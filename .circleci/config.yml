@@ -1,0 +1,193 @@
+version: 2.1
+commands:
+  setup:
+    description: 'Install tools and configure kubectl'
+    steps:
+      - aws-cli/install
+      - kubernetes/install
+      - helm/install-helm-client:
+          version: v2.13.1
+      - run:
+          name: Setup kubectl
+          command: |
+            echo -n "${KUBE_ENV_CACERT}" | base64 -d > /tmp/cluster_ca.crt
+            kubectl config set-cluster "${KUBE_ENV_NAME}" \
+              --certificate-authority="/tmp/cluster_ca.crt" \
+              --server="https://api.${KUBE_ENV_NAME}"
+            kubectl config set-credentials circleci \
+              --token="${KUBE_ENV_TOKEN}"
+            kubectl config set-context circleci \
+              --cluster="${KUBE_ENV_NAME}" \
+              --user="circleci" \
+              --namespace="${KUBE_ENV_NAMESPACE}"
+            # confirm setup is ok
+            kubectl config use-context circleci
+            kubectl -n "${KUBE_ENV_NAMESPACE}" get deployments
+  deploy_to_env:
+    parameters:
+      env:
+        type: string
+    steps:
+      - setup
+      - checkout:
+          path: ~/git
+      - attach_workspace:
+          at: ~/app
+      - deploy:
+          name: Deploy to << parameters.env >>
+          command: |
+            APP_VERSION=$(egrep buildNumber build-info.json  | awk -F"\"" '{print $4}')
+            aws secretsmanager --region ${AWS_DEFAULT_REGION} get-secret-value --secret-id ${KUBE_ENV_NAMESPACE} | jq -r .SecretString | \
+            helm upgrade sentence-planning ~/git/helm_deploy/sentence-planning/. \
+              --install --wait --reset-values --timeout 360 \
+              --tiller-namespace=${KUBE_ENV_NAMESPACE} \
+              --namespace=${KUBE_ENV_NAMESPACE} \
+              --description="${APP_VERSION} - ${CIRCLE_BUILD_URL}" \
+              --values ~/git/helm_deploy/values-<< parameters.env >>.yaml \
+              --values - \
+              --set image.tag="${APP_VERSION}"
+executors:
+  deployer:
+    docker:
+      - image: circleci/python:3
+    working_directory: ~/app
+  builder:
+    docker:
+      - image: circleci/node:10.15.3-browsers
+    working_directory: ~/app
+
+orbs:
+  aws-cli: circleci/aws-cli@0.1.13
+  kubernetes: circleci/kubernetes@0.3.0
+  helm: circleci/helm@0.1.2
+
+jobs:
+  build:
+    executor: builder
+    steps:
+      - checkout
+      - run:
+          name: Update npm
+          command: 'sudo npm install -g npm@latest'
+      - restore_cache:
+          key: dependency-cache-${CACHE_VERSION}-{{ checksum "package-lock.json" }}
+      - run:
+          name: Install Dependencies
+          command: npm ci
+      - save_cache:
+          key: dependency-cache-${CACHE_VERSION}-{{ checksum "package-lock.json" }}
+          paths:
+            - node_modules
+            - ~/.cache
+      - run:
+          name: Linter check
+          command: npm run lint
+      - run:
+          command: |
+            npm run build
+            DATE=$(date '+%Y-%m-%d')
+            export BUILD_NUMBER=${DATE}.${CIRCLE_BUILD_NUM}
+            export GIT_REF="$CIRCLE_SHA1"
+            npm run record-build-info
+      - persist_to_workspace:
+          root: .
+          paths:
+            - node_modules
+            - build-info.json
+            - assets/stylesheets
+            - .cache/Cypress
+
+  test:
+    executor: builder
+    steps:
+      - checkout
+      - restore_cache:
+          key: dependency-cache-${CACHE_VERSION}-{{ checksum "package-lock.json" }}
+      - run:
+          name: unit tests
+          command: npm run test
+      - store_test_results:
+          path: test-results
+      - store_artifacts:
+          path: test-results/unit-test-reports.html
+
+  build_docker:
+    executor: deployer
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ~/app
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run:
+          name: Build container and publish to docker hub
+          command: |
+            APP_VERSION=$(egrep buildNumber build-info.json  | awk -F"\"" '{print $4}')
+            docker build --rm=false . \
+              --build-arg BUILD_NUMBER=$APP_VERSION \
+              --build-arg GIT_REF=$CIRCLE_SHA1 \
+              --tag "mojdigitalstudio/court-case-matcher:$APP_VERSION" \
+              --label "maintainer=oasys@digital.justice.gov.uk" \
+              --label "app.version=$APP_VERSION" \
+              --label "build.version=$APP_VERSION" \
+              --label "build.number=$CIRCLE_BUILD_NUM" \
+              --label "build.url=$CIRCLE_BUILD_URL" \
+              --label "build.gitref=$CIRCLE_SHA1"
+            if [[ "${CIRCLE_BRANCH}" == "master" ]]; then
+              # publish to docker hub as the tag
+             docker login -u $DOCKER_USER -p $DOCKER_PASS
+             docker tag mojdigitalstudio/court-case-matcher:$APP_VERSION mojdigitalstudio/court-case-matcher:latest
+             docker push mojdigitalstudio/court-case-matcher:$APP_VERSION
+             docker push mojdigitalstudio/court-case-matcher:latest
+            fi
+  deploy_dev:
+    executor: deployer
+    steps:
+      - deploy_to_env:
+          env: 'development'
+  deploy_preprod:
+    executor: deployer
+    steps:
+      - deploy_to_env:
+          env: 'preprod'
+#  deploy_prod:
+#    executor: deployer
+#    steps:
+#      - deploy_to_env:
+#          env: 'prod'
+
+workflows:
+  version: 2
+  build-test-and-deploy:
+    jobs:
+      - build:
+          filters:
+            tags:
+              ignore: /.*/
+      - test:
+          requires:
+            - build
+      - build_docker:
+          filters:
+            branches:
+              only: master
+          requires:
+            - test
+      - deploy_dev:
+          requires:
+            - build_docker
+      - request-preprod-approval:
+          type: approval
+          requires:
+            - deploy_dev
+      - deploy_preprod:
+          context: court-probation-preprod
+          requires:
+            - request-preprod-approval
+  #     - request-prod-approval:
+  #         type: approval
+  #         requires:
+  #           - deploy_preprod
+  #     - deploy_prod:
+  #         context: court-probation-prod
+  #         requires:
