@@ -19,10 +19,6 @@ project.targetCompatibility = 11
 
 group = 'uk.gov.justice.probation'
 
-def today = Instant.now()
-def todayDate = LocalDate.now()
-def formatter = DateTimeFormatter.ofPattern('yyyy-MM-dd')
-version = todayDate.format(formatter)
 
 configurations {
 	compileOnly {
@@ -30,13 +26,35 @@ configurations {
 	}
 }
 
+def applicationName = 'sentence-planning-api'
+def today = java.time.Instant.now()
+def todayDate = java.time.LocalDate.now()
+def formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd")
+version todayDate.format(formatter)
+
 jar {
-	baseName = rootProject.name
+	baseName = applicationName
 	manifest {
-		attributes (
-				'Implementation-Title': rootProject.name,
+		attributes 'Implementation-Title': applicationName,
 				'Implementation-Version': System.getenv('CI') ? "${version}.${System.getenv('CIRCLE_BUILD_NUM')}" : version
-		)
+	}
+}
+
+springBoot {
+	buildInfo {
+		properties {
+			artifact = rootProject.name
+			version = System.getenv('CI') ? "${version}.${System.getenv('CIRCLE_BUILD_NUM')}" : version
+			group = 'uk.gov.justice.digital'
+			name = rootProject.name
+			time = today
+			additional = [
+					by                   : System.properties['user.name'],
+					operatingSystem      : "${System.properties['os.name']} (${System.properties['os.version']})",
+					continuousIntegration: System.getenv('CI') ? true : false,
+					machine              : InetAddress.localHost.hostName
+			]
+		}
 	}
 }
 
