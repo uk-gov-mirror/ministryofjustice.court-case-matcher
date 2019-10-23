@@ -37,7 +37,6 @@ commands:
           name: Deploy to << parameters.env >>
           command: |
             APP_VERSION=$(cat ~/app/app_version.txt)
-            aws secretsmanager --region ${AWS_DEFAULT_REGION} get-secret-value --secret-id ${KUBE_ENV_NAMESPACE} | jq -r .SecretString | \
             helm upgrade court-case-matcher ~/git/helm_deploy/court-case-matcher/. \
               --install --wait --force --reset-values --timeout 360 \
               --tiller-namespace=${KUBE_ENV_NAMESPACE} \
@@ -54,12 +53,6 @@ executors:
   builder:
     docker:
       - image: circleci/openjdk:11-jdk-browsers
-        environment:
-          SPRING_PROFILES_ACTIVE: test
-          DATABASE_USERNAME: root
-          DATABASE_PASSWORD: dev
-          DATABASE_NAME: court_case__test
-          DATABASE_ENDPOINT: 127.0.0.1:5432
     working_directory: ~/app
 
 orbs:
@@ -76,7 +69,7 @@ jobs:
           keys:
             - gradle-{{ checksum "build.gradle" }}
             - gradle-
-      - run: ./gradlew cleanTest build
+      - run: ./gradlew build
       - run:
           name: Record the Application Version
           command: |
@@ -96,9 +89,9 @@ jobs:
             - ~/.gradle
           key: gradle-{{ checksum "build.gradle" }}
       - store_test_results:
-          path: build/reports
+          path: build/test-results
       - store_artifacts:
-          path: build/reports
+          path: build/reports/tests
       - persist_to_workspace:
           root: .
           paths:
@@ -120,7 +113,7 @@ jobs:
             APP_VERSION=$(cat ./app_version.txt)
             docker build --rm=false . \
                --tag "mojdigitalstudio/court-case-matcher:$APP_VERSION" \
-               --label "maintainer=katie.cawthorne@digital.justice.gov.uk" \
+               --label "maintainer=info@digital.justice.gov.uk" \
                --label "app.version=$APP_VERSION" \
                --label "build.version=$APP_VERSION" \
                --label "build.number=$CIRCLE_BUILD_NUM" \
@@ -139,17 +132,17 @@ jobs:
     executor: deployer
     steps:
       - deploy_to_env:
-          env: "development"
+          env: "dev"
   deploy_preprod:
     executor: deployer
     steps:
       - deploy_to_env:
           env: "preprod"
-#  deploy_prod:
-#    executor: deployer
-#    steps:
-#      - deploy_to_env:
-#          env: "prod"
+  deploy_prod:
+    executor: deployer
+    steps:
+      - deploy_to_env:
+          env: "prod"
 
 workflows:
   version: 2
@@ -176,12 +169,11 @@ workflows:
           context: court-probation-preprod
           requires:
             - request-preprod-approval
-#      - request-prod-approval:
-#          type: approval
-#          requires:
-#            - deploy_preprod
-#      - deploy_prod:
-#          context: court-probation-prod
-#          requires:
-#            - request-prod-approval
-
+      - request-prod-approval:
+          type: approval
+          requires:
+            - deploy_preprod
+      - deploy_prod:
+          context: court-probation-prod
+          requires:
+            - request-prod-approval
