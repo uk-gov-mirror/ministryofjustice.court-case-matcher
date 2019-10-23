@@ -13,10 +13,4 @@ env:
   - name: JAVA_OPTS
     value: "{{ .Values.env.JAVA_OPTS }}"
 
-  - name: APPINSIGHTS_INSTRUMENTATIONKEY
-    valueFrom:
-      secretKeyRef:
-        name: court-case-service-secrets
-        key: APPINSIGHTS_INSTRUMENTATIONKEY
-
 {{- end -}}
