@@ -1,7 +1,13 @@
 
+### Helm init
+
+```
+helm init --tiller-namespace court-probation-dev --service-account tiller --history-max 200
+```
+
 ### Example deploy command
 ```
-helm --namespace court-probation-dev --tiller-namespace court-probation-dev upgrade court-case-matcher ./court-case-matcher/ --install --values=values-dev.yaml --values=example-secrets.yaml
+helm --namespace court-probation-dev  --tiller-namespace court-probation-dev upgrade court-case-matcher ./court-case-matcher/ --install --values=values-dev.yaml
 ```
 
 ### Rolling back a release
@@ -15,10 +21,11 @@ Rollback
 ```
 helm --tiller-namespace court-probation-dev rollback court-case-matcher [INSERT REVISION NUMBER HERE] --wait
 ```
+### Setup Lets Encrypt cert
 
-### Helm init
+Ensure the certificate definition exists in the cloud-platform-environments repo under the relevant namespaces folder
 
+e.g.
 ```
-helm init --tiller-namespace court-probation-dev --uk.gov.digital.justice.service-account tiller --history-max 200
-```
+cloud-platform-environments/namespaces/live-1.cloud-platform.service.justice.gov.uk/[INSERT NAMESPACE NAME]/05-certificate.yaml
 ```

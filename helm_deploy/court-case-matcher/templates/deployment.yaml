@@ -26,15 +26,15 @@ spec:
         release: {{ .Release.Name }}
     spec:
       containers:
-        - name: sentence-planning-api
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}" 
+        - name: court-case-matcher
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - containerPort: {{ .Values.image.port }}
               protocol: TCP
           livenessProbe:
             httpGet:
-              path: /health
+              path: /ping
               port: {{ .Values.image.port }}
             periodSeconds: 30
             initialDelaySeconds: 90
@@ -42,7 +42,7 @@ spec:
             failureThreshold: 10
           readinessProbe:
             httpGet:
-              path: /health
+              path: /ping
               port: {{ .Values.image.port }}
             periodSeconds: 20
             initialDelaySeconds: 60
