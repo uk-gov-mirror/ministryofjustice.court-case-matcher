@@ -1,3 +1,6 @@
+import java.time.Instant
+import java.time.LocalDate
+
 plugins {
 	id 'java'
 	id 'org.springframework.boot' version '2.1.9.RELEASE'
@@ -8,6 +11,7 @@ plugins {
 repositories {
 	mavenCentral()
 }
+
 apply plugin: 'idea'
 
 project.sourceCompatibility = 11
@@ -15,6 +19,9 @@ project.targetCompatibility = 11
 
 group = 'uk.gov.justice.probation'
 
+def today = Instant.now()
+def todaysDate = LocalDate.now().format('yyyy-MM-dd')
+version = System.getenv('CI') ? "${todaysDate}.${System.getenv('CIRCLE_BUILD_NUM')}" : todaysDate
 
 configurations {
 	compileOnly {
@@ -22,17 +29,12 @@ configurations {
 	}
 }
 
-def applicationName = 'court-case-matcher'
-def today = java.time.Instant.now()
-def todayDate = java.time.LocalDate.now()
-def formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd")
-version todayDate.format(formatter)
-
 jar {
-	baseName = applicationName
+	baseName = rootProject.name
 	manifest {
-		attributes 'Implementation-Title': applicationName,
-				'Implementation-Version': System.getenv('CI') ? "${version}.${System.getenv('CIRCLE_BUILD_NUM')}" : version
+		attributes (
+				'Implementation-Title': rootProject.name, 'Implementation-Version': version
+		)
 	}
 }
 
@@ -40,8 +42,8 @@ springBoot {
 	buildInfo {
 		properties {
 			artifact = rootProject.name
-			version = System.getenv('CI') ? "${version}.${System.getenv('CIRCLE_BUILD_NUM')}" : version
-			group = 'uk.gov.justice.digital'
+			version = version
+			group = group
 			name = rootProject.name
 			time = today
 			additional = [

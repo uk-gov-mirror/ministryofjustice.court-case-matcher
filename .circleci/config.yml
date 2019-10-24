@@ -22,7 +22,7 @@ commands:
               --namespace="${KUBE_ENV_NAMESPACE}"
             # confirm setup is ok
             kubectl config use-context circleci
-            kubectl -n "${KUBE_ENV_NAMESPACE}" get deployments
+            kubectl -n "${KUBE_ENV_NAMESPACE}" get pods
   deploy_to_env:
     parameters:
       env:
@@ -76,14 +76,12 @@ jobs:
             jar xvf build/libs/court-case-matcher-*.jar BOOT-INF/classes/META-INF/build-info.properties
             APP_VERSION=$(grep 'build.version=' BOOT-INF/classes/META-INF/build-info.properties | awk -F= '{print $2}')
             rm BOOT-INF/classes/META-INF/build-info.properties
-
             # make up a good version name
             TAG=${APP_VERSION}.${CIRCLE_BRANCH}
             if [[ "${CIRCLE_BRANCH}" == "master" ]]; then
               TAG=${APP_VERSION}
             fi
             echo $TAG > ./app_version.txt
-
       - save_cache:
           paths:
             - ~/.gradle
@@ -119,7 +117,6 @@ jobs:
                --label "build.number=$CIRCLE_BUILD_NUM" \
                --label "build.url=$CIRCLE_BUILD_URL" \
                --label "build.gitref=$CIRCLE_SHA1"
-
             if [[ "${CIRCLE_BRANCH}" == "master" ]]; then
               # publish to docker hub as the tag
              docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
@@ -127,7 +124,6 @@ jobs:
              docker push mojdigitalstudio/court-case-matcher:$APP_VERSION
              docker push mojdigitalstudio/court-case-matcher:latest
             fi
-
   deploy_dev:
     executor: deployer
     steps:
