@@ -3,7 +3,7 @@ import java.time.LocalDate
 
 plugins {
 	id 'java'
-	id 'org.springframework.boot' version '2.1.9.RELEASE'
+	id 'org.springframework.boot' version '2.2.2.RELEASE'
 	id 'io.spring.dependency-management' version '1.0.8.RELEASE'
 	id 'com.github.ben-manes.versions' version '0.26.0'
 }
@@ -72,6 +72,10 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'net.javacrumbs.json-unit:json-unit-assertj:2.9.0'
 	testCompile 'io.rest-assured:rest-assured:3.0.3'
-	testCompile "com.github.tomakehurst:wiremock:2.13.0"
+	testCompile "com.github.tomakehurst:wiremock:2.25.0"
 	testCompile group: 'commons-io', name: 'commons-io', version: '2.6'
+
+	implementation ('org.springframework:spring-web:5.2.3.RELEASE') {
+		because 'Transitive dependency. Previous versions have a known vulnerability'
+	}
 }
