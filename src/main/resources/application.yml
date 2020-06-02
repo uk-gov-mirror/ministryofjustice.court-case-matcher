@@ -1,0 +1,16 @@
+management:
+  security:
+    enabled: false
+
+cgi:
+  jms:
+    destination.name: CP_OutboundQueue
+
+spring:
+  artemis:
+    mode: native
+    host: ${jms.host:localhost}
+    user: ${jms.username:jmsuser}
+    password: ${jms.password:jmsuser}
+    port: ${jms.port:5445}
+

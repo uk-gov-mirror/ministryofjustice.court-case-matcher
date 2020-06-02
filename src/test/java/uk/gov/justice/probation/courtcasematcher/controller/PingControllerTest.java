@@ -1,23 +1,21 @@
 package uk.gov.justice.probation.courtcasematcher.controller;
 
+import static io.restassured.RestAssured.given;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.restassured.RestAssured;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import java.io.IOException;
-
-import static io.restassured.RestAssured.given;
-import static org.assertj.core.api.Assertions.assertThat;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit4.SpringRunner;
 
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@RunWith(SpringJUnit4ClassRunner.class)
-@DirtiesContext
+@RunWith(SpringRunner.class)
+@ActiveProfiles("test")
 public class PingControllerTest {
 
     @LocalServerPort
@@ -30,7 +28,7 @@ public class PingControllerTest {
     }
 
     @Test
-    public void pingEndpoint() throws IOException {
+    public void pingEndpoint() {
 
         String response = given()
                 .when()

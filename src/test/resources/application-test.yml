@@ -1,0 +1,24 @@
+management:
+  security:
+    enabled: false
+
+cgi:
+  jms:
+    destination.name: CP_OutboundQueue
+
+spring:
+  artemis:
+    mode: native
+    host: "localhost"
+    user: "jmsuser"
+    password: "jmsuser"
+    port: 5445
+
+  # Embedded ActiveMQ Configuration Example
+  activemq:
+    broker-url: vm://embedded?broker.persistent=false,useShutdownHook=false
+    in-memory: true
+    non-blocking-redelivery: true
+    packages:
+      trust-all: false
+      trusted: uk.gov.justice.probation
