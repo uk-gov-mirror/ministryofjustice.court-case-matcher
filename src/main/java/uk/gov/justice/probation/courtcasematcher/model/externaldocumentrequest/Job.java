@@ -3,24 +3,25 @@ package uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import java.util.List;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @AllArgsConstructor
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PRIVATE, force = true)
 @Builder
-@Getter
+@Data
 public class Job {
 
     @JacksonXmlProperty(localName = "printdate")
-    private String printDate;
-    private String username;
-    private String late;
-    private String adbox;
-    private String means;
+    private final String printDate;
+    private final String username;
+    private final String late;
+    private final String adbox;
+    private final String means;
 
     @JacksonXmlElementWrapper
-    private List<Session> sessions;
+    private final List<Session> sessions;
 }

@@ -13,3 +13,6 @@ spring:
     user: "jmsuser"
     password: "jmsuser"
     port: 5445
+
+court-case-service:
+  base-url: http://court-case-service-dev.apps.live-1.cloud-platform.service.justice.gov.uk

@@ -3,6 +3,7 @@ package uk.gov.justice.probation.courtcasematcher.application;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.JacksonXmlModule;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.eventbus.EventBus;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,11 +23,14 @@ public class MessagingConfig {
     public XmlMapper xmlMapper() {
         JacksonXmlModule xmlModule = new JacksonXmlModule();
         xmlModule.setDefaultUseWrapper(false);
-        return new XmlMapper(xmlModule);
+        XmlMapper mapper = new XmlMapper(xmlModule);
+        mapper.registerModule(new JavaTimeModule());
+        return mapper;
     }
 
     @Bean
     public EventBus eventBus() {
         return new EventBus();
     }
+
 }

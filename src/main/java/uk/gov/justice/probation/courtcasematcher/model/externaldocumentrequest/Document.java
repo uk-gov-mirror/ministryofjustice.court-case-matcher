@@ -3,21 +3,23 @@ package uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PRIVATE, force = true)
 @AllArgsConstructor
-@Getter
 @Builder
+@Data
 @JsonIgnoreProperties(value = "jsonData")
 public class Document
 {
     @JacksonXmlProperty(localName = "info")
-    private Info info;
-    private Data data;
-    private String jsonData;
+    private final Info info;
+    @JacksonXmlProperty(localName = "data")
+    private final DataJob data;
+
 
 }

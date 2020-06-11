@@ -1,0 +1,18 @@
+{
+  "request": {
+    "method": "PUT",
+    "url": "/court/SHF/case/12345",
+    "bodyPatterns": [
+      {
+        "matches" : ".*caseNo.*12345.*"
+      }
+    ]
+  },
+  "response": {
+    "status": 201,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "bodyFileName": "PUT_case_details_body.json"
+  }
+}

@@ -11,6 +11,7 @@ public class MessageReceiver {
     private static final String CP_QUEUE = "CP_OutboundQueue";
     private final MessageProcessor messageProcessor;
 
+
     public MessageReceiver (MessageProcessor processor) {
         super();
         this.messageProcessor = processor;

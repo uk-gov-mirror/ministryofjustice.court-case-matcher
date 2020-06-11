@@ -14,11 +14,10 @@ spring:
     password: "jmsuser"
     port: 5445
 
-  # Embedded ActiveMQ Configuration Example
-  activemq:
-    broker-url: vm://embedded?broker.persistent=false,useShutdownHook=false
-    in-memory: true
-    non-blocking-redelivery: true
-    packages:
-      trust-all: false
-      trusted: uk.gov.justice.probation
+court-case-service:
+  base-url: http://localhost:8090/
+
+case-mapper-reference:
+  defaultProbationStatus: "No record"
+  courtNameToCodes:
+    Sheffield Magistrates Court: "SHF"

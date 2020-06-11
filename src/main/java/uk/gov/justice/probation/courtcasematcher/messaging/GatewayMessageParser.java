@@ -1,7 +1,7 @@
 package uk.gov.justice.probation.courtcasematcher.messaging;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -24,7 +24,7 @@ public class GatewayMessageParser {
         this.xmlMapper = xmlMapper;
     }
 
-    public MessageType parseMessage (String xml) throws JsonProcessingException {
+    public MessageType parseMessage (String xml) throws IOException {
         return xmlMapper.readValue(xml, MessageType.class);
     }
 

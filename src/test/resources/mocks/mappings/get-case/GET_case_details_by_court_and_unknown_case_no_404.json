@@ -1,0 +1,12 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/court/SHF/case/99999"
+  },
+  "response": {
+    "status": 404,
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

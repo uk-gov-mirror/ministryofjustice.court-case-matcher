@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/court/SHF/case/123456"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "bodyFileName": "GET_court_case_response.json"
+  }
+}

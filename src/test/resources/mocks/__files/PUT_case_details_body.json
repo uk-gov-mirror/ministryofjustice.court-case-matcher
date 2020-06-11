@@ -1,0 +1,26 @@
+{
+  "lastUpdated": "2020-06-06T17:32:00.490478",
+  "caseId": "1246257",
+  "caseNo": "12345",
+  "crn": "X320741",
+  "pnc": "D/1234560BC",
+  "listNo": "2nd",
+  "courtCode": "SHF",
+  "courtRoom": "1",
+  "sessionStartTime": "2020-01-13T09:00:00",
+  "session": "MORNING",
+  "probationStatus": "Current",
+  "suspendedSentenceOrder": true,
+  "breach": true,
+  "offences": [],
+  "defendantName": "Mr Dylan Adam Armstrong",
+  "defendantAddress": {
+    "line1": "27",
+    "line2": "Elm Place",
+    "postcode": "ad21 5dr",
+    "line3": "Bangor"
+  },
+  "defendantDob": "1977-12-11",
+  "defendantSex": "M",
+  "nationality1": "British"
+}

@@ -14,3 +14,19 @@ spring:
     password: ${jms.password:jmsuser}
     port: ${jms.port:5445}
 
+court-case-service:
+  case-put-url-template: /court/%s/case/%s
+
+web:
+  client:
+    connect-timeout-ms: 20000
+    read-timeout-ms: 5000
+    write-timeout-ms: 5000
+
+# court name to codes is a simple look up until CGI provide the change to their feed
+case-mapper-reference:
+  defaultProbationStatus: "No record"
+  courtNameToCodes:
+    Sheffield Magistrates Court: "SHF"
+
+

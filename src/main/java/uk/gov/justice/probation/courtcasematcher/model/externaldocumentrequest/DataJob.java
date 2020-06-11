@@ -1,17 +1,17 @@
 
 package uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest;
 
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @AllArgsConstructor
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PRIVATE, force = true)
 @Builder
-@Getter
-public class Data
+@Data
+public class DataJob
 {
-    private Job job;
-
+    private final Job job;
 }
