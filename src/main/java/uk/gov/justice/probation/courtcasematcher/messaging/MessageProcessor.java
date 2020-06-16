@@ -37,8 +37,8 @@ public class MessageProcessor {
         this.caseMapper = caseMapper;
     }
 
-    public void process(String message) {
-        parse(message).ifPresent(this::process);
+    public void processAll(String message) {
+        parse(message).ifPresent(this::processAll);
     }
 
     private Optional<List<Session>> parse(String message) {
@@ -66,7 +66,7 @@ public class MessageProcessor {
         return Optional.of(sessions);
     }
 
-    private void process(List<Session> sessions) {
+    private void processAll(List<Session> sessions) {
         List<Case> cases = sessions
             .stream()
             .flatMap(session -> session.getBlocks().stream())
@@ -74,16 +74,25 @@ public class MessageProcessor {
             .collect(Collectors.toList());
 
         log.info("Received {} cases", cases.size());
-        cases.forEach(this::store);
+        cases.forEach(this::process);
     }
 
-    private void store(Case incomingCase) {
+    private void process(Case incomingCase) {
+        CourtCase courtCase = match(incomingCase);
+        store(courtCase);
+    }
 
+    private void store(CourtCase courtCase) {
+        restClient.putCourtCase(courtCase.getCourtCode(), courtCase.getCaseNo(), courtCase);
+    }
+
+    private CourtCase match(Case incomingCase) {
         Optional<CourtCase> existingCase = restClient.getCourtCase(incomingCase.getBlock().getSession().getCourtCode(), incomingCase.getCaseNo()).blockOptional();
-        CourtCase courtCaseApi = existingCase
-                                            .map(courtCaseApi1 -> {return caseMapper.merge(incomingCase, courtCaseApi1);})
+//        TODO: I think this class probably has too many responsibilities. I will implement here for now and review after to see if I can break it out into logical components
+        return existingCase
+                                            .map(courtCaseApi1 -> caseMapper.merge(incomingCase, courtCaseApi1))
+//                TODO: At this point in the flow we need to introduce a new call to offender search to get the crn etc
                                             .orElse(caseMapper.newFromCase(incomingCase));
-        restClient.putCourtCase(incomingCase.getBlock().getSession().getCourtCode(), incomingCase.getCaseNo(), courtCaseApi);
     }
 
     private void logMessageReceipt(MessageHeader messageHeader) {

@@ -25,6 +25,6 @@ class MessageReceiverTest {
 
         messageReceiver.receive(msg);
 
-        verify(messageProcessor).process(msg);
+        verify(messageProcessor).processAll(msg);
     }
 }

@@ -37,6 +37,7 @@ class MessageProcessorTest {
 
     private static final String COURT_CODE = "SHF";
     private static final long REST_CLIENT_WAIT_MS = 2000;
+    public static final String CASE_NO = "1600032952";
 
     private static GatewayMessageParser parser;
 
@@ -46,7 +47,7 @@ class MessageProcessorTest {
     private EventBus eventBus;
 
     @Mock
-    private CourtCaseRestClient restClient;
+    private CourtCaseRestClient courtCaseRestClient;
 
     @Mock
     private CaseMapper caseMapper;
@@ -64,7 +65,7 @@ class MessageProcessorTest {
 
     @BeforeEach
     void beforeEach() {
-        messageProcessor = new MessageProcessor(parser, restClient, eventBus, caseMapper);
+        messageProcessor = new MessageProcessor(parser, courtCaseRestClient, eventBus, caseMapper);
     }
 
     @DisplayName("Receive a case which matches (by court code and case no) one in court case service. Merge it and PUT.")
@@ -74,42 +75,46 @@ class MessageProcessorTest {
         Disposable disposable = Mockito.mock(Disposable.class);
         String path = "src/test/resources/messages/gateway-message-single-case.xml";
 
-        CourtCase existingCourtCaseApi = Mockito.mock(CourtCase.class);
+        CourtCase existingCourtCase = Mockito.mock(CourtCase.class);
+        when(existingCourtCase.getCaseNo()).thenReturn(CASE_NO);
+        when(existingCourtCase.getCourtCode()).thenReturn(COURT_CODE);
 
-        when(restClient.getCourtCase(COURT_CODE, "1600032952")).thenReturn(Mono.just(existingCourtCaseApi));
-        when(caseMapper.merge(any(Case.class), eq(existingCourtCaseApi))).thenReturn(existingCourtCaseApi);
-        when(restClient.putCourtCase(eq(COURT_CODE), eq("1600032952"), eq(existingCourtCaseApi))).thenReturn(disposable);
+        when(courtCaseRestClient.getCourtCase(COURT_CODE, CASE_NO)).thenReturn(Mono.just(existingCourtCase));
+        when(caseMapper.merge(any(Case.class), eq(existingCourtCase))).thenReturn(existingCourtCase);
+        when(courtCaseRestClient.putCourtCase(eq(COURT_CODE), eq(CASE_NO), eq(existingCourtCase))).thenReturn(disposable);
 
-        messageProcessor.process(Files.readString(Paths.get(path)));
+        messageProcessor.processAll(Files.readString(Paths.get(path)));
 
-        verify(caseMapper).merge(any(Case.class), eq(existingCourtCaseApi));
-        verify(restClient, timeout(REST_CLIENT_WAIT_MS)).putCourtCase(eq(COURT_CODE), eq("1600032952"), eq(existingCourtCaseApi));
+        verify(caseMapper).merge(any(Case.class), eq(existingCourtCase));
+        verify(courtCaseRestClient, timeout(REST_CLIENT_WAIT_MS)).putCourtCase(eq(COURT_CODE), eq(CASE_NO), eq(existingCourtCase));
     }
 
-    @DisplayName("Receive a case which does NOT match (by court code and case no) to one in court case service. Create new and PUT.")
+    @DisplayName("Receive a case which does NOT match (by court code and case no) to one in court case service. Attempt to match in offender search. Create new and PUT.")
     @Test
     void whenCorrectMessageReceived_ForNewCase_ThenEventsPublished() throws IOException {
 
         Disposable disposable = Mockito.mock(Disposable.class);
         String path = "src/test/resources/messages/gateway-message-single-case.xml";
 
-        CourtCase newCourtCaseApi = Mockito.mock(CourtCase.class);
+        CourtCase courtCase = Mockito.mock(CourtCase.class);
+        when(courtCase.getCaseNo()).thenReturn(CASE_NO);
+        when(courtCase.getCourtCode()).thenReturn(COURT_CODE);
 
-        when(restClient.getCourtCase(COURT_CODE, "1600032952")).thenReturn(Mono.empty());
-        when(caseMapper.newFromCase(any(Case.class))).thenReturn(newCourtCaseApi);
-        when(restClient.putCourtCase(eq(COURT_CODE), eq("1600032952"), eq(newCourtCaseApi))).thenReturn(disposable);
+        when(courtCaseRestClient.getCourtCase(COURT_CODE, CASE_NO)).thenReturn(Mono.empty());
+        when(caseMapper.newFromCase(any(Case.class))).thenReturn(courtCase);
+        when(courtCaseRestClient.putCourtCase(eq(COURT_CODE), eq(CASE_NO), eq(courtCase))).thenReturn(disposable);
 
-        messageProcessor.process(Files.readString(Paths.get(path)));
+        messageProcessor.processAll(Files.readString(Paths.get(path)));
 
         verify(caseMapper).newFromCase(any(Case.class));
-        verify(restClient, timeout(REST_CLIENT_WAIT_MS)).putCourtCase(eq(COURT_CODE), eq("1600032952"), eq(newCourtCaseApi));
+        verify(courtCaseRestClient, timeout(REST_CLIENT_WAIT_MS)).putCourtCase(eq(COURT_CODE), eq(CASE_NO), eq(courtCase));
     }
 
     @DisplayName("An XML message which is invalid")
     @Test
     void whenInvalidMessageReceived_NothingPublished() {
 
-        messageProcessor.process("<someOtherXml>Not the message you are looking for</someOtherXml>");
+        messageProcessor.processAll("<someOtherXml>Not the message you are looking for</someOtherXml>");
 
         verify(eventBus).post(any(CourtCaseFailureEvent.class));
     }
@@ -120,7 +125,7 @@ class MessageProcessorTest {
 
         String path = "src/test/resources/messages/gateway-message-empty-sessions.xml";
 
-        messageProcessor.process(Files.readString(Paths.get(path)));
+        messageProcessor.processAll(Files.readString(Paths.get(path)));
 
         verify(eventBus).post(any(CourtCaseFailureEvent.class));
     }
