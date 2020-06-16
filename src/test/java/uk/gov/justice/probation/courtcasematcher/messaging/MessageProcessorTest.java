@@ -1,24 +1,15 @@
 package uk.gov.justice.probation.courtcasematcher.messaging;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.timeout;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import com.fasterxml.jackson.dataformat.xml.JacksonXmlModule;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.google.common.eventbus.EventBus;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.Map;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentMatcher;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -30,6 +21,16 @@ import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCas
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Case;
 import uk.gov.justice.probation.courtcasematcher.model.mapper.CaseMapper;
 import uk.gov.justice.probation.courtcasematcher.restclient.CourtCaseRestClient;
+import uk.gov.justice.probation.courtcasematcher.service.MatcherService;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Map;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 
 @DisplayName("Message Processor")
 @ExtendWith(MockitoExtension.class)
@@ -52,6 +53,9 @@ class MessageProcessorTest {
     @Mock
     private CaseMapper caseMapper;
 
+    @InjectMocks
+    private MatcherService matcherService;
+
     private MessageProcessor messageProcessor;
 
     @BeforeAll
@@ -65,7 +69,7 @@ class MessageProcessorTest {
 
     @BeforeEach
     void beforeEach() {
-        messageProcessor = new MessageProcessor(parser, courtCaseRestClient, eventBus, caseMapper);
+        messageProcessor = new MessageProcessor(parser, eventBus, matcherService);
     }
 
     @DisplayName("Receive a case which matches (by court code and case no) one in court case service. Merge it and PUT.")
