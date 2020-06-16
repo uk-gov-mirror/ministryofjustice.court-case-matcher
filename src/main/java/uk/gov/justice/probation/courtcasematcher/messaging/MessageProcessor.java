@@ -33,8 +33,8 @@ public class MessageProcessor {
         this.matcherService = matcherService;
     }
 
-    public void processAll(String message) {
-        parse(message).ifPresent(this::processAll);
+    public void process(String message) {
+        parse(message).ifPresent(this::process);
     }
 
     private Optional<List<Session>> parse(String message) {
@@ -62,7 +62,7 @@ public class MessageProcessor {
         return Optional.of(sessions);
     }
 
-    private void processAll(List<Session> sessions) {
+    private void process(List<Session> sessions) {
         List<Case> cases = sessions
             .stream()
             .flatMap(session -> session.getBlocks().stream())
@@ -70,11 +70,7 @@ public class MessageProcessor {
             .collect(Collectors.toList());
 
         log.info("Received {} cases", cases.size());
-        cases.forEach(this::process);
-    }
-
-    private void process(Case incomingCase) {
-        matcherService.match(incomingCase);
+        cases.forEach(matcherService::match);
     }
 
     private void logMessageReceipt(MessageHeader messageHeader) {

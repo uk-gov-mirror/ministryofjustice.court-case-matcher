@@ -20,6 +20,6 @@ public class MessageReceiver {
     @JmsListener(destination = CP_QUEUE)
     public void receive(String message) {
         log.info("Received message");
-        messageProcessor.processAll(message);
+        messageProcessor.process(message);
     }
 }
