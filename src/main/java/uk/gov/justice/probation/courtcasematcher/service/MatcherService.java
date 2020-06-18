@@ -7,7 +7,9 @@ import org.springframework.stereotype.Service;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCase;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Case;
 import uk.gov.justice.probation.courtcasematcher.model.mapper.CaseMapper;
+import uk.gov.justice.probation.courtcasematcher.model.offendersearch.Search;
 import uk.gov.justice.probation.courtcasematcher.restclient.CourtCaseRestClient;
+import uk.gov.justice.probation.courtcasematcher.restclient.OffenderSearchRestClient;
 
 import java.util.Optional;
 
@@ -16,17 +18,33 @@ import java.util.Optional;
 @NoArgsConstructor(access = AccessLevel.PRIVATE, force = true)
 public class MatcherService {
 
-    public final CourtCaseRestClient restClient;
+    private final CourtCaseRestClient restClient;
 
-    public final CaseMapper caseMapper;
+    private final OffenderSearchRestClient offenderSearchRestClient;
+
+    private final CaseMapper caseMapper;
 
     public void match(Case incomingCase) {
-        Optional<CourtCase> existingCase = restClient.getCourtCase(incomingCase.getBlock().getSession().getCourtCode(), incomingCase.getCaseNo()).blockOptional();
-//        TODO: I think this class probably has too many responsibilities. I will implement here for now and review after to see if I can break it out into logical components
+        Optional<CourtCase> existingCase = restClient.getCourtCase(incomingCase.getBlock().getSession().getCourtCode(), incomingCase.getCaseNo())
+                .blockOptional();
+
         CourtCase courtCase = existingCase
-                .map(courtCaseApi1 -> caseMapper.merge(incomingCase, courtCaseApi1))
-//                TODO: At this point in the flow we need to introduce a new call to offender search to get the crn etc
-                .orElse(caseMapper.newFromCase(incomingCase));
+                .map(existing -> caseMapper.merge(incomingCase, existing))
+                .orElseGet(() -> newMatchedCaseOf(incomingCase)
+                .orElseGet(() -> caseMapper.newFromCase(incomingCase)));
+
         restClient.putCourtCase(courtCase.getCourtCode(), courtCase.getCaseNo(), courtCase);
+    }
+
+    private Optional<CourtCase> newMatchedCaseOf(Case incomingCase) {
+        return offenderSearchRestClient.match(incomingCase.getDef_name(), incomingCase.getDef_dob())
+                .map(Search::getMatches)
+                .flatMap(matches -> {
+                    if (matches.size() == 1)
+                        return Optional.ofNullable(matches.get(0));
+                    else
+                        return Optional.empty();
+                })
+                .map( match -> caseMapper.newFromCaseAndOffender(incomingCase, match.getOffender()));
     }
 }

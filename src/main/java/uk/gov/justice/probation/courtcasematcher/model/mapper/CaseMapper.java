@@ -1,11 +1,5 @@
 package uk.gov.justice.probation.courtcasematcher.model.mapper;
 
-import static java.util.Comparator.comparing;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import uk.gov.justice.probation.courtcasematcher.application.CaseMapperReference;
@@ -13,6 +7,14 @@ import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.Address;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCase;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.Offence;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Case;
+import uk.gov.justice.probation.courtcasematcher.model.offendersearch.Offender;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import static java.util.Comparator.comparing;
 
 @Component
 public class CaseMapper {
@@ -93,4 +95,7 @@ public class CaseMapper {
             .build();
     }
 
+    public CourtCase newFromCaseAndOffender(Case incomingCase, Offender offender) {
+        return null;
+    }
 }
