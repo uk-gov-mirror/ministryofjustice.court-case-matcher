@@ -54,7 +54,6 @@ public class WebConfig {
                 .baseUrl(this.offenderSearchBaseUrl)
                 .clientConnector(getClientHttpConnector())
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .apply(oauth2Client.oauth2Configuration())
                 .build();
     }
 

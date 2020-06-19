@@ -19,7 +19,7 @@ spring:
         registration:
           offender-search-client:
             client-name: offender-search-client
-            client-id: ${offender-search-client-id:community-api-client}
+            client-id: ${offender-search-client-id:offender-search-client}
             client-secret: ${offender-search-client-secret:clientsecret}
             client-authentication-method: basic
             authorization-grant-type: client_credentials

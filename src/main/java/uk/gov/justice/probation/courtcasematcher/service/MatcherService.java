@@ -44,7 +44,6 @@ public class MatcherService {
     }
 
     private Optional<CourtCase> newMatchedCaseOf(Case incomingCase) {
-        // TODO: Add check for dob and name
         return offenderSearchRestClient.search(incomingCase.getDef_name(), incomingCase.getDef_dob())
                 .blockOptional()
                 .map(searchResponse -> {

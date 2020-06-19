@@ -3,17 +3,18 @@ package uk.gov.justice.probation.courtcasematcher.restclient;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.eventbus.EventBus;
+import io.netty.util.internal.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
-import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import uk.gov.justice.probation.courtcasematcher.event.OffenderSearchFailureEvent;
+import uk.gov.justice.probation.courtcasematcher.event.OffenderSearchValidationFailureEvent;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.MatchRequest;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.SearchResponse;
 
@@ -29,6 +30,9 @@ public class OffenderSearchRestClient {
     @Value("${offender-search.post-match-url}")
     private String postMatchUrl;
 
+    @Value("${offender-search.disable-authentication:false}")
+    private Boolean disableAuthentication;
+
     private final WebClient webClient;
 
     private final EventBus eventBus;
@@ -43,13 +47,13 @@ public class OffenderSearchRestClient {
         this.objectMapper = objectMapper;
     }
 
-    public Mono<SearchResponse> search(@NonNull String fullName, @NonNull LocalDate dateOfBirth){
+    public Mono<SearchResponse> search(String fullName, LocalDate dateOfBirth){
+        if (!validate(fullName, dateOfBirth)) {
+            return Mono.empty();
+        }
         MatchRequest body = buildRequestBody(fullName, dateOfBirth);
 
-        return webClient
-                .post()
-                .uri(postMatchUrl)
-                .attributes(clientRegistrationId("offender-search-client"))
+        return post()
                 .body(BodyInserters.fromPublisher(Mono.just(body), MatchRequest.class))
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
@@ -57,8 +61,39 @@ public class OffenderSearchRestClient {
                 .onErrorResume(throwable -> handleError(throwable, body));
     }
 
+    private WebClient.RequestBodySpec post() {
+        WebClient.RequestBodySpec postSpec = webClient
+                .post()
+                .uri(postMatchUrl);
+
+        if (!disableAuthentication)  {
+            return postSpec.attributes(clientRegistrationId("offender-search-client"));
+        } else {
+            return postSpec;
+        }
+    }
+
+    private boolean validate(String fullName, LocalDate dateOfBirth) {
+        if(dateOfBirth == null) {
+            eventBus.post(OffenderSearchValidationFailureEvent.builder()
+                    .failureMessage("No dateOfBirth provided")
+                    .fullName(fullName)
+                    .build());
+            return false;
+        }
+
+        if(StringUtil.isNullOrEmpty(fullName)) {
+            eventBus.post(OffenderSearchValidationFailureEvent.builder()
+                    .failureMessage("No name provided")
+                    .fullName(fullName)
+                    .dateOfBirth(dateOfBirth)
+                    .build());
+            return false;
+        }
+        return true;
+    }
+
     private Mono<? extends SearchResponse> handleError(Throwable throwable, MatchRequest body) {
-        //  TODO: test this
         log.error(throwable.getMessage());
         String incomingMessage = null;
         try {
