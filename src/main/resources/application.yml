@@ -17,6 +17,9 @@ spring:
 court-case-service:
   case-put-url-template: /court/%s/case/%s
 
+offender-search:
+  post-match-url: /match
+
 web:
   client:
     connect-timeout-ms: 20000

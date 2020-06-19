@@ -15,14 +15,13 @@ import uk.gov.justice.probation.courtcasematcher.model.mapper.CaseMapper;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.Match;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.MatchType;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.Offender;
-import uk.gov.justice.probation.courtcasematcher.model.offendersearch.Search;
+import uk.gov.justice.probation.courtcasematcher.model.offendersearch.SearchResponse;
 import uk.gov.justice.probation.courtcasematcher.restclient.CourtCaseRestClient;
 import uk.gov.justice.probation.courtcasematcher.restclient.OffenderSearchRestClient;
 
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -52,13 +51,13 @@ class MatcherServiceTest {
             .build();
     private final Offender offender = Offender.builder()
             .build();
-    private final Search singleExactMatch = Search.builder()
+    private final SearchResponse singleExactMatch = SearchResponse.builder()
             .matches(Collections.singletonList(Match.builder()
                     .offender(offender)
                     .build()))
             .matchedBy(MatchType.ALL_SUPPLIED)
             .build();
-    private final Search multipleExactMatches = Search.builder()
+    private final SearchResponse multipleExactMatches = SearchResponse.builder()
             .matches(Arrays.asList(
                     Match.builder()
                     .offender(offender)
@@ -100,7 +99,7 @@ class MatcherServiceTest {
     @Test
     void givenIncomingCaseDoesNotMatchExistingCase_andItDoesNotMatchAnOffender_whenMatchCalled_thenCreateANewRecord(){
         when(courtCaseRestClient.getCourtCase(COURT_CODE, CASE_NO)).thenReturn(Mono.empty());
-        when(offenderSearchRestClient.match(DEF_NAME, DEF_DOB)).thenReturn(Optional.empty());
+        when(offenderSearchRestClient.search(DEF_NAME, DEF_DOB)).thenReturn(Mono.empty());
         when(caseMapper.newFromCase(incomingCase)).thenReturn(courtCase);
         when(courtCaseRestClient.putCourtCase(eq(COURT_CODE), eq(CASE_NO), eq(courtCase))).thenReturn(mock(Disposable.class));
 
@@ -115,7 +114,7 @@ class MatcherServiceTest {
     @Test
     void givenIncomingCaseDoesNotMatchExistingCase_andItExactlyMatchesASingleOffender_whenMatchCalled_thenCreateANewRecordWithOffenderData(){
         when(courtCaseRestClient.getCourtCase(COURT_CODE, CASE_NO)).thenReturn(Mono.empty());
-        when(offenderSearchRestClient.match(DEF_NAME, DEF_DOB)).thenReturn(Optional.of(singleExactMatch));
+        when(offenderSearchRestClient.search(DEF_NAME, DEF_DOB)).thenReturn(Mono.just(singleExactMatch));
         when(caseMapper.newFromCaseAndOffender(incomingCase, offender)).thenReturn(courtCase);
         when(courtCaseRestClient.putCourtCase(eq(COURT_CODE), eq(CASE_NO), eq(courtCase))).thenReturn(mock(Disposable.class));
 
@@ -130,7 +129,7 @@ class MatcherServiceTest {
     @Test
     void givenIncomingCaseDoesNotMatchExistingCase_andItExactlyMatchesAMultipleOffenders_whenMatchCalled_thenCreateANewRecordWithoutOffenderData(){
         when(courtCaseRestClient.getCourtCase(COURT_CODE, CASE_NO)).thenReturn(Mono.empty());
-        when(offenderSearchRestClient.match(DEF_NAME, DEF_DOB)).thenReturn(Optional.of(multipleExactMatches));
+        when(offenderSearchRestClient.search(DEF_NAME, DEF_DOB)).thenReturn(Mono.just(multipleExactMatches));
         when(caseMapper.newFromCase(incomingCase)).thenReturn(courtCase);
         when(courtCaseRestClient.putCourtCase(eq(COURT_CODE), eq(CASE_NO), eq(courtCase))).thenReturn(mock(Disposable.class));
 

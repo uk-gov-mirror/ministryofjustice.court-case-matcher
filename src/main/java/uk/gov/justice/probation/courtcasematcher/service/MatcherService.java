@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCase;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Case;
 import uk.gov.justice.probation.courtcasematcher.model.mapper.CaseMapper;
-import uk.gov.justice.probation.courtcasematcher.model.offendersearch.Search;
+import uk.gov.justice.probation.courtcasematcher.model.offendersearch.SearchResponse;
 import uk.gov.justice.probation.courtcasematcher.restclient.CourtCaseRestClient;
 import uk.gov.justice.probation.courtcasematcher.restclient.OffenderSearchRestClient;
 
@@ -37,8 +37,9 @@ public class MatcherService {
     }
 
     private Optional<CourtCase> newMatchedCaseOf(Case incomingCase) {
-        return offenderSearchRestClient.match(incomingCase.getDef_name(), incomingCase.getDef_dob())
-                .map(Search::getMatches)
+        return offenderSearchRestClient.search(incomingCase.getDef_name(), incomingCase.getDef_dob())
+                .blockOptional()
+                .map(SearchResponse::getMatches)
                 .flatMap(matches -> {
                     if (matches.size() == 1)
                         return Optional.ofNullable(matches.get(0));

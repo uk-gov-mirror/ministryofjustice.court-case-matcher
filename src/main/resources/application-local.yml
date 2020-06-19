@@ -16,3 +16,6 @@ spring:
 
 court-case-service:
   base-url: http://localhost:8082/
+
+offender-search:
+  base-url: http://localhost:8083/

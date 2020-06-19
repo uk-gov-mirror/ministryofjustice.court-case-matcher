@@ -16,3 +16,6 @@ spring:
 
 court-case-service:
   base-url: http://court-case-service-dev.apps.live-1.cloud-platform.service.justice.gov.uk
+
+offender-search:
+  base-url: https://offender-search.test.delius.probation.hmpps.dsd.io

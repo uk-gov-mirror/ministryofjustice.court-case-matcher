@@ -1,14 +1,14 @@
 package uk.gov.justice.probation.courtcasematcher.model.offendersearch;
 
-import lombok.*;
 
-import java.util.List;
+import lombok.*;
 
 @Getter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PRIVATE, force = true)
-public class Search {
-    private final List<Match> matches;
-    private final MatchType matchedBy;
+public class MatchRequest {
+    private String firstName;
+    private String surname;
+    private String dateOfBirth;
 }
