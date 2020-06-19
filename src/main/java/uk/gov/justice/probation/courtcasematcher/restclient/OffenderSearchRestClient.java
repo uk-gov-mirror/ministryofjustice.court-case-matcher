@@ -1,6 +1,5 @@
 package uk.gov.justice.probation.courtcasematcher.restclient;
 
-import com.google.common.eventbus.EventBus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,7 +22,7 @@ public class OffenderSearchRestClient {
     private final WebClient webClient;
 
     @Autowired
-    public OffenderSearchRestClient(@Qualifier("offender-search") WebClient webClient, EventBus eventBus) {
+    public OffenderSearchRestClient(@Qualifier("offender-search") WebClient webClient) {
         super();
         this.webClient = webClient;
     }
@@ -41,8 +40,8 @@ public class OffenderSearchRestClient {
 
     private Mono<MatchRequest> buildRequestBody(String fullName, LocalDate dateOfBirth) {
         return Mono.just(MatchRequest.builder()
-                .firstName(fullName.split(" ")[0].toLowerCase())
-                .surname(fullName.split(" ")[1].toLowerCase())
+                .firstName(NameHelper.getFirstName(fullName).toLowerCase())
+                .surname(NameHelper.getSurname(fullName).toLowerCase())
                 .dateOfBirth(dateOfBirth.format(DateTimeFormatter.ISO_DATE))
                 .build());
     }
