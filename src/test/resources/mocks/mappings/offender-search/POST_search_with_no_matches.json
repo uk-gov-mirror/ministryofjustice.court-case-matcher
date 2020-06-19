@@ -1,0 +1,22 @@
+{
+  "request": {
+    "method": "POST",
+    "url": "/match",
+    "bodyPatterns" : [
+      {
+        "equalToJson" : {
+          "firstName": "juan",
+          "surname": "marstonez",
+          "dateOfBirth": "1982-04-05"
+        }
+      }
+    ]
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "bodyFileName": "offender-search/POST_search_no_match_response.json"
+  }
+}
