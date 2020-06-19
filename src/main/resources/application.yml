@@ -13,6 +13,20 @@ spring:
     user: ${jms.username:jmsuser}
     password: ${jms.password:jmsuser}
     port: ${jms.port:5445}
+  security:
+    oauth2:
+      client:
+        registration:
+          offender-search-client:
+            client-name: offender-search-client
+            client-id: ${offender-search-client-id:community-api-client}
+            client-secret: ${offender-search-client-secret:clientsecret}
+            client-authentication-method: basic
+            authorization-grant-type: client_credentials
+            provider: nomis-oauth-service
+        provider:
+          nomis-oauth-service:
+            token-uri: ${nomis-oauth.base-url:http://oauth:8095}/auth/oauth/token
 
 court-case-service:
   case-put-url-template: /court/%s/case/%s

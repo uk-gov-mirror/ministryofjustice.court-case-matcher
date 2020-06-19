@@ -4,6 +4,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCase;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Case;
@@ -21,10 +22,13 @@ import java.util.Optional;
 @NoArgsConstructor(access = AccessLevel.PRIVATE, force = true)
 public class MatcherService {
 
+    @Autowired
     private final CourtCaseRestClient restClient;
 
+    @Autowired
     private final OffenderSearchRestClient offenderSearchRestClient;
 
+    @Autowired
     private final CaseMapper caseMapper;
 
     public void match(Case incomingCase) {
@@ -40,6 +44,7 @@ public class MatcherService {
     }
 
     private Optional<CourtCase> newMatchedCaseOf(Case incomingCase) {
+        // TODO: Add check for dob and name
         return offenderSearchRestClient.search(incomingCase.getDef_name(), incomingCase.getDef_dob())
                 .blockOptional()
                 .map(searchResponse -> {

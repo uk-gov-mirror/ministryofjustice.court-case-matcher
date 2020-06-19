@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -18,6 +19,8 @@ import uk.gov.justice.probation.courtcasematcher.model.offendersearch.SearchResp
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+
+import static org.springframework.security.oauth2.client.web.reactive.function.client.ServletOAuth2AuthorizedClientExchangeFilterFunction.clientRegistrationId;
 
 @SuppressWarnings("UnstableApiUsage")
 @Component
@@ -40,12 +43,13 @@ public class OffenderSearchRestClient {
         this.objectMapper = objectMapper;
     }
 
-    public Mono<SearchResponse> search(String fullName, LocalDate dateOfBirth){
+    public Mono<SearchResponse> search(@NonNull String fullName, @NonNull LocalDate dateOfBirth){
         MatchRequest body = buildRequestBody(fullName, dateOfBirth);
 
         return webClient
                 .post()
                 .uri(postMatchUrl)
+                .attributes(clientRegistrationId("offender-search-client"))
                 .body(BodyInserters.fromPublisher(Mono.just(body), MatchRequest.class))
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
@@ -54,6 +58,8 @@ public class OffenderSearchRestClient {
     }
 
     private Mono<? extends SearchResponse> handleError(Throwable throwable, MatchRequest body) {
+        //  TODO: test this
+        log.error(throwable.getMessage());
         String incomingMessage = null;
         try {
             // Would rather this didn't block but also want to provide a helpful error message

@@ -10,6 +10,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ClientHttpConnector;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
+import org.springframework.security.oauth2.client.web.reactive.function.client.ServletOAuth2AuthorizedClientExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.netty.http.client.HttpClient;
 
@@ -34,18 +36,29 @@ public class WebConfig {
     private int writeTimeoutMs;
 
     @Bean(name="court-case-service")
-    public WebClient getCourtCaseServiceClient()
-    {
-        return getWebClient(this.courtCaseServiceBaseUrl);
+    public WebClient getCourtCaseServiceClient() {
+
+        return WebClient.builder()
+            .baseUrl(this.courtCaseServiceBaseUrl)
+            .clientConnector(getClientHttpConnector())
+            .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .build();
     }
 
     @Bean(name="offender-search")
-    public WebClient getOffenderSearchClient()
+    public WebClient getOffenderSearchClient(OAuth2AuthorizedClientManager authorizedClientManager)
     {
-        return getWebClient(this.offenderSearchBaseUrl);
+        ServletOAuth2AuthorizedClientExchangeFilterFunction oauth2Client =
+                new ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager);
+        return WebClient.builder()
+                .baseUrl(this.offenderSearchBaseUrl)
+                .clientConnector(getClientHttpConnector())
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .apply(oauth2Client.oauth2Configuration())
+                .build();
     }
 
-    private WebClient getWebClient(String courtCaseServiceBaseUrl) {
+    private ClientHttpConnector getClientHttpConnector() {
         HttpClient httpClient = HttpClient.create()
             .tcpConfiguration(client ->
                 client.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectTimeoutMs)
@@ -53,12 +66,6 @@ public class WebConfig {
                         .addHandlerLast(new ReadTimeoutHandler(readTimeoutMs, TimeUnit.MILLISECONDS))
                         .addHandlerLast(new WriteTimeoutHandler(writeTimeoutMs, TimeUnit.MILLISECONDS))));
 
-        ClientHttpConnector connector = new ReactorClientHttpConnector(httpClient);
-
-        return WebClient.builder()
-            .baseUrl(courtCaseServiceBaseUrl)
-            .clientConnector(connector)
-            .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-            .build();
+        return new ReactorClientHttpConnector(httpClient);
     }
 }
