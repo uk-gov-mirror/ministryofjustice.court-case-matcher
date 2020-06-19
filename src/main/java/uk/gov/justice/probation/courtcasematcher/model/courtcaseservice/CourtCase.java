@@ -1,16 +1,12 @@
 package uk.gov.justice.probation.courtcasematcher.model.courtcaseservice;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.*;
+
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Data
 @Builder
@@ -36,6 +32,8 @@ public class CourtCase implements Serializable {
     private final List<Offence> offences;
 
     private final String crn;
+
+    private final String cro;
 
     private final String pnc;
 

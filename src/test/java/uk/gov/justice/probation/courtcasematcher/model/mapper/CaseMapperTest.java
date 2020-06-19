@@ -1,14 +1,5 @@
 package uk.gov.justice.probation.courtcasematcher.model.mapper;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.Month;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Map;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -21,6 +12,18 @@ import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.A
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Block;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Case;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Session;
+import uk.gov.justice.probation.courtcasematcher.model.offendersearch.Offender;
+import uk.gov.justice.probation.courtcasematcher.model.offendersearch.OtherIds;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.Month;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class CaseMapperTest {
 
@@ -29,6 +32,9 @@ class CaseMapperTest {
     private static final LocalDate DATE_OF_HEARING = LocalDate.of(2020, Month.FEBRUARY, 29);
     private static final LocalTime START_TIME = LocalTime.of(9, 10);
     private static final LocalDateTime SESSION_START_TIME = LocalDateTime.of(2020, Month.FEBRUARY, 29, 9, 10);
+    public static final String CRN = "CRN123";
+    public static final String CRO = "CRO456";
+    public static final String PNC = "PNC789";
 
     private static CaseMapper caseMapper;
 
@@ -85,6 +91,39 @@ class CaseMapperTest {
 
         ReflectionTestUtils.setField(aCase, "offences", null);
         CourtCase courtCase = caseMapper.newFromCase(aCase);
+
+        assertThat(courtCase.getCaseNo()).isEqualTo("123");
+        assertThat(courtCase.getCaseId()).isEqualTo("321321");
+        assertThat(courtCase.getCourtCode()).isEqualTo("SHF");
+        assertThat(courtCase.getCourtRoom()).isEqualTo("2");
+        assertThat(courtCase.getProbationStatus()).isEqualTo(DEFAULT_PROBATION_STATUS);
+        assertThat(courtCase.getDefendantAddress().getLine1()).isEqualTo("line 1");
+        assertThat(courtCase.getDefendantAddress().getLine2()).isEqualTo("line 2");
+        assertThat(courtCase.getDefendantAddress().getLine3()).isEqualTo("line 3");
+        assertThat(courtCase.getDefendantAddress().getPostcode()).isEqualTo("LD1 1AA");
+        assertThat(courtCase.getDefendantDob()).isEqualTo(DATE_OF_BIRTH);
+        assertThat(courtCase.getDefendantName()).isEqualTo("Mr James BLUNT");
+        assertThat(courtCase.getDefendantSex()).isEqualTo("M");
+        assertThat(courtCase.getSessionStartTime()).isEqualTo(SESSION_START_TIME);
+        assertThat(courtCase.getOffences()).isEmpty();
+    }
+
+    @DisplayName("Map a new case from gateway case but with no offences")
+    @Test
+    void whenMapNewFromCaseAndOffender_thenCreateNewCaseWithOffenderData() {
+
+        ReflectionTestUtils.setField(aCase, "offences", null);
+        CourtCase courtCase = caseMapper.newFromCaseAndOffender(aCase, Offender.builder()
+                .otherIds(OtherIds.builder()
+                        .crn(CRN)
+                        .cro(CRO)
+                        .pnc(PNC)
+                        .build())
+                .build());
+
+        assertThat(courtCase.getCrn()).isEqualTo(CRN);
+        assertThat(courtCase.getCro()).isEqualTo(CRO);
+        assertThat(courtCase.getPnc()).isEqualTo(PNC);
 
         assertThat(courtCase.getCaseNo()).isEqualTo("123");
         assertThat(courtCase.getCaseId()).isEqualTo("321321");
