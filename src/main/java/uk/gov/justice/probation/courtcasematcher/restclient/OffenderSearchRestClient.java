@@ -27,8 +27,8 @@ import static org.springframework.security.oauth2.client.web.reactive.function.c
 @Component
 @Slf4j
 public class OffenderSearchRestClient {
-    public static final String ERROR_NO_DATE_OF_BIRTH = "No dateOfBirth provided";
-    public static final String ERROR_NO_NAME = "No name provided";
+    private static final String ERROR_NO_DATE_OF_BIRTH = "No dateOfBirth provided";
+    private static final String ERROR_NO_NAME = "No name provided";
     @Value("${offender-search.post-match-url}")
     private String postMatchUrl;
 
