@@ -79,7 +79,7 @@ jobs:
             rm BOOT-INF/classes/META-INF/build-info.properties
             # make up a good version name
             TAG=${APP_VERSION}.${CIRCLE_BRANCH}
-            if [[ "${CIRCLE_BRANCH}" == "master" ]]; then
+            if [[ "${CIRCLE_BRANCH}" == "main" ]]; then
               TAG=${APP_VERSION}
             fi
             echo $TAG > ./app_version.txt
@@ -118,7 +118,7 @@ jobs:
                --label "build.number=$CIRCLE_BUILD_NUM" \
                --label "build.url=$CIRCLE_BUILD_URL" \
                --label "build.gitref=$CIRCLE_SHA1"
-            if [[ "${CIRCLE_BRANCH}" == "master" ]]; then
+            if [[ "${CIRCLE_BRANCH}" == "main" ]]; then
               # publish to docker hub as the tag
              docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
              docker tag mojdigitalstudio/court-case-matcher:$APP_VERSION mojdigitalstudio/court-case-matcher:latest
@@ -175,7 +175,7 @@ workflows:
           filters:
             branches:
               only:
-                - master
+                - main
     jobs:
       - app-scan
       - image-scan
@@ -190,7 +190,7 @@ workflows:
             - build
           filters:
             branches:
-              only: master
+              only: main
       - deploy_dev:
           requires:
             - build_docker
