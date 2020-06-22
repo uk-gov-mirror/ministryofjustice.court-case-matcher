@@ -13,9 +13,3 @@ spring:
     user: "jmsuser"
     password: "jmsuser"
     port: 5445
-
-court-case-service:
-  base-url: http://localhost:8082/
-
-offender-search:
-  base-url: http://localhost:8083/

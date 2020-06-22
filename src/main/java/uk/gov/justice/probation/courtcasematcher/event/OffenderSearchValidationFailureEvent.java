@@ -8,7 +8,7 @@ import java.time.LocalDate;
 @Getter
 @Builder
 public class OffenderSearchValidationFailureEvent {
-    private String failureMessage;
-    private String fullName;
-    private LocalDate dateOfBirth;
+    private final  String failureMessage;
+    private final String fullName;
+    private final LocalDate dateOfBirth;
 }

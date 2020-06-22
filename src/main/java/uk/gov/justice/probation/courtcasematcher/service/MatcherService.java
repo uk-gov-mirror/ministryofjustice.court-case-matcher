@@ -43,13 +43,13 @@ public class MatcherService {
     private Mono<CourtCase> newMatchedCaseOf(Case incomingCase) {
         return offenderSearchRestClient.search(incomingCase.getDef_name(), incomingCase.getDef_dob())
                 .map(searchResponse -> {
-                    log.info(String.format("Match results for caseNo: %s, courtCode: %s - matchedBy: %s, matchCount: %s", incomingCase.getCaseNo(), incomingCase.getBlock().getSession().getCourtCode(), searchResponse.getMatchedBy(), searchResponse.getMatches().size()));
+                    log.info(String.format("Match results for caseNo: %s, courtCode: %s - matchedBy: %s, matchCount: %s", incomingCase.getCaseNo(), incomingCase.getBlock().getSession().getCourtCode(), searchResponse.getMatchedBy(), searchResponse.getMatches() == null ? "null" : searchResponse.getMatches().size()));
                     return searchResponse;
                 })
                 .filter(searchResponse -> searchResponse.getMatchedBy() == MatchType.ALL_SUPPLIED)
                 .map(SearchResponse::getMatches)
                 .flatMap(matches -> {
-                    if (matches.size() == 1)
+                    if (matches != null && matches.size() == 1)
                         return Mono.just(matches.get(0));
                     else
                         return Mono.empty();
