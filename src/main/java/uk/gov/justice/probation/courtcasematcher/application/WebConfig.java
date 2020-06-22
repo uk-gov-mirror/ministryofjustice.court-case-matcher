@@ -8,7 +8,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.http.client.reactive.ClientHttpConnector;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.web.reactive.function.client.ServletOAuth2AuthorizedClientExchangeFilterFunction;
@@ -38,11 +37,9 @@ public class WebConfig {
     @Bean(name="court-case-service")
     public WebClient getCourtCaseServiceClient() {
 
-        return WebClient.builder()
-            .baseUrl(this.courtCaseServiceBaseUrl)
-            .clientConnector(getClientHttpConnector())
-            .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-            .build();
+        return defaultWebClientBuilder()
+                .baseUrl(this.courtCaseServiceBaseUrl)
+                .build();
     }
 
     @Bean(name="offender-search")
@@ -50,14 +47,13 @@ public class WebConfig {
     {
         ServletOAuth2AuthorizedClientExchangeFilterFunction oauth2Client =
                 new ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager);
-        return WebClient.builder()
+        return defaultWebClientBuilder()
                 .baseUrl(this.offenderSearchBaseUrl)
-                .clientConnector(getClientHttpConnector())
-                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .filter(oauth2Client)
                 .build();
     }
 
-    private ClientHttpConnector getClientHttpConnector() {
+    private WebClient.Builder defaultWebClientBuilder() {
         HttpClient httpClient = HttpClient.create()
             .tcpConfiguration(client ->
                 client.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectTimeoutMs)
@@ -65,6 +61,8 @@ public class WebConfig {
                         .addHandlerLast(new ReadTimeoutHandler(readTimeoutMs, TimeUnit.MILLISECONDS))
                         .addHandlerLast(new WriteTimeoutHandler(writeTimeoutMs, TimeUnit.MILLISECONDS))));
 
-        return new ReactorClientHttpConnector(httpClient);
+        return WebClient.builder()
+                .clientConnector(new ReactorClientHttpConnector(httpClient))
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
     }
 }
