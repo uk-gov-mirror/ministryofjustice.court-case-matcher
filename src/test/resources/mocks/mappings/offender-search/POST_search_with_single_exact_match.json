@@ -1,0 +1,22 @@
+{
+  "request": {
+    "method": "POST",
+    "url": "/match",
+    "bodyPatterns" : [
+      {
+        "equalToJson" : {
+          "firstName": "arthur",
+          "surname": "morgan",
+          "dateOfBirth": "1975-01-01"
+        }
+      }
+    ]
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "bodyFileName": "offender-search/POST_search_single_exact_response.json"
+  }
+}

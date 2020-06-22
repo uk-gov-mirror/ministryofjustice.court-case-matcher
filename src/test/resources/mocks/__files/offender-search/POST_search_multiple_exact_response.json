@@ -1,0 +1,131 @@
+{
+  "matches": [
+    {
+      "offender": {
+        "offenderId": 2500371167,
+        "title": "Mr",
+        "firstName": "John",
+        "surname": "Marston",
+        "dateOfBirth": "1982-04-05",
+        "gender": "Male",
+        "otherIds": {
+          "crn": "Y346123",
+          "cro": "2234DEF",
+          "pnc": "BBCD1567"
+        },
+        "contactDetails": {},
+        "offenderProfile": {
+          "offenderLanguages": {},
+          "previousConviction": {}
+        },
+        "offenderManagers": [
+          {
+            "trustOfficer": {
+              "forenames": "Unallocated Staff(N07)",
+              "surname": "Staff"
+            },
+            "staff": {
+              "forenames": "Unallocated Staff(N07)",
+              "surname": "Staff"
+            },
+            "partitionArea": "National Data",
+            "softDeleted": false,
+            "team": {
+              "description": "Unallocated Team(N07)",
+              "district": {
+                "code": "N07NPSA",
+                "description": "N07 Division"
+              },
+              "borough": {
+                "code": "N07100",
+                "description": "N07 Cluster 1"
+              }
+            },
+            "probationArea": {
+              "code": "N07",
+              "description": "NPS London",
+              "nps": true
+            },
+            "fromDate": "1900-01-01",
+            "active": true,
+            "allocationReason": {
+              "code": "IN1",
+              "description": "Initial Allocation"
+            }
+          }
+        ],
+        "softDeleted": false,
+        "currentDisposal": "1",
+        "partitionArea": "National Data",
+        "currentRestriction": false,
+        "restrictionMessage": "This is a restricted offender record. Please contact a system administrator",
+        "currentExclusion": false,
+        "exclusionMessage": "You are excluded from viewing this offender record. Please contact a system administrator"
+      }
+    },
+    {
+      "offender": {
+        "offenderId": 2500371168,
+        "title": "Mr",
+        "firstName": "John",
+        "surname": "Marston",
+        "dateOfBirth": "1982-04-05",
+        "gender": "Male",
+        "otherIds": {
+          "crn": "Z346124",
+          "cro": "3234DEG",
+          "pnc": "CBCD1568"
+        },
+        "contactDetails": {},
+        "offenderProfile": {
+          "offenderLanguages": {},
+          "previousConviction": {}
+        },
+        "offenderManagers": [
+          {
+            "trustOfficer": {
+              "forenames": "Unallocated Staff(N07)",
+              "surname": "Staff"
+            },
+            "staff": {
+              "forenames": "Unallocated Staff(N07)",
+              "surname": "Staff"
+            },
+            "partitionArea": "National Data",
+            "softDeleted": false,
+            "team": {
+              "description": "Unallocated Team(N07)",
+              "district": {
+                "code": "N07NPSA",
+                "description": "N07 Division"
+              },
+              "borough": {
+                "code": "N07100",
+                "description": "N07 Cluster 1"
+              }
+            },
+            "probationArea": {
+              "code": "N07",
+              "description": "NPS London",
+              "nps": true
+            },
+            "fromDate": "1900-01-01",
+            "active": true,
+            "allocationReason": {
+              "code": "IN1",
+              "description": "Initial Allocation"
+            }
+          }
+        ],
+        "softDeleted": false,
+        "currentDisposal": "1",
+        "partitionArea": "National Data",
+        "currentRestriction": false,
+        "restrictionMessage": "This is a restricted offender record. Please contact a system administrator",
+        "currentExclusion": false,
+        "exclusionMessage": "You are excluded from viewing this offender record. Please contact a system administrator"
+      }
+    }
+  ],
+  "matchedBy": "ALL_SUPPLIED"
+}

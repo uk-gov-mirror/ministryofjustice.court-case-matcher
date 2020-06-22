@@ -1,9 +1,9 @@
 package uk.gov.justice.probation.courtcasematcher.restclient;
 
 import com.google.common.eventbus.EventBus;
-import java.nio.charset.StandardCharsets;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -17,6 +17,8 @@ import uk.gov.justice.probation.courtcasematcher.event.CourtCaseFailureEvent;
 import uk.gov.justice.probation.courtcasematcher.event.CourtCaseSuccessEvent;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCase;
 import uk.gov.justice.probation.courtcasematcher.restclient.exception.CourtCaseNotFoundException;
+
+import java.nio.charset.StandardCharsets;
 
 @Component
 @Slf4j
@@ -33,7 +35,7 @@ public class CourtCaseRestClient {
     private final WebClient webClient;
 
     @Autowired
-    public CourtCaseRestClient(WebClient webClient, EventBus eventBus) {
+    public CourtCaseRestClient(@Qualifier("court-case-service") WebClient webClient, EventBus eventBus) {
         super();
         this.webClient = webClient;
         this.eventBus = eventBus;
@@ -65,9 +67,7 @@ public class CourtCaseRestClient {
             .onStatus(HttpStatus::isError, (clientResponse) -> handlePutError(clientResponse, courtCode, caseNo))
             .bodyToMono(CourtCase.class)
             .doOnError(e -> postErrorToBus(String.format(ERROR_MSG_FORMAT, caseNo, courtCode) + ".Exception : " + e))
-            .subscribe(courtCaseApi -> {
-                eventBus.post(CourtCaseSuccessEvent.builder().courtCaseApi(courtCaseApi).build());
-            });
+            .subscribe(courtCaseApi -> eventBus.post(CourtCaseSuccessEvent.builder().courtCaseApi(courtCaseApi).build()));
     }
 
     private WebClient.RequestHeadersSpec<?> get(String path) {

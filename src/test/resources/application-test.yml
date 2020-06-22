@@ -17,6 +17,10 @@ spring:
 court-case-service:
   base-url: http://localhost:8090/
 
+offender-search:
+  base-url: http://localhost:8090/
+  disable-authentication: true
+
 case-mapper-reference:
   defaultProbationStatus: "No record"
   courtNameToCodes:

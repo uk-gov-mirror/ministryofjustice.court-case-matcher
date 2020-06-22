@@ -1,11 +1,6 @@
 package uk.gov.justice.probation.courtcasematcher.model.mapper;
 
-import static java.util.Comparator.comparing;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import uk.gov.justice.probation.courtcasematcher.application.CaseMapperReference;
@@ -13,8 +8,17 @@ import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.Address;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCase;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.Offence;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Case;
+import uk.gov.justice.probation.courtcasematcher.model.offendersearch.Offender;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import static java.util.Comparator.comparing;
 
 @Component
+@Slf4j
 public class CaseMapper {
 
     private final CaseMapperReference caseMapperReference;
@@ -25,6 +29,11 @@ public class CaseMapper {
     }
 
     public CourtCase newFromCase(Case aCase) {
+        return getOffenceBuilderFromCase(aCase)
+            .build();
+    }
+
+    private CourtCase.CourtCaseBuilder getOffenceBuilderFromCase(Case aCase) {
         return CourtCase.builder()
             .caseNo(aCase.getCaseNo())
             .courtCode(aCase.getBlock().getSession().getCourtCode())
@@ -39,8 +48,7 @@ public class CaseMapper {
             .nationality2(aCase.getNationality2())
             .sessionStartTime(aCase.getBlock().getSession().getSessionStartTime())
             .probationStatus(caseMapperReference.getDefaultProbationStatus())
-            .offences(Optional.ofNullable(aCase.getOffences()).map(CaseMapper::fromOffences).orElse(Collections.emptyList()))
-            .build();
+            .offences(Optional.ofNullable(aCase.getOffences()).map(CaseMapper::fromOffences).orElse(Collections.emptyList()));
     }
 
     private static List<Offence> fromOffences(List<uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Offence> offences) {
@@ -93,4 +101,11 @@ public class CaseMapper {
             .build();
     }
 
+    public CourtCase newFromCaseAndOffender(Case incomingCase, Offender offender) {
+        return getOffenceBuilderFromCase(incomingCase)
+                .crn(offender.getOtherIds().getCrn())
+                .cro(offender.getOtherIds().getCro())
+                .pnc(offender.getOtherIds().getPnc())
+                .build();
+    }
 }
