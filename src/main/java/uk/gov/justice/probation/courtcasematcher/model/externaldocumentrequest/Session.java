@@ -37,6 +37,8 @@ public class Session {
     private final String panel;
     @JacksonXmlProperty(localName = "room")
     private final String courtRoom;
+    @JacksonXmlProperty(localName = "ou_code")
+    private final String ouCode;
 
     @JsonDeserialize(using = LocalTimeDeserializer.class)
     @JacksonXmlProperty(localName = "sstart")

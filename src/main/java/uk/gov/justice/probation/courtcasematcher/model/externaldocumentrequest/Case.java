@@ -36,6 +36,9 @@ public class Case {
     private final Integer seq;
     private final String type;
 
+    @JacksonXmlProperty(localName = "def_name_elements")
+    private final Name name;
+
     private final String def_name;
     private final String def_type;
     private final String def_sex;
@@ -45,6 +48,12 @@ public class Case {
     @JacksonXmlProperty(localName = "def_addr")
     private final Address def_addr;
     private final String def_age;
+
+    @JacksonXmlProperty(localName = "cro_number")
+    private final String cro;
+
+    @JacksonXmlProperty(localName = "pnc_id")
+    private final String pnc;
 
     private final String pg_type;
     private final String pg_name;

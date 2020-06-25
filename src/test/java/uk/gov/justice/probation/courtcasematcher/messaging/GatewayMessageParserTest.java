@@ -28,6 +28,7 @@ import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.B
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Case;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Document;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Info;
+import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Name;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Offence;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Session;
 
@@ -100,7 +101,7 @@ public class GatewayMessageParserTest {
         assertThat(session.getLja()).isEqualTo("South West London Magistrates; Court");
         assertThat(session.getCmu()).isEqualTo("Gl Management Unit 1");
         assertThat(session.getPanel()).isEqualTo("Adult Panel");
-//        assertThat(session.getCourtName()).isEqualTo("Sheffield Magistrates Court");
+        assertThat(session.getOuCode()).isEqualTo("B13HT00");
         assertThat(session.getCourtCode()).isEqualTo("SHF");
         assertThat(session.getCourtRoom()).isEqualTo("00");
         assertThat(session.getStart()).isEqualTo(START_TIME);
@@ -121,8 +122,6 @@ public class GatewayMessageParserTest {
 
     private void checkCase(Case aCase) {
         // Fields populated from the session
-//        assertThat(aCase.getBlock().getSession().getCourtName()).isEqualTo("Sheffield Magistrates Court");
-
         assertThat(aCase.getDef_age()).isEqualTo("14");
         assertThat(aCase.getId()).isEqualTo(1215460);
         assertThat(aCase.getH_id()).isEqualTo(1291275);
@@ -130,9 +129,17 @@ public class GatewayMessageParserTest {
         assertThat(aCase.getType()).isEqualTo("C");
         assertThat(aCase.getProv()).isEqualTo("Y");
         assertThat(aCase.getDef_name()).isEqualTo("Tess TEYOUTHBAILTWO");
+        assertThat(aCase.getName()).isEqualTo(Name.builder()
+                                                .title("Ms")
+                                                .forename1("Tess")
+                                                .forename2("name2")
+                                                .forename3("name3")
+                                                .surname("TEYOUTHBAILTWO").build());
         assertThat(aCase.getDef_type()).isEqualTo("P");
         assertThat(aCase.getDef_sex()).isEqualTo("F");
         assertThat(aCase.getDef_age()).isEqualTo("14");
+        assertThat(aCase.getPnc()).isEqualTo("PNC-ID");
+        assertThat(aCase.getCro()).isEqualTo("12345/678E");
         assertThat(aCase.getDef_addr()).isEqualToComparingFieldByField(Address.builder()
                                                                     .line1("39 The Stree")
                                                                     .line2("Newtown")

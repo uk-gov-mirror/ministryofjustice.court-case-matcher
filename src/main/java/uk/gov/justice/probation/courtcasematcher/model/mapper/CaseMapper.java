@@ -1,5 +1,11 @@
 package uk.gov.justice.probation.courtcasematcher.model.mapper;
 
+import static java.util.Comparator.comparing;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -9,13 +15,6 @@ import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCas
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.Offence;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Case;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.Offender;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import static java.util.Comparator.comparing;
 
 @Component
 @Slf4j
@@ -29,11 +28,11 @@ public class CaseMapper {
     }
 
     public CourtCase newFromCase(Case aCase) {
-        return getOffenceBuilderFromCase(aCase)
+        return getCourtCaseBuilderFromCase(aCase)
             .build();
     }
 
-    private CourtCase.CourtCaseBuilder getOffenceBuilderFromCase(Case aCase) {
+    private CourtCase.CourtCaseBuilder getCourtCaseBuilderFromCase(Case aCase) {
         return CourtCase.builder()
             .caseNo(aCase.getCaseNo())
             .courtCode(aCase.getBlock().getSession().getCourtCode())
@@ -43,6 +42,8 @@ public class CaseMapper {
             .defendantName(aCase.getDef_name())
             .defendantDob(aCase.getDef_dob())
             .defendantSex(aCase.getDef_sex())
+            .cro(aCase.getCro())
+            .pnc(aCase.getPnc())
             .listNo(aCase.getListNo())
             .nationality1(aCase.getNationality1())
             .nationality2(aCase.getNationality2())
@@ -102,7 +103,7 @@ public class CaseMapper {
     }
 
     public CourtCase newFromCaseAndOffender(Case incomingCase, Offender offender) {
-        return getOffenceBuilderFromCase(incomingCase)
+        return getCourtCaseBuilderFromCase(incomingCase)
                 .crn(offender.getOtherIds().getCrn())
                 .cro(offender.getOtherIds().getCro())
                 .pnc(offender.getOtherIds().getPnc())
