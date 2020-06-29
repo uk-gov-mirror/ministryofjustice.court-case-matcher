@@ -5,6 +5,8 @@ import com.fasterxml.jackson.dataformat.xml.JacksonXmlModule;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.eventbus.EventBus;
+import javax.validation.Validation;
+import javax.validation.Validator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -26,6 +28,11 @@ public class MessagingConfig {
         XmlMapper mapper = new XmlMapper(xmlModule);
         mapper.registerModule(new JavaTimeModule());
         return mapper;
+    }
+
+    @Bean
+    public Validator validator() {
+        return Validation.buildDefaultValidatorFactory().getValidator();
     }
 
     @Bean

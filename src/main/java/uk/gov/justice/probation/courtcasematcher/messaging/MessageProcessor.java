@@ -1,7 +1,13 @@
 package uk.gov.justice.probation.courtcasematcher.messaging;
 
 import com.google.common.eventbus.EventBus;
+import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import javax.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.gov.justice.probation.courtcasematcher.event.CourtCaseFailureEvent;
 import uk.gov.justice.probation.courtcasematcher.model.MessageHeader;
@@ -9,11 +15,6 @@ import uk.gov.justice.probation.courtcasematcher.model.MessageType;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Case;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Session;
 import uk.gov.justice.probation.courtcasematcher.service.MatcherService;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -26,9 +27,10 @@ public class MessageProcessor {
 
     private final MatcherService matcherService;
 
-    public MessageProcessor(GatewayMessageParser parser, EventBus eventBus, MatcherService matcherService) {
+    @Autowired
+    public MessageProcessor(GatewayMessageParser gatewayMessageParser, EventBus eventBus, MatcherService matcherService) {
         super();
-        this.parser = parser;
+        this.parser = gatewayMessageParser;
         this.eventBus = eventBus;
         this.matcherService = matcherService;
     }
@@ -42,9 +44,16 @@ public class MessageProcessor {
         MessageType messageType;
         try {
             messageType = parser.parseMessage(message);
-        } catch (IOException e) {
-            log.error("Failed to parse message", e);
-            eventBus.post(CourtCaseFailureEvent.builder().failureMessage(e.getMessage()).incomingMessage(message).build());
+        }
+        catch (ConstraintViolationException | IOException ex) {
+            log.error("Failed to parse and validate message", ex);
+            CourtCaseFailureEvent.CourtCaseFailureEventBuilder builder = CourtCaseFailureEvent.builder()
+                .failureMessage(ex.getMessage())
+                .incomingMessage(message);
+            if (ex instanceof ConstraintViolationException) {
+                builder.violations(((ConstraintViolationException)ex).getConstraintViolations());
+            }
+            eventBus.post(builder.build());
             return Optional.empty();
         }
 

@@ -27,21 +27,6 @@ We need a version of this where messages are not encrypted and which creates a W
         # Starts as daemon
         docker-compose up -d
         
-        # Connect to wildfly container
-        docker exec -it mgw-wildfly bash
-        
-        # From within the container, enter the jboss CLI shell
-        /opt/jboss/wildfly/bin/jboss-cli.sh --timeout=40000
-        
-        # These commands are executed in the JBOSS CLI
-        connect
-        /subsystem=messaging-activemq/server=default/remote-acceptor=netty:add(socket-binding=messaging)
-        reload
-        quit
-        
-        # Leave the docker container
-        exit
-        
 
 2.SOAP UI. (https://www.soapui.org/downloads/soapui/)
 
@@ -64,11 +49,26 @@ The court case matcher will now receive the messages and will output messages li
    2020-06-03 15:24:59.087  INFO 17281 --- [enerContainer-1] u.g.j.p.c.messaging.MessageProcessor     : Successfully published case ID: 1218463, case no:1600032995 for defendant: DLUNSCHEDULEDTHREE
    2020-06-03 15:24:59.087  INFO 17281 --- [enerContainer-1] u.g.j.p.c.messaging.MessageProcessor     : Successfully published case ID: 1216463, case no:1600032855 for defendant: Tod TEBAILCONDPENDING
 ```
+### Environment 
+
+The following environment variables should be set when running the spring boot application, so as to enable communications with offender-search.
+
+```
+offender-search-client-secret=[insert secret string here]
+offender-search-client-id=probation-in-court
+```
 
 
 ### Application health
 ```
 curl -X GET http://localhost:8080/actuator/health
+```
+
+Spring Boot exposes liveness and readiness probes at the following endpoints
+
+```
+curl http://localhost:8080/actuator/health/liveness
+curl http://localhost:8080/actuator/health/readiness
 ```
 
 ### Application Ping

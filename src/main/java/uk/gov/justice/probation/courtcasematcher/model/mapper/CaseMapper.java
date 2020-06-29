@@ -45,8 +45,6 @@ public class CaseMapper {
             .cro(aCase.getCro())
             .pnc(aCase.getPnc())
             .listNo(aCase.getListNo())
-            .nationality1(aCase.getNationality1())
-            .nationality2(aCase.getNationality2())
             .sessionStartTime(aCase.getBlock().getSession().getSessionStartTime())
             .probationStatus(caseMapperReference.getDefaultProbationStatus())
             .offences(Optional.ofNullable(aCase.getOffences()).map(CaseMapper::fromOffences).orElse(Collections.emptyList()));
@@ -88,8 +86,6 @@ public class CaseMapper {
             .defendantSex(incomingCase.getDef_sex())
             .defendantDob(incomingCase.getDef_dob())
             .listNo(incomingCase.getListNo())
-            .nationality1(incomingCase.getNationality1())
-            .nationality2(incomingCase.getNationality2())
             .sessionStartTime(incomingCase.getBlock().getSession().getSessionStartTime())
             .offences(fromOffences(incomingCase.getOffences()))
             // Fields to be retained from existing court case

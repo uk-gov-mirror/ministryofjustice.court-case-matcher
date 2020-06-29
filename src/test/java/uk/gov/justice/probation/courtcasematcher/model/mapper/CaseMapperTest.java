@@ -1,5 +1,14 @@
 package uk.gov.justice.probation.courtcasematcher.model.mapper;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.Month;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Map;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -14,16 +23,6 @@ import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.C
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Session;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.Offender;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.OtherIds;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.Month;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Map;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class CaseMapperTest {
 
@@ -54,7 +53,7 @@ class CaseMapperTest {
     void beforeEach() {
         Session session = Session.builder()
             .courtCode("SHF")
-            .courtRoom("2")
+            .courtRoom("00")
             .dateOfHearing(DATE_OF_HEARING)
             .start(START_TIME)
             .build();
@@ -72,15 +71,9 @@ class CaseMapperTest {
             .def_name("Mr James BLUNT")
             .def_sex("M")
             .def_type("C")
-            .h_id(13442L)
             .id(321321L)
-            .inf("POL01")
             .listNo("1st")
-            .nationality1("British")
-            .nationality2("Transylvania")
             .seq(1)
-            .type("C")
-            .valid("Y")
             .offences(Collections.singletonList(buildOffence("NEW Theft from a person", 1)))
             .build();
     }
@@ -95,7 +88,7 @@ class CaseMapperTest {
         assertThat(courtCase.getCaseNo()).isEqualTo("123");
         assertThat(courtCase.getCaseId()).isEqualTo("321321");
         assertThat(courtCase.getCourtCode()).isEqualTo("SHF");
-        assertThat(courtCase.getCourtRoom()).isEqualTo("2");
+        assertThat(courtCase.getCourtRoom()).isEqualTo("00");
         assertThat(courtCase.getProbationStatus()).isEqualTo(DEFAULT_PROBATION_STATUS);
         assertThat(courtCase.getDefendantAddress().getLine1()).isEqualTo("line 1");
         assertThat(courtCase.getDefendantAddress().getLine2()).isEqualTo("line 2");
@@ -128,7 +121,7 @@ class CaseMapperTest {
         assertThat(courtCase.getCaseNo()).isEqualTo("123");
         assertThat(courtCase.getCaseId()).isEqualTo("321321");
         assertThat(courtCase.getCourtCode()).isEqualTo("SHF");
-        assertThat(courtCase.getCourtRoom()).isEqualTo("2");
+        assertThat(courtCase.getCourtRoom()).isEqualTo("00");
         assertThat(courtCase.getProbationStatus()).isEqualTo(DEFAULT_PROBATION_STATUS);
         assertThat(courtCase.getDefendantAddress().getLine1()).isEqualTo("line 1");
         assertThat(courtCase.getDefendantAddress().getLine2()).isEqualTo("line 2");
@@ -158,7 +151,6 @@ class CaseMapperTest {
             .builder()
             .as("Contrary to section 2(2) and 8 of the Theft Act 1968.")
             .sum("On 02/02/2022 at Town, stole Article, to the value of £0.02, belonging to Person.")
-            .code("ASD2537")
             .title("Theft from a person")
             .seq(1)
             .build();
@@ -166,7 +158,6 @@ class CaseMapperTest {
             .builder()
             .as("Contrary to section 1(1) and 7 of the Theft Act 1968.")
             .sum("On 01/01/2016 at Town, stole Article, to the value of £100.00, belonging to Shop.")
-            .code("ASD2537")
             .title("Theft from a shop")
             .seq(2)
             .build();
@@ -218,7 +209,7 @@ class CaseMapperTest {
                                                         .build()))
             .build();
 
-        ReflectionTestUtils.setField(aCase, "nationality2", null);
+        ReflectionTestUtils.setField(aCase, "def_dob", null);
 
         CourtCase courtCase = caseMapper.merge(aCase, existingCourtCase);
 
@@ -232,16 +223,16 @@ class CaseMapperTest {
         assertThat(courtCase.getPnc()).isEqualTo("PNC");
         // Fields that get overwritten from Libra incoming (even if null)
         assertThat(courtCase.getCaseId()).isEqualTo("321321");
-        assertThat(courtCase.getCourtRoom()).isEqualTo("2");
+        assertThat(courtCase.getCourtRoom()).isEqualTo("00");
         assertThat(courtCase.getDefendantAddress().getLine1()).isEqualTo("line 1");
         assertThat(courtCase.getDefendantAddress().getLine2()).isEqualTo("line 2");
         assertThat(courtCase.getDefendantAddress().getLine3()).isEqualTo("line 3");
         assertThat(courtCase.getDefendantAddress().getPostcode()).isEqualTo("LD1 1AA");
-        assertThat(courtCase.getDefendantDob()).isEqualTo(DATE_OF_BIRTH);
+        assertThat(courtCase.getDefendantDob()).isNull();
         assertThat(courtCase.getDefendantName()).isEqualTo("Mr James BLUNT");
         assertThat(courtCase.getDefendantSex()).isEqualTo("M");
         assertThat(courtCase.getSessionStartTime()).isEqualTo(SESSION_START_TIME);
-        assertThat(courtCase.getNationality1()).isEqualTo("British");
+        assertThat(courtCase.getNationality1()).isNull();
         assertThat(courtCase.getNationality2()).isNull();
         assertThat(courtCase.getOffences()).hasSize(1);
         assertThat(courtCase.getOffences().get(0).getOffenceTitle()).isEqualTo("NEW Theft from a person");
@@ -252,7 +243,6 @@ class CaseMapperTest {
         return uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Offence.builder()
             .as("Contrary to section 2(2) and 8 of the Theft Act 1968.")
             .sum("On 02/02/2022 at Town, stole Article, to the value of £0.02, belonging to Person.")
-            .code("ASD2537")
             .title(title)
             .seq(seq)
             .build();

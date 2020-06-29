@@ -1,11 +1,14 @@
 package uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest;
 
 import java.util.List;
+import javax.validation.Valid;
+import javax.validation.constraints.NotEmpty;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE, force = true)
 @AllArgsConstructor
@@ -13,8 +16,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class DocumentWrapper
 {
-
-    private final List<Document> document;
-    private final String jobNumber;
+    @NotEmpty
+    private final List<@Valid Document> document;
 
 }

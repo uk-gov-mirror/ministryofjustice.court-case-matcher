@@ -1,11 +1,10 @@
 package uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.OptBoolean;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
-import java.time.LocalDate;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.PositiveOrZero;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,27 +15,18 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE, force = true)
 @Builder
 @Data
+@JsonIgnoreProperties(value = {"co_id", "code", "maxpen", "cy_title", "alm", "ala", "cy_sum", "cy_as", "sof", "cy_sof",
+                                "adjdate", "adjreason", "plea", "pleadate", "convdate"})
 public class Offence {
 
-    private final String adjdate;
-    private final String adjreason;
-
-    private final String code;
+    @NotNull
+    @PositiveOrZero
     @JacksonXmlProperty(localName = "oseq")
     private final Integer seq;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy", lenient = OptBoolean.TRUE)
-    @JsonDeserialize(using = LocalDateDeserializer.class)
-    @JacksonXmlProperty(localName = "pleadate")
-    private final LocalDate pleaDate;
-
-    private final Long co_id;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy", lenient = OptBoolean.TRUE)
-    @JsonDeserialize(using = LocalDateDeserializer.class)
-    private final LocalDate convdate;
+    @NotBlank
     private final String sum;
+    @NotBlank
     private final String title;
-    private final String plea;
-    private final String maxpen;
     private final String as;
 }

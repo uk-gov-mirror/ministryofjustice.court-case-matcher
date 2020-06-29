@@ -2,7 +2,8 @@
 package uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,10 +17,11 @@ import lombok.NoArgsConstructor;
 @JsonIgnoreProperties(value = "jsonData")
 public class Document
 {
-    @JacksonXmlProperty(localName = "info")
+    @Valid
     private final Info info;
-    @JacksonXmlProperty(localName = "data")
-    private final DataJob data;
 
+    @NotNull
+    @Valid
+    private final DataJob data;
 
 }

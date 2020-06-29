@@ -6,14 +6,6 @@ cgi:
   jms:
     destination.name: CP_OutboundQueue
 
-spring:
-  artemis:
-    mode: native
-    host: "localhost"
-    user: "jmsuser"
-    password: "jmsuser"
-    port: 5445
-
 court-case-service:
   base-url: https://court-case-service-dev.apps.live-1.cloud-platform.service.justice.gov.uk
 

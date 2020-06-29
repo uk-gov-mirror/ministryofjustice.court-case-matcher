@@ -1,7 +1,9 @@
 management:
   security:
     enabled: false
-
+  health:
+    probes:
+      enabled: true
 cgi:
   jms:
     destination.name: CP_OutboundQueue
@@ -19,7 +21,6 @@ court-case-service:
 
 offender-search:
   base-url: https://offender-search.test.delius.probation.hmpps.dsd.io
-
 
 nomis-oauth:
   base-url: https://gateway.t3.nomis-api.hmpps.dsd.io

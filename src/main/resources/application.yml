@@ -1,6 +1,9 @@
 management:
   security:
     enabled: false
+  health:
+    probes:
+      enabled: true
 
 cgi:
   jms:

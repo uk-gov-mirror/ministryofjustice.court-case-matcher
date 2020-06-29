@@ -7,26 +7,33 @@ import static uk.gov.justice.probation.courtcasematcher.messaging.GatewayMessage
 
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
 
 @AllArgsConstructor
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PRIVATE, force = true)
 @Builder
-@Getter
+@Data
 @JacksonXmlRootElement(localName = "CSCI_Message_Type")
 public class MessageType {
 
+    @NotNull
     @JacksonXmlProperty(namespace = CSCI_HDR_NS, localName = "MessageHeader")
-    private MessageHeader messageHeader;
+    @Valid
+    private final MessageHeader messageHeader;
 
     @JacksonXmlProperty(namespace = CSCI_BODY_NS, localName = "MessageBody")
-    private MessageBodyType messageBody;
+    @NotNull
+    @Valid
+    private final MessageBodyType messageBody;
 
     @JacksonXmlProperty(namespace = CSC_STATUS_NS, localName = "MessageStatus")
-    private MessageStatus messageStatus;
+    private final MessageStatus messageStatus;
 
 }

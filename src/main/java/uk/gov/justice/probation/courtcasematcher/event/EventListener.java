@@ -6,6 +6,7 @@ import com.google.common.eventbus.Subscribe;
 import java.util.concurrent.atomic.AtomicLong;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 /**
  * We intend to replace EventBus with an external message queue.
@@ -28,6 +29,11 @@ public class EventListener {
     public void courtCaseEvent(CourtCaseFailureEvent courtCaseEvent) {
         log.error("Message processing failed. Current error count: {}. Error: {} ",
             failureCount.incrementAndGet(), courtCaseEvent.getFailureMessage());
+        if (!CollectionUtils.isEmpty(courtCaseEvent.getViolations())) {
+            courtCaseEvent.getViolations().forEach(
+                cv -> log.error("Validation failed : {} at {} ", cv.getMessage(), cv.getPropertyPath().toString())
+            );
+        }
     }
 
     @AllowConcurrentEvents

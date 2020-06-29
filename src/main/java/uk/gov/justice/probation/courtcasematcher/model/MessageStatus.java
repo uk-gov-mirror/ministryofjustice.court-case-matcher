@@ -1,19 +1,20 @@
 package uk.gov.justice.probation.courtcasematcher.model;
 
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @AllArgsConstructor
-@NoArgsConstructor
-@Getter
+@NoArgsConstructor(access = AccessLevel.PRIVATE, force = true)
+@Data
 @Builder
 public class MessageStatus {
 
-    private String status;
-    private String code;
-    private String reason;
-    private String detail;
+    private final String status;
+    private final String code;
+    private final String reason;
+    private final String detail;
 
 }
