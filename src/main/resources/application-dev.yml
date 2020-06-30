@@ -6,6 +6,14 @@ cgi:
   jms:
     destination.name: CP_OutboundQueue
 
+spring:
+  artemis:
+    mode: native
+    host: "crime-portal-mirror-gateway-jms.crime-portal-mirror-gateway-dev"
+    user: ${GATEWAY_JMS_USERNAME}
+    password: ${GATEWAY_JMS_PASSWORD}
+    port: ${GATEWAY_JMS_PORT:5445}
+
 court-case-service:
   base-url: https://court-case-service-dev.apps.live-1.cloud-platform.service.justice.gov.uk
 

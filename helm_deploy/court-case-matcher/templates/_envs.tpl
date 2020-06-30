@@ -24,4 +24,28 @@ env:
       secretKeyRef:
         name: court-case-matcher-secrets
         key: nomis-oauth-client-secret
+
+  - name: GATEWAY_JMS_USERNAME
+    valueFrom:
+      secretKeyRef:
+        name: pict-cpmg-wildfly-credentials
+        key: jmsuser
+
+  - name: GATEWAY_JMS_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: pict-cpmg-wildfly-credentials
+        key: user-password
+
+  - name: GATEWAY_WILDFLY_ADMIN_USERNAME
+    valueFrom:
+      secretKeyRef:
+        name: pict-cpmg-wildfly-credentials
+        key: adminuser
+
+  - name: GATEWAY_WILDFLY_ADMIN_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: pict-cpmg-wildfly-credentials
+        key: owner-password
 {{- end -}}

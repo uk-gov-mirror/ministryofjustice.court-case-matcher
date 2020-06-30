@@ -11,10 +11,10 @@ cgi:
 spring:
   artemis:
     mode: native
-    host: "localhost"
-    user: "jmsuser"
-    password: "jmsuser"
-    port: 5445
+    host: ${GATEWAY_JMS_HOST:localhost}
+    user: ${GATEWAY_JMS_USERNAME:jmsuser}
+    password: ${GATEWAY_JMS_PASSWORD:jmsuser}
+    port: ${GATEWAY_JMS_PORT:5445}
 
 court-case-service:
   base-url: http://localhost:8082/

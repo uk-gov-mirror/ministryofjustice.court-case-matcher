@@ -12,10 +12,10 @@ cgi:
 spring:
   artemis:
     mode: native
-    host: ${jms.host:localhost}
-    user: ${jms.username:jmsuser}
-    password: ${jms.password:jmsuser}
-    port: ${jms.port:5445}
+    host: ${GATEWAY_JMS_HOST:localhost}
+    user: ${GATEWAY_JMS_USERNAME}
+    password: ${GATEWAY_JMS_PASSWORD}
+    port: ${GATEWAY_JMS_PORT:5445}
   security:
     oauth2:
       client:
