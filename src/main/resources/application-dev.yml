@@ -1,6 +1,19 @@
 management:
   security:
     enabled: false
+  health:
+    probes:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health,info,env,loggers,configprops,metrics
+
+logging:
+  level:
+    org.springframework.web: INFO
+    org.apache.activemq: DEBUG
+    org.springframework.jms: DEBUG
 
 cgi:
   jms:

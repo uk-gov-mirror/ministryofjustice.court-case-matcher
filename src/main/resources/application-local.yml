@@ -1,9 +1,17 @@
 management:
   security:
     enabled: false
-  health:
-    probes:
-      enabled: true
+  endpoint:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,beans,env,loggers,configprops,metrics
+
+logging:
+  level:
+    org.apache.activemq: DEBUG
+    org.springframework.jms: DEBUG
+
 cgi:
   jms:
     destination.name: CP_OutboundQueue
