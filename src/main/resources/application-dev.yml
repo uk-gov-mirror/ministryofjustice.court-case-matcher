@@ -22,7 +22,7 @@ cgi:
 spring:
   artemis:
     mode: native
-    host: ${GATEWAY_JMS_HOST:crime-portal-mirror-gateway-dev.crime-portal-mirror-gateway-jms}
+    host: ${GATEWAY_JMS_HOST:crime-portal-mirror-gateway-jms.crime-portal-mirror-gateway-dev}
     user: ${GATEWAY_JMS_USERNAME}
     password: ${GATEWAY_JMS_PASSWORD}
     port: ${GATEWAY_JMS_PORT:5445}
