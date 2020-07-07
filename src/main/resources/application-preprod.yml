@@ -1,5 +1,27 @@
+management:
+  security:
+    enabled: false
+  health:
+    probes:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health,info,env,loggers,configprops,metrics
+
+logging:
+  level:
+    org.springframework.web: INFO
+    org.apache.activemq: DEBUG
+    org.springframework.jms: DEBUG
+
+GATEWAY_JMS_HOST: crime-portal-mirror-gateway-jms.crime-portal-mirror-gateway-preprod
+
+offender-search:
+  base-url: https://offender-search.pre-prod.delius.probation.hmpps.dsd.io
+
 court-case-service:
   base-url: http://court-case-service-preprod.apps.live-1.cloud-platform.service.justice.gov.uk
 
 nomis-oauth:
-  base-url: https://gateway.t3.nomis-api.hmpps.dsd.io
+  base-url: https://gateway.preprod.nomis-api.service.hmpps.dsd.io

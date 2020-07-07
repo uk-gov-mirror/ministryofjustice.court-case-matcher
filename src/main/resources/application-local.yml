@@ -12,17 +12,7 @@ logging:
     org.apache.activemq: DEBUG
     org.springframework.jms: DEBUG
 
-cgi:
-  jms:
-    destination.name: CP_OutboundQueue
-
-spring:
-  artemis:
-    mode: native
-    host: ${GATEWAY_JMS_HOST:localhost}
-    user: ${GATEWAY_JMS_USERNAME:jmsuser}
-    password: ${GATEWAY_JMS_PASSWORD:jmsuser}
-    port: ${GATEWAY_JMS_PORT:5445}
+GATEWAY_JMS_HOST: localhost
 
 court-case-service:
   base-url: http://localhost:8082/
