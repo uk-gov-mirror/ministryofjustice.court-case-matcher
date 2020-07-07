@@ -44,9 +44,10 @@ web:
     read-timeout-ms: 5000
     write-timeout-ms: 5000
 
-# court name to codes is a simple look up until CGI provide the change to their feed
+# court name to codes is a simple look up until we resolve our reference data tickets
 case-mapper-reference:
   defaultProbationStatus: "No record"
+  defaultCourtCode: "SHF"
   courtNameToCodes:
     Sheffield Magistrates Court: "SHF"
 

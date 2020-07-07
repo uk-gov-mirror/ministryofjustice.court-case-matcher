@@ -1,14 +1,15 @@
 package uk.gov.justice.probation.courtcasematcher.messaging;
 
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import java.io.IOException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import uk.gov.justice.probation.courtcasematcher.application.CaseMapperReference;
 
+@Slf4j
 @Component
 public class CourtDeserializer extends StdDeserializer<String> {
 
@@ -27,7 +28,8 @@ public class CourtDeserializer extends StdDeserializer<String> {
     public String deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
         JsonNode node = jp.getCodec().readTree(jp);
         String courtName = node != null ? node.asText() : "";
-        return caseMapperReference.getCourtCodeFromName(courtName)
-            .orElseThrow(() -> new JsonParseException(jp, "Unable to find court code for court name :" + courtName));
+        String courtCode = caseMapperReference.getCourtCodeFromName(courtName).orElse(caseMapperReference.getDefaultCourtCode());
+        log.info("Got court code of {} from court name {}", courtCode, courtName);
+        return courtCode;
     }
 }

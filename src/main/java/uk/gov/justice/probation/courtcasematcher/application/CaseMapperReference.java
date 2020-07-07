@@ -17,6 +17,8 @@ public class CaseMapperReference {
 
     @Value("${case-mapper-reference.defaultProbationStatus}")
     private String defaultProbationStatus;
+    @Value("${case-mapper-reference.defaultCourtCode}")
+    private String defaultCourtCode;
 
     public CaseMapperReference() {
         super();
@@ -39,5 +41,9 @@ public class CaseMapperReference {
 
     public String getDefaultProbationStatus() {
         return defaultProbationStatus;
+    }
+
+    public String getDefaultCourtCode() {
+        return defaultCourtCode;
     }
 }
