@@ -10,5 +10,5 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PRIVATE, force = true)
 public class SearchResponse {
     private final List<Match> matches;
-    private final MatchType matchedBy;
+    private final OffenderSearchMatchType matchedBy;
 }

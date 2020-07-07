@@ -1,0 +1,18 @@
+{
+  "request": {
+    "method": "POST",
+    "url": "/court/XXX/case/12345/grouped-offender-matches",
+    "bodyPatterns": [
+      {
+        "matches" : ".*X99999.*"
+      }
+    ]
+  },
+  "response": {
+    "status": 404,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": "{\n  \"status\": 404,\n  \"userMessage\": \"Court XXX not found\",\n  \"developerMessage\": \"Court XXX not found\"\n}"
+  }
+}

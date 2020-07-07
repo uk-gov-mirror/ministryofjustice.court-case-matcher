@@ -1,11 +1,14 @@
 package uk.gov.justice.probation.courtcasematcher.model.offendersearch;
 
 public enum MatchType {
-    ALL_SUPPLIED,
-    HMPPS_KEY,
-    EXTERNAL_KEY,
-    NAME,
-    PARTIAL_NAME,
-    PARTIAL_NAME_DOB_LENIENT,
-    NOTHING
+    NAME_DOB;
+
+    public static MatchType of(OffenderSearchMatchType offenderSearchMatchType) {
+        switch (offenderSearchMatchType) {
+            case ALL_SUPPLIED:
+                return NAME_DOB;
+            default:
+                return null;
+        }
+    }
 }

@@ -1,10 +1,13 @@
 package uk.gov.justice.probation.courtcasematcher.restclient;
 
 import com.google.common.eventbus.EventBus;
+import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -16,19 +19,20 @@ import reactor.core.publisher.Mono;
 import uk.gov.justice.probation.courtcasematcher.event.CourtCaseFailureEvent;
 import uk.gov.justice.probation.courtcasematcher.event.CourtCaseSuccessEvent;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCase;
+import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.GroupedOffenderMatches;
 import uk.gov.justice.probation.courtcasematcher.restclient.exception.CourtCaseNotFoundException;
-
-import java.nio.charset.StandardCharsets;
 
 @Component
 @Slf4j
 public class CourtCaseRestClient {
 
-    private static final String ERROR_MSG_FORMAT = "Unexpected exception when applying PUT to update case number '%s' for court '%s'";
-    private static final String PUT_404_MSG_FORMAT = "PUT of case no '%s' for court '%s' failed. Http status '%s'. Likely an incorrect court code.";
+    private static final String ERR_MSG_FORMAT_PUT_CASE = "Unexpected exception when applying PUT to update case number '%s' for court '%s'";
+    private static final String ERR_MSG_FORMAT_POST_MATCH = "Unexpected exception when POST matches for case number '%s' for court '%s'";
 
     @Value("${court-case-service.case-put-url-template}")
     private String courtCasePutTemplate;
+    @Value("${court-case-service.matches-post-url-template}")
+    private String matchesPostTemplate;
 
     private final EventBus eventBus;
 
@@ -61,13 +65,34 @@ public class CourtCaseRestClient {
 
     public Disposable putCourtCase(String courtCode, String caseNo, CourtCase courtCase) {
         final String path = String.format(courtCasePutTemplate, courtCode, caseNo);
+        final GroupedOffenderMatches offenderMatches = courtCase.getGroupedOffenderMatches();
 
         return put(path, courtCase)
             .retrieve()
-            .onStatus(HttpStatus::isError, (clientResponse) -> handlePutError(clientResponse, courtCode, caseNo))
+            .onStatus(HttpStatus::isError, (clientResponse) -> handleError(clientResponse, courtCode, caseNo))
             .bodyToMono(CourtCase.class)
-            .doOnError(e -> postErrorToBus(String.format(ERROR_MSG_FORMAT, caseNo, courtCode) + ".Exception : " + e))
-            .subscribe(courtCaseApi -> eventBus.post(CourtCaseSuccessEvent.builder().courtCaseApi(courtCaseApi).build()));
+            .doOnError(e -> postErrorToBus(String.format(ERR_MSG_FORMAT_PUT_CASE, caseNo, courtCode) + ".Exception : " + e))
+            .subscribe(courtCaseApi -> {
+                eventBus.post(CourtCaseSuccessEvent.builder().courtCaseApi(courtCaseApi).build());
+                postMatches(courtCaseApi.getCourtCode(), courtCaseApi.getCaseNo(), offenderMatches);
+            });
+    }
+
+    public void postMatches(String courtCode, String caseNo, GroupedOffenderMatches offenderMatches) {
+
+        if (offenderMatches != null) {
+            final String path = String.format(matchesPostTemplate, courtCode, caseNo);
+            post(path, offenderMatches)
+                .retrieve()
+                .onStatus(HttpStatus::isError, (clientResponse) -> handleError(clientResponse, courtCode, caseNo))
+                .toBodilessEntity()
+                .doOnError(e -> log.error(String.format(ERR_MSG_FORMAT_POST_MATCH, caseNo, courtCode) + ".Exception : " + e))
+                .subscribe(responseEntity -> {
+                    log.info("Successful POST of offender matches. Response location: {} ",
+                        Optional.ofNullable(responseEntity.getHeaders().getFirst(HttpHeaders.LOCATION))
+                            .orElse("[NOT FOUND]"));
+                });
+        }
     }
 
     private WebClient.RequestHeadersSpec<?> get(String path) {
@@ -85,6 +110,14 @@ public class CourtCaseRestClient {
             .accept(MediaType.APPLICATION_JSON);
     }
 
+    private WebClient.RequestHeadersSpec<?> post(String path, GroupedOffenderMatches request) {
+        return webClient
+            .post()
+            .uri(uriBuilder -> uriBuilder.path(path).build())
+            .body(Mono.just(request), GroupedOffenderMatches.class)
+            .accept(MediaType.APPLICATION_JSON);
+    }
+
     private Mono<? extends Throwable> handleGetError(ClientResponse clientResponse, String courtCode, String caseNo) {
         final HttpStatus httpStatus = clientResponse.statusCode();
         // This is expected for new cases
@@ -99,7 +132,7 @@ public class CourtCaseRestClient {
             StandardCharsets.UTF_8);
     }
 
-    private Mono<? extends Throwable> handlePutError(ClientResponse clientResponse, String courtCode, String caseNo) {
+    private Mono<? extends Throwable> handleError(ClientResponse clientResponse, String courtCode, String caseNo) {
         final HttpStatus httpStatus = clientResponse.statusCode();
         if (HttpStatus.NOT_FOUND.equals(httpStatus)) {
             return Mono.error(new CourtCaseNotFoundException(courtCode, caseNo));

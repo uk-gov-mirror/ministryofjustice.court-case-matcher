@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import uk.gov.justice.probation.courtcasematcher.application.CaseMapperReference;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.Address;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCase;
+import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.GroupedOffenderMatches;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.Offence;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Case;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.Offender;
@@ -98,11 +99,12 @@ public class CaseMapper {
             .build();
     }
 
-    public CourtCase newFromCaseAndOffender(Case incomingCase, Offender offender) {
+    public CourtCase newFromCaseAndOffender(Case incomingCase, Offender offender, GroupedOffenderMatches groupedOffenderMatches) {
         return getCourtCaseBuilderFromCase(incomingCase)
                 .crn(offender.getOtherIds().getCrn())
                 .cro(offender.getOtherIds().getCro())
                 .pnc(offender.getOtherIds().getPnc())
+                .groupedOffenderMatches(groupedOffenderMatches)
                 .build();
     }
 }

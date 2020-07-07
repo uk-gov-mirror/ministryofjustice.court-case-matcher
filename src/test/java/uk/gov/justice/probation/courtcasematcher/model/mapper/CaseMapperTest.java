@@ -1,5 +1,6 @@
 package uk.gov.justice.probation.courtcasematcher.model.mapper;
 
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.LocalDate;
@@ -7,7 +8,6 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Month;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,11 +16,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 import uk.gov.justice.probation.courtcasematcher.application.CaseMapperReference;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCase;
+import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.GroupedOffenderMatches;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.Offence;
+import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.OffenderMatch;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Address;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Block;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Case;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Session;
+import uk.gov.justice.probation.courtcasematcher.model.offendersearch.MatchType;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.Offender;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.OtherIds;
 
@@ -74,7 +77,7 @@ class CaseMapperTest {
             .id(321321L)
             .listNo("1st")
             .seq(1)
-            .offences(Collections.singletonList(buildOffence("NEW Theft from a person", 1)))
+            .offences(singletonList(buildOffence("NEW Theft from a person", 1)))
             .build();
     }
 
@@ -106,13 +109,19 @@ class CaseMapperTest {
     void whenMapNewFromCaseAndOffender_thenCreateNewCaseWithOffenderData() {
 
         ReflectionTestUtils.setField(aCase, "offences", null);
+        GroupedOffenderMatches matches = GroupedOffenderMatches.builder()
+            .matches(singletonList(
+                        OffenderMatch.builder()
+                            .matchType(MatchType.NAME_DOB)
+                            .build()))
+            .build();
         CourtCase courtCase = caseMapper.newFromCaseAndOffender(aCase, Offender.builder()
                 .otherIds(OtherIds.builder()
                         .crn(CRN)
                         .cro(CRO)
                         .pnc(PNC)
                         .build())
-                .build());
+                .build(), matches);
 
         assertThat(courtCase.getCrn()).isEqualTo(CRN);
         assertThat(courtCase.getCro()).isEqualTo(CRO);
@@ -132,6 +141,7 @@ class CaseMapperTest {
         assertThat(courtCase.getDefendantSex()).isEqualTo("M");
         assertThat(courtCase.getSessionStartTime()).isEqualTo(SESSION_START_TIME);
         assertThat(courtCase.getOffences()).isEmpty();
+        assertThat(courtCase.getGroupedOffenderMatches().getMatches()).hasSize(1);
     }
 
     @DisplayName("Map from a new case composed of nulls. Ensures no null pointers.")
@@ -201,7 +211,7 @@ class CaseMapperTest {
             .listNo("999st")
             .courtRoom("4")
             .sessionStartTime(LocalDateTime.of(2020, Month.JANUARY, 3, 9, 10, 0))
-            .offences(Collections.singletonList(Offence.builder()
+            .offences(singletonList(Offence.builder()
                                                         .act("act")
                                                         .sequenceNumber(1)
                                                         .offenceSummary("summary")

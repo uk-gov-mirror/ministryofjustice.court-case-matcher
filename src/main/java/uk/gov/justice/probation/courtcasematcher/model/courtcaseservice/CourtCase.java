@@ -1,5 +1,6 @@
 package uk.gov.justice.probation.courtcasematcher.model.courtcaseservice;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -59,5 +60,8 @@ public class CourtCase implements Serializable {
     private final Boolean breach;
 
     private final Boolean suspendedSentenceOrder;
+
+    @JsonIgnore
+    private final GroupedOffenderMatches groupedOffenderMatches;
 
 }

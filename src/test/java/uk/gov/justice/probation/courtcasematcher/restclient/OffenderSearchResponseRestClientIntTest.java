@@ -13,8 +13,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import uk.gov.justice.probation.courtcasematcher.event.OffenderSearchFailureEvent;
 import uk.gov.justice.probation.courtcasematcher.event.OffenderSearchValidationFailureEvent;
-import uk.gov.justice.probation.courtcasematcher.model.offendersearch.MatchType;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.Offender;
+import uk.gov.justice.probation.courtcasematcher.model.offendersearch.OffenderSearchMatchType;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.SearchResponse;
 
 import java.time.LocalDate;
@@ -52,7 +52,7 @@ public class OffenderSearchResponseRestClientIntTest {
                 .blockOptional();
 
         assertThat(match).isPresent();
-        assertThat(match.get().getMatchedBy()).isEqualTo(MatchType.ALL_SUPPLIED);
+        assertThat(match.get().getMatchedBy()).isEqualTo(OffenderSearchMatchType.ALL_SUPPLIED);
         assertThat(match.get().getMatches().size()).isEqualTo(1);
 
         Offender offender = match.get().getMatches().get(0).getOffender();
@@ -67,7 +67,7 @@ public class OffenderSearchResponseRestClientIntTest {
                 .blockOptional();
 
         assertThat(match).isPresent();
-        assertThat(match.get().getMatchedBy()).isEqualTo(MatchType.ALL_SUPPLIED);
+        assertThat(match.get().getMatchedBy()).isEqualTo(OffenderSearchMatchType.ALL_SUPPLIED);
         assertThat(match.get().getMatches().size()).isEqualTo(2);
 
         Offender offender1 = match.get().getMatches().get(0).getOffender();
@@ -87,7 +87,7 @@ public class OffenderSearchResponseRestClientIntTest {
                 .blockOptional();
 
         assertThat(match).isPresent();
-        assertThat(match.get().getMatchedBy()).isEqualTo(MatchType.NOTHING);
+        assertThat(match.get().getMatchedBy()).isEqualTo(OffenderSearchMatchType.NOTHING);
         assertThat(match.get().getMatches().size()).isEqualTo(0);
     }
 

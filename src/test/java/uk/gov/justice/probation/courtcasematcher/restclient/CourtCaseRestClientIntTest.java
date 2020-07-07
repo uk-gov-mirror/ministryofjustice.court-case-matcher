@@ -3,19 +3,33 @@ package uk.gov.justice.probation.courtcasematcher.restclient;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
+import static org.slf4j.LoggerFactory.getLogger;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.classic.spi.LoggingEvent;
+import ch.qos.logback.core.Appender;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.common.eventbus.EventBus;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -25,7 +39,11 @@ import uk.gov.justice.probation.courtcasematcher.event.CourtCaseFailureEvent;
 import uk.gov.justice.probation.courtcasematcher.event.CourtCaseSuccessEvent;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.Address;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCase;
+import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.GroupedOffenderMatches;
+import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.MatchIdentifiers;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.Offence;
+import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.OffenderMatch;
+import uk.gov.justice.probation.courtcasematcher.model.offendersearch.MatchType;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -37,11 +55,29 @@ public class CourtCaseRestClientIntTest {
     private static final String NEW_CASE_NO = "999999";
     private static final int WEB_CLIENT_TIMEOUT_MS = 2000;
 
+    private static final GroupedOffenderMatches matches = GroupedOffenderMatches.builder()
+        .matches(Collections.singletonList(OffenderMatch.builder()
+            .matchType(MatchType.NAME_DOB)
+            .matchIdentifiers(MatchIdentifiers.builder()
+                .crn("X123456")
+                .cro("E1324/11")
+                .pnc("PNC")
+                .build())
+            .build()))
+        .build();
+
     private static final CourtCase A_CASE = CourtCase.builder()
         .caseId("1246257")
         .caseNo(CASE_NO)
         .courtCode(COURT_CODE)
+        .groupedOffenderMatches(matches)
         .build();
+
+    @Mock
+    private Appender<ILoggingEvent> mockAppender;
+
+    @Captor
+    private ArgumentCaptor<LoggingEvent> captorLoggingEvent;
 
     @MockBean
     private EventBus eventBus;
@@ -53,6 +89,14 @@ public class CourtCaseRestClientIntTest {
     public WireMockRule wireMockRule = new WireMockRule(wireMockConfig()
             .port(8090)
             .usingFilesUnderClasspath("mocks"));
+
+    @Before
+    public void before() {
+        MockitoAnnotations.initMocks(this);
+        Logger logger = (Logger) getLogger(LoggerFactory.getLogger(CourtCaseRestClient.class).getName());
+        logger.addAppender(mockAppender);
+    }
+
 
     @Test
     public void whenGetCourtCase_thenMakeRestCallToCourtCaseService() {
@@ -111,6 +155,13 @@ public class CourtCaseRestClientIntTest {
         restClient.putCourtCase(COURT_CODE, CASE_NO, A_CASE);
 
         verify(eventBus, timeout(WEB_CLIENT_TIMEOUT_MS)).post(any(CourtCaseSuccessEvent.class));
+
+        verify(mockAppender, timeout(WEB_CLIENT_TIMEOUT_MS)).doAppend(captorLoggingEvent.capture());
+        List<LoggingEvent> events = captorLoggingEvent.getAllValues();
+        LoggingEvent loggingEvent = events.get(0);
+        assertThat(loggingEvent.getLevel()).isEqualTo(Level.INFO);
+        assertThat(loggingEvent.getFormattedMessage().trim())
+            .contains("/court/SHF/case/1600028974/grouped-offender-matches/4");
     }
 
     @Test
@@ -133,4 +184,64 @@ public class CourtCaseRestClientIntTest {
         verify(eventBus, timeout(WEB_CLIENT_TIMEOUT_MS)).post(any(CourtCaseFailureEvent.class));
     }
 
+    @Test
+    public void whenPostOffenderMatches_thenMakeRestCallToCourtCaseService() {
+
+        restClient.postMatches(COURT_CODE, CASE_NO, matches);
+
+        verify(mockAppender, timeout(WEB_CLIENT_TIMEOUT_MS)).doAppend(captorLoggingEvent.capture());
+
+        List<LoggingEvent> events = captorLoggingEvent.getAllValues();
+        LoggingEvent loggingEvent = events.get(0);
+        assertThat(loggingEvent.getLevel()).isEqualTo(Level.INFO);
+        assertThat(loggingEvent.getFormattedMessage().trim())
+            .contains("/court/SHF/case/1600028974/grouped-offender-matches/4");
+    }
+
+    @Test
+    public void givenUnknownCourt_whenPostOffenderMatches_thenReportErrorToEventBus() {
+
+        GroupedOffenderMatches matches = GroupedOffenderMatches.builder()
+            .matches(Collections.singletonList(OffenderMatch.builder()
+                .matchType(MatchType.NAME_DOB)
+                .matchIdentifiers(MatchIdentifiers.builder()
+                    .crn("X99999")
+                    .cro("E1324/11")
+                    .pnc("PNC")
+                    .build())
+                .build()))
+            .build();
+
+        restClient.postMatches("XXX", CASE_NO, matches);
+
+        verify(mockAppender, timeout(WEB_CLIENT_TIMEOUT_MS)).doAppend(captorLoggingEvent.capture());
+
+        List<LoggingEvent> events = captorLoggingEvent.getAllValues();
+        LoggingEvent loggingEvent = events.get(0);
+        assertThat(loggingEvent.getLevel()).isEqualTo(Level.ERROR);
+        assertThat(loggingEvent.getFormattedMessage().trim())
+            .startsWith("Unexpected exception when POST matches for case number '12345' for court 'XXX'");
+    }
+
+    @Test
+    public void whenRestClientThrows500OnPostMatches_ThenFailureEvent() {
+
+        restClient.postMatches("X500", CASE_NO, matches);
+
+        verify(mockAppender, timeout(WEB_CLIENT_TIMEOUT_MS)).doAppend(captorLoggingEvent.capture());
+
+        List<LoggingEvent> events = captorLoggingEvent.getAllValues();
+        LoggingEvent loggingEvent = events.get(0);
+        assertThat(loggingEvent.getLevel()).isEqualTo(Level.ERROR);
+        assertThat(loggingEvent.getFormattedMessage().trim())
+            .startsWith("Unexpected exception when POST matches for case number '12345' for court 'X500'");
+    }
+
+    @Test
+    public void whenRestClientCalledWithEmptyOptional_ThenFailureEvent() {
+
+        restClient.postMatches(COURT_CODE, CASE_NO, null);
+
+        verify(mockAppender, never()).doAppend(captorLoggingEvent.capture());
+    }
 }
