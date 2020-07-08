@@ -36,16 +36,4 @@ env:
       secretKeyRef:
         name: pict-cpmg-wildfly-credentials
         key: user-password
-
-  - name: GATEWAY_WILDFLY_ADMIN_USERNAME
-    valueFrom:
-      secretKeyRef:
-        name: pict-cpmg-wildfly-credentials
-        key: adminuser
-
-  - name: GATEWAY_WILDFLY_ADMIN_PASSWORD
-    valueFrom:
-      secretKeyRef:
-        name: pict-cpmg-wildfly-credentials
-        key: owner-password
 {{- end -}}
