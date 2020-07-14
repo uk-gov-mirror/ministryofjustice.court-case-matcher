@@ -4,6 +4,9 @@ Environment variables for web and worker containers
 */}}
 {{- define "deployment.envs" }}
 env:
+  - name: SPRING_PROFILES_ACTIVE
+    value: "logstash"
+
   - name: SERVER_PORT
     value: "{{ .Values.image.port }}"
 
@@ -18,6 +21,12 @@ env:
       secretKeyRef:
         name: court-case-matcher-secrets
         key: nomis-oauth-client-id
+
+  - name: APPINSIGHTS_INSTRUMENTATIONKEY
+    valueFrom:
+      secretKeyRef:
+        name: court-case-matcher-secrets
+        key: APPINSIGHTS_INSTRUMENTATIONKEY
 
   - name: OFFENDER_SEARCH_CLIENT_SECRET
     valueFrom:

@@ -75,6 +75,7 @@ dependencies {
 
     compile 'org.springframework.boot:spring-boot-starter-webflux'
     compile 'org.projectreactor:reactor-spring:1.0.1.RELEASE'
+    implementation 'com.microsoft.azure:applicationinsights-spring-boot-starter:2.6.0'
 
 	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.2'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
