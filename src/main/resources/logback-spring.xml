@@ -6,7 +6,7 @@
 
     <springProperty scope="context" name="app" source="spring.application.name"/>
 
-    <springProfile name="!logstash">
+    <springProfile name="!instrumented">
         <appender name="consoleAppender" class="ch.qos.logback.core.ConsoleAppender">
             <layout class="ch.qos.logback.classic.PatternLayout">
                 <Pattern>${LOG_PATTERN}</Pattern>
@@ -15,7 +15,7 @@
         <appender name="aiAppender" class="ch.qos.logback.core.helpers.NOPAppender"/>
     </springProfile>
 
-    <springProfile name="logstash">
+    <springProfile name="instrumented">
         <appender name="consoleAppender" class="ch.qos.logback.core.ConsoleAppender">
             <encoder class="net.logstash.logback.encoder.LogstashEncoder">
                 <includeCallerInfo>true</includeCallerInfo>
@@ -25,7 +25,7 @@
         <appender name="aiAppender" class="com.microsoft.applicationinsights.logback.ApplicationInsightsAppender"/>
     </springProfile>
 
-    <logger name="uk.gov" additivity="false" level="DEBUG">
+    <logger name="uk.gov.justice.probation.courtcasematcher" additivity="false" level="DEBUG">
         <appender-ref ref="consoleAppender"/>
         <appender-ref ref="aiAppender"/>
     </logger>

@@ -4,9 +4,6 @@ Environment variables for web and worker containers
 */}}
 {{- define "deployment.envs" }}
 env:
-  - name: SPRING_PROFILES_ACTIVE
-    value: "logstash"
-
   - name: SERVER_PORT
     value: "{{ .Values.image.port }}"
 
