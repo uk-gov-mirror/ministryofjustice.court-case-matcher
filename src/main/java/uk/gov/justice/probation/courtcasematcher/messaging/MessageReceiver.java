@@ -20,6 +20,7 @@ public class MessageReceiver {
     @JmsListener(destination = CP_QUEUE)
     public void receive(String message) {
         log.info("Received message");
+        log.trace("Raw message contents for parsing:{}", message);
         messageProcessor.process(message);
     }
 }
