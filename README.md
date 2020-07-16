@@ -21,9 +21,7 @@ We need a version of this where messages are not encrypted and which creates a W
         # Builds the non-encrypted version of the WAR (you need JDK 8 to build)
         ./gradlew clean build
         
-        # Builds the docker images (change the passwords and usernames if required)
-        docker-compose build --build-arg APP_USERNAME="appuser" --build-arg APP_PASSWORD="appuser" --build-arg JMS_USERNAME="jmsuser" --build-arg JMS_PASSWORD="jmsuser"
-        
+        # Will also builds the docker images (change the passwords and usernames if required in docker-compose)
         # Starts as daemon
         docker-compose up -d
         
@@ -58,7 +56,6 @@ offender-search-client-secret=[insert secret string here]
 offender-search-client-id=probation-in-court
 ```
 
-
 ### Application health
 ```
 curl -X GET http://localhost:8080/actuator/health
@@ -69,6 +66,24 @@ Spring Boot exposes liveness and readiness probes at the following endpoints
 ```
 curl http://localhost:8080/actuator/health/liveness
 curl http://localhost:8080/actuator/health/readiness
+```
+
+### Application Logs
+
+Spring Boot exposes logging levels in preprod and dev profiles and they may be changed at runtime. 
+For example, logging level can be set to TRACE to expose the raw messages as they are received from 
+the messaging queue.
+
+To view all logging levels 
+
+```
+https://court-case-matcher-dev.apps.live-1.cloud-platform.service.justice.gov.uk/actuator/loggers
+```
+
+To alter the level of the MessageReceiver to TRACE.
+
+```
+curl -i -X POST -H 'Content-Type: application/json' -d '{"configuredLevel": "TRACE"}' https://court-case-matcher-dev.apps.live-1.cloud-platform.service.justice.gov.uk/actuator/loggers/uk.gov.justice.probation.courtcasematcher.messaging.MessageReceiver
 ```
 
 ### Application Ping

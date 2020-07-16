@@ -29,7 +29,7 @@ public class CourtDeserializer extends StdDeserializer<String> {
         JsonNode node = jp.getCodec().readTree(jp);
         String courtName = node != null ? node.asText() : "";
         String courtCode = caseMapperReference.getCourtCodeFromName(courtName).orElse(caseMapperReference.getDefaultCourtCode());
-        log.info("Got court code of {} from court name {}", courtCode, courtName);
+        log.debug("Got court code of {} from court name {}", courtCode, courtName);
         return courtCode;
     }
 }
