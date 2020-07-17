@@ -21,7 +21,7 @@ env:
   JAVA_OPTS: "-Xmx512m"
 
 spring:
-  profile: prod
+  profile: prod,instrumented
 
 whitelist:
   office: "217.33.148.210/32"
