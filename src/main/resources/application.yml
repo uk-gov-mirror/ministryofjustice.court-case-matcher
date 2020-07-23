@@ -10,6 +10,8 @@ cgi:
     destination.name: CP_OutboundQueue
 
 spring:
+  application:
+    name: court-case-matcher
   artemis:
     mode: native
     host: ${GATEWAY_JMS_HOST:localhost}
