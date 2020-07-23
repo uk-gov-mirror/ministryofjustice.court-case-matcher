@@ -18,6 +18,7 @@ import java.util.Set;
 import javax.validation.ConstraintViolation;
 import javax.validation.Path;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -82,6 +83,7 @@ class EventListenerTest {
     }
 
     @DisplayName("Ensure that failure events are logged and counted")
+    @Disabled
     @Test
     void testFailureEventWithConstraintViolations() {
 
