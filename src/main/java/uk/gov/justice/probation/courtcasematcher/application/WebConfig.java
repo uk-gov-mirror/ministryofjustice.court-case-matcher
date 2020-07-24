@@ -35,11 +35,14 @@ public class WebConfig {
     private int writeTimeoutMs;
 
     @Bean(name="court-case-service")
-    public WebClient getCourtCaseServiceClient() {
+    public WebClient getCourtCaseServiceClient(OAuth2AuthorizedClientManager authorizedClientManager) {
 
+        ServletOAuth2AuthorizedClientExchangeFilterFunction oauth2Client =
+            new ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager);
         return defaultWebClientBuilder()
-                .baseUrl(this.courtCaseServiceBaseUrl)
-                .build();
+            .baseUrl(this.courtCaseServiceBaseUrl)
+            .filter(oauth2Client)
+            .build();
     }
 
     @Bean(name="offender-search")

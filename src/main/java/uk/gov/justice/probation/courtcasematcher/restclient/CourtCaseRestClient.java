@@ -13,6 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClient.RequestHeadersSpec;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
@@ -21,6 +22,8 @@ import uk.gov.justice.probation.courtcasematcher.event.CourtCaseSuccessEvent;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCase;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.GroupedOffenderMatches;
 import uk.gov.justice.probation.courtcasematcher.restclient.exception.CourtCaseNotFoundException;
+
+import static org.springframework.security.oauth2.client.web.reactive.function.client.ServletOAuth2AuthorizedClientExchangeFilterFunction.clientRegistrationId;
 
 @Component
 @Slf4j
@@ -33,6 +36,9 @@ public class CourtCaseRestClient {
     private String courtCasePutTemplate;
     @Value("${court-case-service.matches-post-url-template}")
     private String matchesPostTemplate;
+
+    @Value("${court-case-service.disable-authentication:false}")
+    private Boolean disableAuthentication;
 
     private final EventBus eventBus;
 
@@ -58,7 +64,7 @@ public class CourtCaseRestClient {
                 return courtCaseResponse;
             })
             .onErrorResume((e) -> {
-                log.debug("GET failed for retrieving the case for path {}", path);
+                log.debug("GET failed for retrieving the case for path {}", path, e);
                 return Mono.empty();
             });
     }
@@ -96,34 +102,53 @@ public class CourtCaseRestClient {
     }
 
     private WebClient.RequestHeadersSpec<?> get(String path) {
-        return webClient
+        final WebClient.RequestHeadersSpec<?> spec = webClient
             .get()
             .uri(uriBuilder -> uriBuilder.path(path).build())
             .accept(MediaType.APPLICATION_JSON);
+
+        return addSpecAuthAttribute(spec, path);
     }
 
     private WebClient.RequestHeadersSpec<?> put(String path, CourtCase courtCase) {
-        return webClient
+        WebClient.RequestHeadersSpec<?> spec =  webClient
             .put()
             .uri(uriBuilder -> uriBuilder.path(path).build())
             .body(Mono.just(courtCase), CourtCase.class)
             .accept(MediaType.APPLICATION_JSON);
+
+        return addSpecAuthAttribute(spec, path);
     }
 
     private WebClient.RequestHeadersSpec<?> post(String path, GroupedOffenderMatches request) {
-        return webClient
+        WebClient.RequestHeadersSpec<?> spec = webClient
             .post()
             .uri(uriBuilder -> uriBuilder.path(path).build())
             .body(Mono.just(request), GroupedOffenderMatches.class)
             .accept(MediaType.APPLICATION_JSON);
+
+        return addSpecAuthAttribute(spec, path);
+    }
+
+    private RequestHeadersSpec<?> addSpecAuthAttribute(RequestHeadersSpec<?> spec, String path) {
+        if (disableAuthentication) {
+            log.info(String.format("Skipping authentication with community api for call to %s", path));
+            return spec;
+        }
+
+        log.info(String.format("Authenticating with %s for call to %s", "offender-search-client", path));
+        return spec.attributes(clientRegistrationId("offender-search-client"));
     }
 
     private Mono<? extends Throwable> handleGetError(ClientResponse clientResponse, String courtCode, String caseNo) {
         final HttpStatus httpStatus = clientResponse.statusCode();
         // This is expected for new cases
-        if (HttpStatus.NOT_FOUND.equals(clientResponse.statusCode())) {
+        if (HttpStatus.NOT_FOUND.equals(httpStatus)) {
             log.info("Failed to get case for case number {} and court code {}", caseNo, courtCode);
             return Mono.error(new CourtCaseNotFoundException(courtCode, caseNo));
+        }
+        else if(HttpStatus.UNAUTHORIZED.equals(httpStatus) || HttpStatus.FORBIDDEN.equals(httpStatus)) {
+            log.error("HTTP status {} to to GET the case from court case service", httpStatus);
         }
         throw WebClientResponseException.create(httpStatus.value(),
             httpStatus.name(),
