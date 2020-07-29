@@ -1,0 +1,17 @@
+{
+  "request": {
+    "method": "PUT",
+    "url": "/court/SHF/cases/purgeAbsent",
+    "bodyPatterns": [
+      {
+        "matches" : ".*2020.*"
+      }
+    ]
+  },
+  "response": {
+    "status": 204,
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

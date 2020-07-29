@@ -5,6 +5,7 @@ import static uk.gov.justice.probation.courtcasematcher.messaging.GatewayMessage
 
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,6 +19,7 @@ import lombok.NoArgsConstructor;
 public class ExternalDocumentRequest
 {
     @JacksonXmlProperty(namespace = EXT_DOC_NS, localName = "documents")
+    @NotNull
     @Valid
     private final DocumentWrapper documentWrapper;
 

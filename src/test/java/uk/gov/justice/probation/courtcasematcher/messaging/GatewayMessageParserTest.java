@@ -44,7 +44,7 @@ import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.S
 @DisplayName("Gateway Message Parser Test")
 public class GatewayMessageParserTest {
 
-    private static final LocalDate HEARING_DATE = LocalDate.of(2020, Month.FEBRUARY, 19);
+    private static final LocalDate HEARING_DATE = LocalDate.of(2020, Month.FEBRUARY, 20);
     private static final LocalTime START_TIME = LocalTime.of(9, 1);
     private static final LocalDateTime SESSION_START_TIME = LocalDateTime.of(HEARING_DATE, START_TIME);
     private static final CaseMapperReference caseMapperReference = new CaseMapperReference();
@@ -81,7 +81,7 @@ public class GatewayMessageParserTest {
     @DisplayName("Parse a valid message")
     @Test
     void whenValidMessage_ThenReturnAsObject() throws IOException {
-        String path = "src/test/resources/messages/gateway-message-full.xml";
+        String path = "src/test/resources/messages/gateway-message-multi-session.xml";
         String content = Files.readString(Paths.get(path));
 
         MessageType message = gatewayMessageParser.parseMessage(content);
@@ -130,41 +130,39 @@ public class GatewayMessageParserTest {
     }
 
     private void checkBlock(Block block) {
-        assertThat(block.getCases()).hasSize(9);
-        checkCase(block.getCases().stream().filter(aCase -> aCase.getCaseNo().equals("1600032804")).findFirst().orElseThrow());
+        assertThat(block.getCases()).hasSize(2);
+        checkCase(block.getCases().stream().filter(aCase -> aCase.getCaseNo().equals("1600032952")).findFirst().orElseThrow());
     }
 
     private void checkCase(Case aCase) {
         // Fields populated from the session
-        assertThat(aCase.getDef_age()).isEqualTo("14");
-        assertThat(aCase.getId()).isEqualTo(1215460);
-        assertThat(aCase.getDef_name()).isEqualTo("Tess TEYOUTHBAILTWO");
+        assertThat(aCase.getDef_age()).isEqualTo("20");
+        assertThat(aCase.getId()).isEqualTo(1217464);
+        assertThat(aCase.getDef_name()).isEqualTo("Mr. David DLONE");
         assertThat(aCase.getName()).isEqualTo(Name.builder()
-                                                .title("Ms")
-                                                .forename1("Tess")
-                                                .forename2("name2")
-                                                .forename3("name3")
-                                                .surname("TEYOUTHBAILTWO").build());
+                                                .title("Mr.")
+                                                .forename1("David")
+                                                .surname("DLONE").build());
         assertThat(aCase.getDef_type()).isEqualTo("P");
-        assertThat(aCase.getDef_sex()).isEqualTo("F");
-        assertThat(aCase.getDef_age()).isEqualTo("14");
-        assertThat(aCase.getPnc()).isEqualTo("PNC-ID");
-        assertThat(aCase.getCro()).isEqualTo("12345/678E");
+        assertThat(aCase.getDef_sex()).isEqualTo("N");
+        assertThat(aCase.getDef_age()).isEqualTo("20");
+        assertThat(aCase.getPnc()).isEqualTo("PNC-ID1");
+        assertThat(aCase.getCro()).isEqualTo("11111/79J");
         assertThat(aCase.getDef_addr()).isEqualToComparingFieldByField(Address.builder()
-                                                                    .line1("39 The Stree")
+                                                                    .line1("39 The Street")
                                                                     .line2("Newtown")
                                                                     .pcode("NT4 6YH").build());
         assertThat(aCase.getDef_dob()).isEqualTo(LocalDate.of(2002, Month.FEBRUARY, 2));
-        assertThat(aCase.getSeq()).isEqualTo(9);
-        assertThat(aCase.getListNo()).isEqualTo("2nd");
+        assertThat(aCase.getSeq()).isEqualTo(1);
+        assertThat(aCase.getListNo()).isEqualTo("1st");
         assertThat(aCase.getOffences()).hasSize(1);
         checkOffence(aCase.getOffences().get(0));
     }
 
     private void checkOffence(Offence offence) {
         assertThat(offence.getSeq()).isEqualTo(1);
-        assertThat(offence.getTitle()).isEqualTo("Printed in the U.K. a tobacco advertisement");
-        assertThat(offence.getSum()).isEqualTo("Blah");
+        assertThat(offence.getTitle()).isEqualTo("Theft from a shop");
+        assertThat(offence.getSum()).isEqualTo("On 01/01/2016 at Town, stole Article, to the value of £100.00, belonging to Person.");
     }
 
     @TestConfiguration

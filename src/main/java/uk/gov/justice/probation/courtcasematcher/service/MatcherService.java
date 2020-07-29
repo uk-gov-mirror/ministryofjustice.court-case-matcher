@@ -88,7 +88,4 @@ public class MatcherService {
             .build();
     }
 
-//    public void saveOffenderMatches(String courtCode, String caseNo, GroupedOffenderMatches offenderMatches) {
-//        restClient.postMatches(courtCode, caseNo, offenderMatches);
-//    }
 }

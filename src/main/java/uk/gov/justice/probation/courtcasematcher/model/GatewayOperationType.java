@@ -5,6 +5,7 @@ import static uk.gov.justice.probation.courtcasematcher.messaging.GatewayMessage
 
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,6 +20,7 @@ import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.E
 public class GatewayOperationType {
 
     @JacksonXmlProperty(namespace = EXT_DOC_NS, localName = "ExternalDocumentRequest")
+    @NotNull
     @Valid
     private final ExternalDocumentRequest externalDocumentRequest;
 

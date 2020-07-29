@@ -26,3 +26,4 @@ case-mapper-reference:
   defaultProbationStatus: "No record"
   courtNameToCodes:
     Sheffield Magistrates Court: "SHF"
+    Beverley: "BEV"

@@ -1,0 +1,12 @@
+{
+  "request": {
+    "method": "PUT",
+    "url": "/court/X500/cases/purgeAbsent"
+  },
+  "response": {
+    "status": 500,
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

@@ -2,23 +2,35 @@ package uk.gov.justice.probation.courtcasematcher.messaging;
 
 import com.google.common.eventbus.EventBus;
 import java.io.IOException;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import javax.validation.ConstraintViolationException;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import uk.gov.justice.probation.courtcasematcher.event.CourtCaseFailureEvent;
 import uk.gov.justice.probation.courtcasematcher.model.MessageHeader;
 import uk.gov.justice.probation.courtcasematcher.model.MessageType;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Case;
+import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.DocumentWrapper;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Session;
+import uk.gov.justice.probation.courtcasematcher.service.CourtCaseService;
 import uk.gov.justice.probation.courtcasematcher.service.MatcherService;
 
+@Setter
 @Service
 @Slf4j
 public class MessageProcessor {
+
+    @Value("${case-feed-future-date-offset}")
+    private int caseFeedFutureDateOffset;
 
     @SuppressWarnings("UnstableApiUsage") // Not part of the final product
     private final EventBus eventBus;
@@ -27,19 +39,25 @@ public class MessageProcessor {
 
     private final MatcherService matcherService;
 
+    private final CourtCaseService courtCaseService;
+
     @Autowired
-    public MessageProcessor(GatewayMessageParser gatewayMessageParser, EventBus eventBus, MatcherService matcherService) {
+    public MessageProcessor(GatewayMessageParser gatewayMessageParser,
+                            EventBus eventBus,
+                            MatcherService matcherService,
+                            CourtCaseService courtCaseService) {
         super();
         this.parser = gatewayMessageParser;
         this.eventBus = eventBus;
         this.matcherService = matcherService;
+        this.courtCaseService = courtCaseService;
     }
 
     public void process(String message) {
         parse(message).ifPresent(this::process);
     }
 
-    private Optional<List<Session>> parse(String message) {
+    private Optional<MessageType> parse(String message) {
 
         MessageType messageType;
         try {
@@ -56,34 +74,52 @@ public class MessageProcessor {
             eventBus.post(builder.build());
             return Optional.empty();
         }
-
         logMessageReceipt(messageType.getMessageHeader());
 
-        List<Session> sessions = messageType.getMessageBody()
-            .getGatewayOperationType()
-            .getExternalDocumentRequest()
-            .getDocumentWrapper()
+        return Optional.of(messageType);
+    }
+
+    private void process(MessageType messageType) {
+        DocumentWrapper documentWrapper = messageType.getMessageBody().getGatewayOperationType().getExternalDocumentRequest().getDocumentWrapper();
+
+        List<Session> sessions = documentWrapper
             .getDocument()
             .stream()
             .flatMap(document -> document.getData().getJob().getSessions().stream())
             .collect(Collectors.toList());
 
-        return Optional.of(sessions);
+        List<CompletableFuture<Long>> futures = matchCases(sessions);
+
+        Set<LocalDate> hearingDates = MessageProcessorUtils.getHearingDates(sessions, caseFeedFutureDateOffset);
+        CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).thenRun(() -> {
+            MessageProcessorUtils.getCourtCodes(sessions).forEach(courtCode ->  {
+                log.debug("Purging cases for court {}", courtCode);
+                courtCaseService.purgeAbsent(courtCode, hearingDates, MessageProcessorUtils.getCases(courtCode, sessions));
+            });
+        });
     }
 
-    private void process(List<Session> sessions) {
-        List<Case> cases = sessions
-            .stream()
-            .flatMap(session -> session.getBlocks().stream())
-            .flatMap(block -> block.getCases().stream())
-            .collect(Collectors.toList());
+    private List<CompletableFuture<Long>> matchCases(List<Session> sessions) {
 
-        log.info("Received {} cases", cases.size());
+        List<CompletableFuture<Long>> allFutures = new ArrayList<>();
+        sessions.forEach(session -> {
+            List<Case> cases = session.getBlocks().stream()
+                .flatMap(block -> block.getCases().stream())
+                .collect(Collectors.toList());
+            allFutures.add(CompletableFuture.supplyAsync(() -> matchCases(session, cases)));
+        });
+        return allFutures;
+    }
+
+    private Long matchCases(Session session, List<Case> cases) {
+        log.debug("Matching {} cases for court {}, session {}", cases.size(), session.getCourtCode(), session.getId());
         cases.forEach(matcherService::match);
+        return session.getId();
     }
 
     private void logMessageReceipt(MessageHeader messageHeader) {
         log.info("Received message UUID {}, from {}, original timestamp {}",
             messageHeader.getMessageID().getUuid(), messageHeader.getFrom(), messageHeader.getTimeStamp());
     }
+
 }

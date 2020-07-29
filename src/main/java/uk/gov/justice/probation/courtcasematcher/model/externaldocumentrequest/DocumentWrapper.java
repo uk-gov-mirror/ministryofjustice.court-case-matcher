@@ -2,7 +2,7 @@ package uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest;
 
 import java.util.List;
 import javax.validation.Valid;
-import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class DocumentWrapper
 {
-    @NotEmpty
+    @NotNull
     private final List<@Valid Document> document;
 
 }
