@@ -56,6 +56,11 @@ springBoot {
     }
 }
 
+configurations {
+    agentDeps
+    agentDeps.transitive = false
+}
+
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web:2.3.0.RELEASE'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
@@ -95,6 +100,8 @@ dependencies {
 
     testCompile 'org.apache.activemq:artemis-junit:2.13.0'
 
+    agentDeps 'com.microsoft.azure:applicationinsights-agent:2.5.1-BETA.2'
+    compile configurations.agentDeps
 }
 
 test {
@@ -113,3 +120,10 @@ test {
         }
     }
 }
+
+task copyAgent(type: Copy) {
+    from configurations.agentDeps
+    into "$buildDir/libs"
+}
+
+assemble.dependsOn copyAgent

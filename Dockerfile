@@ -10,9 +10,12 @@ RUN addgroup --gid 2000 --system appgroup && \
 RUN mkdir -p /app
 WORKDIR /app
 
-COPY build/libs/court-case-matcher-*.jar /app/court-case-matcher.jar
 COPY run.sh /app
 
+COPY build/libs/court-case-matcher-*.jar /app/court-case-matcher.jar
+COPY build/libs/applicationinsights-agent*.jar /app/agent.jar
+COPY AI-Agent.xml /app
+COPY run.sh /app
 RUN chown -R appuser:appgroup /app
 
 USER 2000
