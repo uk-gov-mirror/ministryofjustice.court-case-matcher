@@ -102,10 +102,10 @@ public class GatewayMessageParserTest {
 
         assertThat(documents).hasSize(2);
         Document document = documents.stream()
-            .filter(doc -> doc.getInfo().getOuCode().equals("B01CX00"))
+            .filter(doc -> doc.getInfo().getInfoSourceDetail().getOuCode().equals("B01CX00"))
             .findFirst().orElseThrow();
 
-        assertThat(document.getInfo().getOuCode()).isEqualTo("B01CX00");
+        assertThat(document.getInfo().getInfoSourceDetail().getOuCode()).isEqualTo("B01CX00");
         assertThat(document.getData().getJob().getSessions()).hasSize(1);
         checkSession(document.getData().getJob().getSessions().get(0));
     }

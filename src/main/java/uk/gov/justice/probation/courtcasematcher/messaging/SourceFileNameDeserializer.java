@@ -7,31 +7,34 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.InfoSourceDetail;
 
 @Slf4j
 @Component
-public class SourceFileNameToOuCodeDeserializer extends StdDeserializer<String> {
+public class SourceFileNameDeserializer extends StdDeserializer<InfoSourceDetail> {
 
-    public SourceFileNameToOuCodeDeserializer() {
+    public SourceFileNameDeserializer() {
         this(String.class);
     }
 
-    public SourceFileNameToOuCodeDeserializer(Class<?> vc) {
+    public SourceFileNameDeserializer(Class<?> vc) {
         super(vc);
     }
 
     @Override
-    public String deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
+    public InfoSourceDetail deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
         JsonNode node = jp.getCodec().readTree(jp);
         String sourceFileName = node != null ? node.asText() : "";
         // Source filename has the following format 146_27072020_2578_B01OB00_ADULT_COURT_LIST_DAILY
         String[] fileNameParts = sourceFileName.split("_");
         if (fileNameParts.length < 4) {
             log.error("Unable to determine OU code from source file name of {}", sourceFileName);
-            return "";
+            return InfoSourceDetail.builder().build();
         }
 
-        log.debug("Got OU code of {} from source_file_name of {}", fileNameParts[3], sourceFileName);
-        return fileNameParts[3].toUpperCase();
+        String ouCode = fileNameParts[3].toUpperCase();
+        long seq = Long.parseLong(fileNameParts[0]);
+        log.debug("Got OU code of {} and identifier of {} from source_file_name of {}", ouCode, seq, sourceFileName);
+        return InfoSourceDetail.builder().ouCode(ouCode).sequence(seq).build();
     }
 }

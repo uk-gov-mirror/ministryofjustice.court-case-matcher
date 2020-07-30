@@ -70,7 +70,7 @@ public class Session {
 
     // This is a temporary measure for tactical solution. ouCode will be available in this object in the longer term.
     public String getCourtCode() {
-        return Optional.ofNullable(courtCode).orElse(job.getDataJob().getDocument().getInfo().getOuCode());
+        return Optional.ofNullable(courtCode).orElse(job.getDataJob().getDocument().getInfo().getInfoSourceDetail().getOuCode());
     }
 
     @JsonBackReference
