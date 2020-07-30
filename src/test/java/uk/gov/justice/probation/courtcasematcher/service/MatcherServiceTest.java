@@ -64,7 +64,7 @@ class MatcherServiceTest {
             .def_name(DEF_NAME)
             .block(Block.builder()
                     .session(Session.builder()
-                            .courtCode(COURT_CODE)
+                            .courtName(COURT_CODE)
                             .build())
                     .build())
             .build();

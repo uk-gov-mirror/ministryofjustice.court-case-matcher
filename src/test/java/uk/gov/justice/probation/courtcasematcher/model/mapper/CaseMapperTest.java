@@ -8,7 +8,6 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Month;
 import java.util.Arrays;
-import java.util.Map;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -22,6 +21,10 @@ import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.Offender
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Address;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Block;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Case;
+import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.DataJob;
+import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Document;
+import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Info;
+import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Job;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Session;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.MatchType;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.Offender;
@@ -34,9 +37,12 @@ class CaseMapperTest {
     private static final LocalDate DATE_OF_HEARING = LocalDate.of(2020, Month.FEBRUARY, 29);
     private static final LocalTime START_TIME = LocalTime.of(9, 10);
     private static final LocalDateTime SESSION_START_TIME = LocalDateTime.of(2020, Month.FEBRUARY, 29, 9, 10);
+    private static final String COURT_CODE = "B10JQ00";
+    private static final String COURT_NAME = "North Shields Magistrates Court";
     public static final String CRN = "CRN123";
     public static final String CRO = "CRO456";
     public static final String PNC = "PNC789";
+
 
     private static CaseMapper caseMapper;
 
@@ -48,17 +54,23 @@ class CaseMapperTest {
     static void beforeAll() {
         CaseMapperReference caseMapperReference = new CaseMapperReference();
         caseMapperReference.setDefaultProbationStatus(DEFAULT_PROBATION_STATUS);
-        caseMapperReference.setCourtNameToCodes(Map.of("SheffieldMagistratesCourt", "SHF"));
         caseMapper = new CaseMapper(caseMapperReference);
     }
 
     @BeforeEach
     void beforeEach() {
+
+        Info info = Info.builder().ouCode(COURT_CODE).build();
+        Document document = Document.builder().info(info).build();
+        DataJob dataJob = DataJob.builder().document(document).build();
+        Job job = Job.builder().dataJob(dataJob).build();
+
         Session session = Session.builder()
-            .courtCode("SHF")
+            .courtName(COURT_NAME)
             .courtRoom("00")
             .dateOfHearing(DATE_OF_HEARING)
             .start(START_TIME)
+            .job(job)
             .build();
 
         block = Block.builder()
@@ -90,7 +102,7 @@ class CaseMapperTest {
 
         assertThat(courtCase.getCaseNo()).isEqualTo("123");
         assertThat(courtCase.getCaseId()).isEqualTo("321321");
-        assertThat(courtCase.getCourtCode()).isEqualTo("SHF");
+        assertThat(courtCase.getCourtCode()).isEqualTo(COURT_CODE);
         assertThat(courtCase.getCourtRoom()).isEqualTo("00");
         assertThat(courtCase.getProbationStatus()).isEqualTo(DEFAULT_PROBATION_STATUS);
         assertThat(courtCase.getDefendantAddress().getLine1()).isEqualTo("line 1");
@@ -129,7 +141,7 @@ class CaseMapperTest {
 
         assertThat(courtCase.getCaseNo()).isEqualTo("123");
         assertThat(courtCase.getCaseId()).isEqualTo("321321");
-        assertThat(courtCase.getCourtCode()).isEqualTo("SHF");
+        assertThat(courtCase.getCourtCode()).isEqualTo(COURT_CODE);
         assertThat(courtCase.getCourtRoom()).isEqualTo("00");
         assertThat(courtCase.getProbationStatus()).isEqualTo(DEFAULT_PROBATION_STATUS);
         assertThat(courtCase.getDefendantAddress().getLine1()).isEqualTo("line 1");
@@ -201,7 +213,7 @@ class CaseMapperTest {
             .caseNo("12345")
             .caseId("123456")
             .probationStatus("Current")
-            .courtCode("SHF")
+            .courtCode(COURT_CODE)
             .defendantAddress(null)
             .defendantName("Pat Garrett")
             .defendantDob(LocalDate.of(1969, Month.JANUARY, 1))
@@ -224,7 +236,7 @@ class CaseMapperTest {
         CourtCase courtCase = caseMapper.merge(aCase, existingCourtCase);
 
         // Fields that stay the same on existing value
-        assertThat(courtCase.getCourtCode()).isEqualTo("SHF");
+        assertThat(courtCase.getCourtCode()).isEqualTo(COURT_CODE);
         assertThat(courtCase.getProbationStatus()).isEqualTo("Current");
         assertThat(courtCase.getCaseNo()).isEqualTo("12345");
         assertThat(courtCase.getBreach()).isTrue();

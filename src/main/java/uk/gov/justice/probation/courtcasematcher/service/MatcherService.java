@@ -38,7 +38,7 @@ public class MatcherService {
     private final CaseMapper caseMapper;
 
     public void match(Case incomingCase) {
-        restClient.getCourtCase(incomingCase.getBlock().getSession().getCourtCode(), incomingCase.getCaseNo())
+        restClient.getCourtCase(incomingCase.getBlock().getSession().getCourtName(), incomingCase.getCaseNo())
                 .map(existing -> caseMapper.merge(incomingCase, existing))
                 .switchIfEmpty(Mono.defer(() -> newMatchedCaseOf(incomingCase)))
                 .switchIfEmpty(Mono.defer(() -> Mono.just(caseMapper.newFromCase(incomingCase))))
@@ -47,7 +47,7 @@ public class MatcherService {
     }
 
     private Mono<CourtCase> newMatchedCaseOf(Case incomingCase) {
-        final String courtCode = incomingCase.getBlock().getSession().getCourtCode();
+        final String courtCode = incomingCase.getBlock().getSession().getCourtName();
         final String caseNo = incomingCase.getCaseNo();
         return offenderSearchRestClient.search(incomingCase.getDef_name(), incomingCase.getDef_dob())
                 .map(searchResponse -> {
@@ -68,7 +68,7 @@ public class MatcherService {
                 .doOnSuccess((data) -> {
                     if (data == null) {
                         log.error(String.format("Match results for caseNo: %s, courtCode: %s - Empty response from OffenderSearchRestClient",
-                            incomingCase.getCaseNo(), incomingCase.getBlock().getSession().getCourtCode()));
+                            incomingCase.getCaseNo(), incomingCase.getBlock().getSession().getCourtName()));
                     }
                 });
     }

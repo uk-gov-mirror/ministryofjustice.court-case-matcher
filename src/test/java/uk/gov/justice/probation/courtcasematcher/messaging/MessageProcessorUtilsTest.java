@@ -2,7 +2,6 @@ package uk.gov.justice.probation.courtcasematcher.messaging;
 
 import java.time.LocalDate;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -10,6 +9,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Block;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Case;
+import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.DataJob;
+import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Document;
+import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Info;
+import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Job;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Session;
 
 import static java.util.Collections.singletonList;
@@ -85,17 +88,20 @@ class MessageProcessorUtilsTest {
     @DisplayName("Gets list of the cases for a court")
     @Test
     void whenGetCasesForACourt() {
-        Session session1 = Session.builder().courtCode("SHF")
+
+        Session session1 = Session.builder().courtName("Camberwell Green")
+            .job(buildJob("B01CX00"))
             .blocks(Arrays.asList(
                 Block.builder().cases(Arrays.asList(buildCase("100000001"), buildCase("100000002"))).build(),
                 Block.builder().cases(Arrays.asList(buildCase("100000003"), buildCase("100000004"))).build()
             )).build();
-        Session session2 = Session.builder().courtCode("BEV")
+        Session session2 = Session.builder().courtName("Beverley")
+            .job(buildJob("B16BG00"))
             .blocks(singletonList(
                 Block.builder().cases(Arrays.asList(buildCase("10000005"), buildCase("100000006"))).build()
             )).build();
 
-        List<Case> cases = getCases("SHF", Arrays.asList(session1, session2));
+        List<Case> cases = getCases("B01CX00", Arrays.asList(session1, session2));
 
         assertThat(cases).hasSize(4);
         assertThat(cases).extracting("caseNo").contains("100000001", "100000002", "100000003", "100000004");
@@ -105,25 +111,31 @@ class MessageProcessorUtilsTest {
     @Test
     void whenGetCourtCodesFromSessions() {
         Session session1 = Session.builder()
-            .courtCode("SHF")
+            .job(buildJob("B16BG00"))
             .courtRoom("1")
             .build();
         Session session2 = Session.builder()
-            .courtCode("SHF")
+            .job(buildJob("B16BG00"))
             .courtRoom("1")
             .build();
         Session session3 = Session.builder()
-            .courtCode("BEV")
+            .job(buildJob("B01CX00"))
             .build();
 
         Set<String> courtCodes = getCourtCodes(Arrays.asList(session1, session2, session3));
 
         assertThat(courtCodes).hasSize(2);
-        assertThat(courtCodes).contains("SHF", "BEV");
+        assertThat(courtCodes).contains("B16BG00", "B01CX00");
     }
 
     private Case buildCase(String caseNo) {
         return Case.builder().caseNo(caseNo).build();
     }
 
+    private Job buildJob(String ouCode) {
+        Info info = Info.builder().ouCode(ouCode).build();
+        Document document = Document.builder().info(info).build();
+        DataJob dataJob = DataJob.builder().document(document).build();
+        return Job.builder().dataJob(dataJob).build();
+    }
 }

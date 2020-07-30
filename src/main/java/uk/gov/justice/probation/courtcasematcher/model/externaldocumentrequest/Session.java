@@ -1,5 +1,6 @@
 package uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
@@ -13,6 +14,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
@@ -22,7 +24,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-import uk.gov.justice.probation.courtcasematcher.messaging.CourtDeserializer;
 
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PRIVATE, force = true)
@@ -41,15 +42,15 @@ public class Session {
     @NotNull
     private final LocalDate dateOfHearing;
 
-    @NotEmpty
-    @JsonDeserialize(using = CourtDeserializer.class)
+    @NotNull
     @JacksonXmlProperty(localName = "court")
-    private final String courtCode;
+    private final String courtName;
     @NotNull
     @JacksonXmlProperty(localName = "room")
     private final String courtRoom;
     @JacksonXmlProperty(localName = "ou_code")
-    private final String ouCode;
+    private final String courtCode;
+
 
     @NotNull
     @JsonDeserialize(using = LocalTimeDeserializer.class)
@@ -66,6 +67,14 @@ public class Session {
     @ToString.Exclude
     @NotEmpty
     private final List<@Valid Block> blocks;
+
+    // This is a temporary measure for tactical solution. ouCode will be available in this object in the longer term.
+    public String getCourtCode() {
+        return Optional.ofNullable(courtCode).orElse(job.getDataJob().getDocument().getInfo().getOuCode());
+    }
+
+    @JsonBackReference
+    private final Job job;
 
     public LocalDateTime getSessionStartTime() {
         //noinspection ConstantConditions - analysis says these fields may be null but annotations / validation prevents that

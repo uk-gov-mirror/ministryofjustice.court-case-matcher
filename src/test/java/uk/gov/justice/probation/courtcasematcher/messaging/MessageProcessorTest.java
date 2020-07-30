@@ -19,7 +19,6 @@ import java.time.LocalDate;
 import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
@@ -44,7 +43,9 @@ import uk.gov.justice.probation.courtcasematcher.service.MatcherService;
 @ExtendWith(MockitoExtension.class)
 class MessageProcessorTest {
 
-    private static final String COURT_CODE = "SHF";
+    private static final String COURT_CODE = "B01CX00";
+    private static final String WEST_LONDON_COURT_CODE = "B01OB00";
+    private static final String BEVERLEY_COURT_CODE = "B16BG00";
     public static final String CASE_NO = "1600032952";
 
     private static final long MATCHER_THREAD_TIMEOUT = 4000;
@@ -101,7 +102,6 @@ class MessageProcessorTest {
         multiCourtXml = multiCourtXml.replace("[TODAY]", LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
 
         caseMapperReference.setDefaultProbationStatus("No record");
-        caseMapperReference.setCourtNameToCodes(Map.of("SheffieldMagistratesCourt", COURT_CODE, "Beverley", "BEV"));
     }
 
     @BeforeEach
@@ -119,7 +119,7 @@ class MessageProcessorTest {
 
         messageProcessor.process(singleCaseXml);
 
-        verify(matcherService).match(captor.capture());
+        verify(matcherService, timeout(MATCHER_THREAD_TIMEOUT)).match(captor.capture());
         assertThat(captor.getValue().getCaseNo()).isEqualTo(CASE_NO);
         assertThat(captor.getValue().getBlock().getSession().getCourtCode()).isEqualTo(COURT_CODE);
     }
@@ -187,7 +187,7 @@ class MessageProcessorTest {
         assertThat(captorCases.getValue().size()).isEqualTo(1);
     }
 
-    @DisplayName("")
+    @DisplayName("Two courts means two calls to purgeAbsent")
     @Test
     void whenValidMessageReceivedWithMultipleCourts_ThenPurgeForBoth() {
 
@@ -197,18 +197,16 @@ class MessageProcessorTest {
         messageProcessor.process(multiCourtXml);
 
         verify(matcherService, timeout(MATCHER_THREAD_TIMEOUT).times(2)).match(any(Case.class));
-        verify(courtCaseService, timeout(MATCHER_THREAD_TIMEOUT)).purgeAbsent(eq(COURT_CODE), eq(Set.of(date1, date2)), captorCases.capture());
-        List<Case> shfCases = captorCases.getValue();
-        assertThat(shfCases.size()).isEqualTo(1);
-        assertThat(shfCases.get(0).getCaseNo()).isEqualTo("1000000005");
-
-        verify(courtCaseService, timeout(MATCHER_THREAD_TIMEOUT)).purgeAbsent(eq("BEV"), eq(Set.of(date1, date2)), captorCases.capture());
-        assertThat(captorCases.getValue().size()).isEqualTo(1);
+        verify(courtCaseService, timeout(MATCHER_THREAD_TIMEOUT)).purgeAbsent(eq(BEVERLEY_COURT_CODE), eq(Set.of(date1, date2)), captorCases.capture());
         List<Case> bevCases = captorCases.getValue();
         assertThat(bevCases.size()).isEqualTo(1);
         assertThat(bevCases.get(0).getCaseNo()).isEqualTo("1000000001");
-    }
 
+        verify(courtCaseService, timeout(MATCHER_THREAD_TIMEOUT)).purgeAbsent(eq(WEST_LONDON_COURT_CODE), eq(Set.of(date1, date2)), captorCases.capture());
+        List<Case> westLondonCases = captorCases.getValue();
+        assertThat(westLondonCases.size()).isEqualTo(1);
+        assertThat(westLondonCases.get(0).getCaseNo()).isEqualTo("1000000005");
+    }
 
     @DisplayName("An XML message which is invalid")
     @Test

@@ -15,7 +15,6 @@ import java.time.LocalTime;
 import java.time.Month;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import javax.validation.ConstraintViolationException;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
@@ -35,7 +34,6 @@ import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.A
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Block;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Case;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Document;
-import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Info;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Name;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Offence;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Session;
@@ -55,7 +53,6 @@ public class GatewayMessageParserTest {
     @BeforeAll
     static void beforeAll() {
         caseMapperReference.setDefaultProbationStatus("No record");
-        caseMapperReference.setCourtNameToCodes(Map.of("SheffieldMagistratesCourt", "SHF"));
     }
 
     @Test
@@ -100,18 +97,15 @@ public class GatewayMessageParserTest {
 
         assertThat(message.getMessageBody().getGatewayOperationType().getExternalDocumentRequest().getDocumentWrapper().getDocument()).hasSize(2);
 
-        Info expectedInfo = Info.builder()
-            .sourceFileName("5_27022020_2992_B13HT00_ADULT_COURT_LIST_DAILY")
-            .build();
         List<Document> documents = new ArrayList<>(message.getMessageBody().getGatewayOperationType().getExternalDocumentRequest()
             .getDocumentWrapper().getDocument());
 
         assertThat(documents).hasSize(2);
         Document document = documents.stream()
-            .filter(doc -> doc.getInfo().getSourceFileName().startsWith("5_"))
+            .filter(doc -> doc.getInfo().getOuCode().equals("B01CX00"))
             .findFirst().orElseThrow();
 
-        assertThat(document.getInfo()).isEqualToComparingFieldByField(expectedInfo);
+        assertThat(document.getInfo().getOuCode()).isEqualTo("B01CX00");
         assertThat(document.getData().getJob().getSessions()).hasSize(1);
         checkSession(document.getData().getJob().getSessions().get(0));
     }
@@ -119,8 +113,8 @@ public class GatewayMessageParserTest {
     private void checkSession(Session session) {
         assertThat(session.getId()).isEqualTo(556805);
         assertThat(session.getDateOfHearing()).isEqualTo(HEARING_DATE);
-        assertThat(session.getOuCode()).isEqualTo("B13HT00");
-        assertThat(session.getCourtCode()).isEqualTo("SHF");
+        assertThat(session.getCourtCode()).isEqualTo("B01CX00");
+        assertThat(session.getCourtName()).isEqualTo("Camberwell Green");
         assertThat(session.getCourtRoom()).isEqualTo("00");
         assertThat(session.getStart()).isEqualTo(START_TIME);
         assertThat(session.getSessionStartTime()).isEqualTo(SESSION_START_TIME);
