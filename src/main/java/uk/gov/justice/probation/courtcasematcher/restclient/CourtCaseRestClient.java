@@ -1,12 +1,6 @@
 package uk.gov.justice.probation.courtcasematcher.restclient;
 
 import com.google.common.eventbus.EventBus;
-import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -27,6 +21,13 @@ import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCas
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.GroupedOffenderMatches;
 import uk.gov.justice.probation.courtcasematcher.restclient.exception.CourtCaseNotFoundException;
 import uk.gov.justice.probation.courtcasematcher.restclient.exception.CourtNotFoundException;
+
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Supplier;
 
 import static org.springframework.security.oauth2.client.web.reactive.function.client.ServletOAuth2AuthorizedClientExchangeFilterFunction.clientRegistrationId;
 
@@ -53,7 +54,7 @@ public class CourtCaseRestClient {
     private final WebClient webClient;
 
     @Autowired
-    public CourtCaseRestClient(@Qualifier("court-case-service") WebClient webClient, EventBus eventBus) {
+    public CourtCaseRestClient(@Qualifier("courtCaseServiceWebClient") WebClient webClient, EventBus eventBus) {
         super();
         this.webClient = webClient;
         this.eventBus = eventBus;

@@ -25,6 +25,9 @@ public class WebConfig {
     @Value("${offender-search.base-url}")
     private String offenderSearchBaseUrl;
 
+    @Value("${nomis-oauth.base-url}")
+    private String nomisOauthBaseUrl;
+
     @Value("${web.client.connect-timeout-ms}")
     private int connectTimeoutMs;
 
@@ -34,8 +37,8 @@ public class WebConfig {
     @Value("${web.client.write-timeout-ms}")
     private int writeTimeoutMs;
 
-    @Bean(name="court-case-service")
-    public WebClient getCourtCaseServiceClient(OAuth2AuthorizedClientManager authorizedClientManager) {
+    @Bean
+    public WebClient courtCaseServiceWebClient(OAuth2AuthorizedClientManager authorizedClientManager) {
 
         ServletOAuth2AuthorizedClientExchangeFilterFunction oauth2Client =
             new ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager);
@@ -45,13 +48,24 @@ public class WebConfig {
             .build();
     }
 
-    @Bean(name="offender-search")
-    public WebClient getOffenderSearchClient(OAuth2AuthorizedClientManager authorizedClientManager)
+    @Bean
+    public WebClient offenderSearchWebClient(OAuth2AuthorizedClientManager authorizedClientManager)
     {
         ServletOAuth2AuthorizedClientExchangeFilterFunction oauth2Client =
                 new ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager);
         return defaultWebClientBuilder()
                 .baseUrl(this.offenderSearchBaseUrl)
+                .filter(oauth2Client)
+                .build();
+    }
+
+    @Bean
+    public WebClient oauthWebClient(OAuth2AuthorizedClientManager authorizedClientManager)
+    {
+        ServletOAuth2AuthorizedClientExchangeFilterFunction oauth2Client =
+                new ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager);
+        return defaultWebClientBuilder()
+                .baseUrl(this.nomisOauthBaseUrl)
                 .filter(oauth2Client)
                 .build();
     }

@@ -15,11 +15,16 @@ spring:
     port: 5445
 
 court-case-service:
-  base-url: http://localhost:8090/
+  base-url: http://localhost:8090
   disable-authentication: true
 
 offender-search:
-  base-url: http://localhost:8090/
+  base-url: http://localhost:8090
+  disable-authentication: true
+  ping-url: /ping
+
+nomis-oauth:
+  base-url: http://localhost:8090
   disable-authentication: true
 
 case-mapper-reference:

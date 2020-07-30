@@ -42,7 +42,7 @@ public class OffenderSearchRestClient {
     private final ObjectMapper objectMapper;
 
     @Autowired
-    public OffenderSearchRestClient(@Qualifier("offender-search") WebClient webClient, EventBus eventBus, com.fasterxml.jackson.databind.ObjectMapper objectMapper) {
+    public OffenderSearchRestClient(@Qualifier("offenderSearchWebClient") WebClient webClient, EventBus eventBus, com.fasterxml.jackson.databind.ObjectMapper objectMapper) {
         super();
         this.webClient = webClient;
         this.eventBus = eventBus;
