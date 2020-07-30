@@ -1,11 +1,8 @@
 management:
-  security:
-    enabled: false
-  endpoint:
   endpoints:
     web:
       exposure:
-        include: health,info,beans,env,loggers,configprops,metrics
+        include: health,info,loggers
 
 logging:
   level:
