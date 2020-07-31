@@ -1,5 +1,7 @@
 package uk.gov.justice.probation.courtcasematcher.messaging;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -16,6 +18,8 @@ import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.S
 
 @Slf4j
 public final class MessageProcessorUtils {
+
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     static Set<String> getCourtCodes(List<Session> sessions) {
         return sessions.stream()
@@ -83,7 +87,19 @@ public final class MessageProcessorUtils {
                 .ifPresentOrElse(result::add,() -> log.error("Could not match for info {} and sequence value {}", info, maxSequence));
         });
 
+        logDocuments(result);
+
         return result;
+    }
+
+    private static void logDocuments(List<Document> documents) {
+        if (log.isDebugEnabled()) {
+            try {
+                log.debug("After de-duplication, documents :{}", OBJECT_MAPPER.writeValueAsString(documents));
+            } catch (JsonProcessingException e) {
+                log.debug("Unable to serialise de-duplicated documents to JSON. Documents :{}", documents);
+            }
+        }
     }
 
     static long getMaxSequenceNumber(List<Document> documents, Info info) {
