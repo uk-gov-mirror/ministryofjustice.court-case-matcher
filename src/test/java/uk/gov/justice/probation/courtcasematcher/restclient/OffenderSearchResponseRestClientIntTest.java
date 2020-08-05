@@ -9,8 +9,10 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
+import uk.gov.justice.probation.courtcasematcher.application.TestMessagingConfig;
 import uk.gov.justice.probation.courtcasematcher.event.OffenderSearchFailureEvent;
 import uk.gov.justice.probation.courtcasematcher.event.OffenderSearchValidationFailureEvent;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.Offender;
@@ -29,6 +31,7 @@ import static org.mockito.Mockito.verify;
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @ActiveProfiles("test")
+@Import(TestMessagingConfig.class)
 public class OffenderSearchResponseRestClientIntTest {
 
     @Autowired
@@ -163,4 +166,5 @@ public class OffenderSearchResponseRestClientIntTest {
         assertThat(validationFailureCaptor.getValue().getFullName()).isEqualTo("");
         assertThat(validationFailureCaptor.getValue().getDateOfBirth()).isEqualTo(LocalDate.of(1982, 4, 5));
     }
+
 }

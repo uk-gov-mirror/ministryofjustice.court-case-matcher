@@ -9,8 +9,8 @@ import org.springframework.stereotype.Service;
 public class MessageReceiver {
 
     private static final String CP_QUEUE = "CP_OutboundQueue";
-    private final MessageProcessor messageProcessor;
 
+    private final MessageProcessor messageProcessor;
 
     public MessageReceiver (MessageProcessor processor) {
         super();
@@ -21,6 +21,12 @@ public class MessageReceiver {
     public void receive(String message) {
         log.info("Received message");
         log.trace("Raw message contents for parsing:{}", message);
-        messageProcessor.process(message);
+        try {
+            messageProcessor.process(message);
+        }
+        catch (Exception exception) {
+            throw new RuntimeException(message, exception);
+        }
     }
+
 }

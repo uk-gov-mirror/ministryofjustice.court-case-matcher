@@ -4,8 +4,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.jms.annotation.EnableJms;
 
-@SpringBootApplication
 @EnableJms
+@SpringBootApplication
 public class CourtCaseMatcherApplication {
 
 	public static void main(String[] args) {

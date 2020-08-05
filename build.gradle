@@ -3,7 +3,7 @@ import java.time.LocalDate
 
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '2.3.0.RELEASE'
+    id 'org.springframework.boot' version '2.3.2.RELEASE'
     id 'io.spring.dependency-management' version '1.0.9.RELEASE'
     id 'com.github.ben-manes.versions' version '0.26.0'
 }
@@ -57,12 +57,12 @@ springBoot {
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-web:2.3.0.RELEASE'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
-    implementation 'org.springframework.boot:spring-boot-starter-validation:2.3.0.RELEASE'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'io.jsonwebtoken:jjwt:0.9.1'
     compileOnly 'org.projectlombok:lombok'
-    annotationProcessor "org.springframework.boot:spring-boot-configuration-processor:2.3.0.RELEASE"
+    annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
     runtimeOnly 'org.springframework.boot:spring-boot-devtools'
     annotationProcessor 'org.projectlombok:lombok'
     compile group: 'com.google.guava', name: 'guava', version: '29.0-jre'
@@ -91,7 +91,6 @@ dependencies {
     testCompile "com.github.tomakehurst:wiremock-jre8:2.26.3"
     testCompile 'org.mockito:mockito-core:3.3.3'
     testCompile group: 'commons-io', name: 'commons-io', version: '2.6'
-    testRuntimeOnly 'org.apache.activemq:activemq-broker:5.15.3'
 
     testCompile 'org.apache.activemq:artemis-junit:2.13.0'
 

@@ -18,12 +18,10 @@ import com.google.common.eventbus.EventBus;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -36,8 +34,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
+import uk.gov.justice.probation.courtcasematcher.application.TestMessagingConfig;
 import uk.gov.justice.probation.courtcasematcher.event.CourtCaseFailureEvent;
 import uk.gov.justice.probation.courtcasematcher.event.CourtCaseSuccessEvent;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.Address;
@@ -51,6 +51,7 @@ import uk.gov.justice.probation.courtcasematcher.model.offendersearch.MatchType;
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @ActiveProfiles("test")
+@Import(TestMessagingConfig.class)
 public class CourtCaseRestClientIntTest {
 
     private static final String COURT_CODE = "SHF";
@@ -269,4 +270,6 @@ public class CourtCaseRestClientIntTest {
         assertThat(loggingEvent.getLevel()).isEqualTo(Level.ERROR);
         assertThat(loggingEvent.getFormattedMessage()).contains("Unexpected exception when applying PUT to purge absent cases for court 'X500'");
     }
+
+
 }
