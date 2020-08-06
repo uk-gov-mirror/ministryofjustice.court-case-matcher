@@ -143,11 +143,13 @@ public class CourtCaseRestClient {
     }
 
     private WebClient.RequestHeadersSpec<?> put(String path, Map<LocalDate, List<String>> casesByDate) {
-        return webClient
+        var spec = webClient
             .put()
             .uri(uriBuilder -> uriBuilder.path(path).build())
             .body(Mono.just(casesByDate), Map.class)
             .accept(MediaType.APPLICATION_JSON);
+
+        return addSpecAuthAttribute(spec, path);
     }
 
     private WebClient.RequestHeadersSpec<?> post(String path, GroupedOffenderMatches request) {
@@ -162,7 +164,6 @@ public class CourtCaseRestClient {
 
     private RequestHeadersSpec<?> addSpecAuthAttribute(RequestHeadersSpec<?> spec, String path) {
         if (disableAuthentication) {
-            log.info(String.format("Skipping authentication with court case service for call to %s", path));
             return spec;
         }
 
