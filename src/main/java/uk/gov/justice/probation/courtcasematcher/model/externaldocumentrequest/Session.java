@@ -67,13 +67,13 @@ public class Session {
     @NotEmpty
     private final List<@Valid Block> blocks;
 
+    @JsonBackReference
+    private final Job job;
+
     // This is a temporary measure for tactical solution. ouCode will be available in this object in the longer term.
     public String getCourtCode() {
         return courtCode != null ? courtCode : job.getDataJob().getDocument().getInfo().getInfoSourceDetail().getOuCode();
     }
-
-    @JsonBackReference
-    private final Job job;
 
     public LocalDateTime getSessionStartTime() {
         //noinspection ConstantConditions - analysis says these fields may be null but annotations / validation prevents that
