@@ -58,16 +58,12 @@ class MatcherServiceTest {
 
     private final LocalDate DEF_DOB = LocalDate.of(2000, 6, 17);
     private final String DEF_NAME = "Arthur MORGAN";
-    private final Case incomingCase = Case.builder()
-            .caseNo(CASE_NO)
-            .def_dob(DEF_DOB)
-            .def_name(DEF_NAME)
-            .block(Block.builder()
-                    .session(Session.builder()
-                            .courtName(COURT_CODE)
-                            .build())
-                    .build())
-            .build();
+
+    @Mock
+    private Session session;
+
+    private Case incomingCase;
+
     private final OtherIds otherIds = OtherIds.builder()
         .crn(CRN)
         .cro("CRO")
@@ -140,6 +136,17 @@ class MatcherServiceTest {
         MockitoAnnotations.initMocks(this);
         Logger logger = (Logger) getLogger(LoggerFactory.getLogger(MatcherService.class).getName());
         logger.addAppender(mockAppender);
+
+        incomingCase = Case.builder()
+            .caseNo(CASE_NO)
+            .def_dob(DEF_DOB)
+            .def_name(DEF_NAME)
+            .block(Block.builder()
+                .session(session)
+                .build())
+            .build();
+
+        when(session.getCourtCode()).thenReturn(COURT_CODE);
 
         matcherService = new MatcherService(courtCaseRestClient, offenderSearchRestClient, caseMapper);
     }
