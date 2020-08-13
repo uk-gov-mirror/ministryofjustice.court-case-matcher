@@ -14,7 +14,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
-import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
@@ -68,13 +67,13 @@ public class Session {
     @NotEmpty
     private final List<@Valid Block> blocks;
 
-    // This is a temporary measure for tactical solution. ouCode will be available in this object in the longer term.
-    public String getCourtCode() {
-        return Optional.ofNullable(courtCode).orElse(job.getDataJob().getDocument().getInfo().getInfoSourceDetail().getOuCode());
-    }
-
     @JsonBackReference
     private final Job job;
+
+    // This is a temporary measure for tactical solution. ouCode will be available in this object in the longer term.
+    public String getCourtCode() {
+        return courtCode != null ? courtCode : job.getDataJob().getDocument().getInfo().getInfoSourceDetail().getOuCode();
+    }
 
     public LocalDateTime getSessionStartTime() {
         //noinspection ConstantConditions - analysis says these fields may be null but annotations / validation prevents that
