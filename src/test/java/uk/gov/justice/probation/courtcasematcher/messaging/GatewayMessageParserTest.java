@@ -63,16 +63,13 @@ public class GatewayMessageParserTest {
         Throwable thrown = catchThrowable(() -> gatewayMessageParser.parseMessage(content));
 
         ConstraintViolationException ex = (ConstraintViolationException) thrown;
-        assertThat(ex.getConstraintViolations()).hasSize(4);
+        assertThat(ex.getConstraintViolations()).hasSize(2);
+        final String docInfoPath = "messageBody.gatewayOperationType.externalDocumentRequest.documentWrapper.document[0].info";
         final String firstSessionPath = "messageBody.gatewayOperationType.externalDocumentRequest.documentWrapper.document[0].data.job.sessions[0]";
         assertThat(ex.getConstraintViolations()).anyMatch(cv -> cv.getMessage().equals("must not be null")
-            && cv.getPropertyPath().toString().equals(firstSessionPath + ".courtRoom"));
-        assertThat(ex.getConstraintViolations()).anyMatch(cv -> cv.getMessage().equals("must not be null")
-            && cv.getPropertyPath().toString().equals(firstSessionPath + ".id"));
+            && cv.getPropertyPath().toString().equals(docInfoPath + ".dateOfHearing"));
         assertThat(ex.getConstraintViolations()).anyMatch(cv -> cv.getMessage().equals("must not be blank")
             && cv.getPropertyPath().toString().equals(firstSessionPath + ".blocks[0].cases[0].caseNo"));
-        assertThat(ex.getConstraintViolations()).anyMatch(cv -> cv.getMessage().equals("must not be blank")
-            && cv.getPropertyPath().toString().equals(firstSessionPath + ".blocks[0].cases[0].offences[0].title"));
     }
 
     @DisplayName("Parse a valid message")

@@ -40,6 +40,7 @@
                                         <doh>20/02/2020</doh>
                                         <lja>South West London Magistrates; Court</lja>
                                         <cmu>Gl Management Unit 1</cmu>
+                                        <someUnknownFieldWhichWeCanIgnore>hello</someUnknownFieldWhichWeCanIgnore>
                                         <panel>Adult Panel</panel>
                                         <court>Camberwell Green</court>
                                         <room>00</room>

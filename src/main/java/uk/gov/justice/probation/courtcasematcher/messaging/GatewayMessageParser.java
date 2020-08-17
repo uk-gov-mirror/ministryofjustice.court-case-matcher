@@ -1,5 +1,6 @@
 package uk.gov.justice.probation.courtcasematcher.messaging;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import java.io.IOException;
 import java.util.Set;
@@ -29,6 +30,7 @@ public class GatewayMessageParser {
         super();
         this.xmlMapper = xmlMapper;
         this.validator = validator;
+        this.xmlMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
     }
 
     public MessageType parseMessage (String xml) throws IOException {
@@ -42,6 +44,10 @@ public class GatewayMessageParser {
         if (!errors.isEmpty()) {
             throw new ConstraintViolationException(errors);
         }
+        if (messageType.getMessageBody() == null) {
+            throw new ConstraintViolationException("null message body", null);
+        }
+
     }
 
 }

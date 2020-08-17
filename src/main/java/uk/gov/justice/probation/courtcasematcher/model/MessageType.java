@@ -21,6 +21,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @Data
 @JacksonXmlRootElement(localName = "CSCI_Message_Type")
+@Valid
 public class MessageType {
 
     @NotNull

@@ -1,8 +1,11 @@
 package uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.OptBoolean;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -10,10 +13,6 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalTimeDeserializer;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
@@ -28,10 +27,8 @@ import lombok.ToString;
 @NoArgsConstructor(access = AccessLevel.PRIVATE, force = true)
 @Builder
 @Data
-@JsonIgnoreProperties(value = {"lja", "cmu", "area_code", "panel"})
 public class Session {
 
-    @NotNull
     @JacksonXmlProperty(localName = "s_id")
     private final Long id;
 
@@ -41,22 +38,18 @@ public class Session {
     @NotNull
     private final LocalDate dateOfHearing;
 
-    @NotNull
     @JacksonXmlProperty(localName = "court")
     private final String courtName;
-    @NotNull
     @JacksonXmlProperty(localName = "room")
     private final String courtRoom;
     @JacksonXmlProperty(localName = "ou_code")
     private final String courtCode;
-
 
     @NotNull
     @JsonDeserialize(using = LocalTimeDeserializer.class)
     @JacksonXmlProperty(localName = "sstart")
     private final LocalTime start;
 
-    @NotNull
     @JsonDeserialize(using = LocalTimeDeserializer.class)
     @JacksonXmlProperty(localName = "send")
     private final LocalTime end;
