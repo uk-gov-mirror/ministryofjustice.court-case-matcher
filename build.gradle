@@ -92,7 +92,7 @@ dependencies {
     testCompile 'org.mockito:mockito-core:3.3.3'
     testCompile group: 'commons-io', name: 'commons-io', version: '2.6'
 
-    testCompile 'org.apache.activemq:artemis-junit:2.13.0'
+    testCompile 'org.apache.activemq:artemis-junit:2.14.0'
 
 }
 
