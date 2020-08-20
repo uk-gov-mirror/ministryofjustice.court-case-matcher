@@ -1,11 +1,5 @@
 package uk.gov.justice.probation.courtcasematcher.model.mapper;
 
-import static java.util.Comparator.comparing;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -16,6 +10,13 @@ import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.GroupedO
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.Offence;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Case;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.Offender;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import static java.util.Comparator.comparing;
 
 @Component
 @Slf4j
@@ -101,6 +102,7 @@ public class CaseMapper {
 
     public CourtCase newFromCaseAndOffender(Case incomingCase, Offender offender, GroupedOffenderMatches groupedOffenderMatches) {
         return getCourtCaseBuilderFromCase(incomingCase)
+                .probationStatus("Previously Known")
                 .crn(offender.getOtherIds().getCrn())
                 .cro(offender.getOtherIds().getCro())
                 .pnc(offender.getOtherIds().getPnc())
