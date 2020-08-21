@@ -94,11 +94,7 @@ public final class MessageProcessorUtils {
 
     private static void logDocuments(List<Document> documents) {
         if (log.isDebugEnabled()) {
-            try {
-                log.debug("After de-duplication, documents :{}", OBJECT_MAPPER.writeValueAsString(documents));
-            } catch (JsonProcessingException e) {
-                log.debug("Unable to serialise de-duplicated documents to JSON. Documents :{}", documents);
-            }
+            log.debug("After de-duplication - documents redacted.");
         }
     }
 
