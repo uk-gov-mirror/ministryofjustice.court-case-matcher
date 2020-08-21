@@ -60,6 +60,7 @@ orbs:
   kubernetes: circleci/kubernetes@0.3.0
   helm: circleci/helm@0.1.2
   snyk: snyk/snyk@0.0.10
+  dps: ministryofjustice/dps@1.2.1
 
 jobs:
   build:
@@ -188,12 +189,16 @@ workflows:
       - build_docker:
           requires:
             - build
-          filters:
-            branches:
-              only: main
+      - dps/helm_lint:
+          name: helm_lint_dev
+          env: dev
+          chart_name: court-case-matcher
       - deploy_dev:
           requires:
             - build_docker
+          filters:
+            branches:
+              only: main
       - request-preprod-approval:
           type: approval
           requires:
