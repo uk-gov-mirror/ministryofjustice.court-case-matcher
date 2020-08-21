@@ -1,13 +1,5 @@
 package uk.gov.justice.probation.courtcasematcher.model.mapper;
 
-import static java.util.Collections.singletonList;
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.Month;
-import java.util.Arrays;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -30,6 +22,15 @@ import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.S
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.MatchType;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.Offender;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.OtherIds;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.Month;
+import java.util.Arrays;
+
+import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class CaseMapperTest {
 
@@ -144,7 +145,7 @@ class CaseMapperTest {
         assertThat(courtCase.getCaseId()).isEqualTo("321321");
         assertThat(courtCase.getCourtCode()).isEqualTo(COURT_CODE);
         assertThat(courtCase.getCourtRoom()).isEqualTo("00");
-        assertThat(courtCase.getProbationStatus()).isEqualTo(DEFAULT_PROBATION_STATUS);
+        assertThat(courtCase.getProbationStatus()).isEqualTo("Previously Known");
         assertThat(courtCase.getDefendantAddress().getLine1()).isEqualTo("line 1");
         assertThat(courtCase.getDefendantAddress().getLine2()).isEqualTo("line 2");
         assertThat(courtCase.getDefendantAddress().getLine3()).isEqualTo("line 3");
