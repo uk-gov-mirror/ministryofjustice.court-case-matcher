@@ -4,7 +4,7 @@ import java.time.LocalDate
 plugins {
     id 'java'
     id 'org.springframework.boot' version '2.3.3.RELEASE'
-    id 'io.spring.dependency-management' version '1.0.9.RELEASE'
+    id 'io.spring.dependency-management' version '1.0.10.RELEASE'
     id 'com.github.ben-manes.versions' version '0.26.0'
 }
 
@@ -66,12 +66,9 @@ dependencies {
     runtimeOnly 'org.springframework.boot:spring-boot-devtools'
     annotationProcessor 'org.projectlombok:lombok'
     compile group: 'com.google.guava', name: 'guava', version: '29.0-jre'
-    implementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.3.1'
-    implementation group: 'com.sun.xml.bind', name: 'jaxb-impl', version: '2.3.0.1'
-    compile 'org.glassfish.jaxb:jaxb-runtime:2.3.0'
     implementation 'org.springframework.boot:spring-boot-starter-artemis'
-    compile 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.11.0'
-    compile 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.11.0'
+    compile 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.11.2'
+    compile 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.11.2'
 
     compile 'org.springframework.boot:spring-boot-starter-webflux'
     compile 'org.projectreactor:reactor-spring:1.0.1.RELEASE'
@@ -83,15 +80,13 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.security:spring-security-oauth2-client'
-    testImplementation 'net.javacrumbs.json-unit:json-unit-assertj:2.9.0'
+    testImplementation 'net.javacrumbs.json-unit:json-unit-assertj:2.18.1'
     testImplementation 'org.assertj:assertj-core:3.16.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.6.2'
 
     testCompile 'io.rest-assured:rest-assured:3.3.0'
     testCompile "com.github.tomakehurst:wiremock-jre8:2.26.3"
-    testCompile 'org.mockito:mockito-core:3.3.3'
-    testCompile group: 'commons-io', name: 'commons-io', version: '2.6'
-
+    testCompile 'org.mockito:mockito-core:3.5.6'
     testCompile 'org.apache.activemq:artemis-junit:2.14.0'
 
 }

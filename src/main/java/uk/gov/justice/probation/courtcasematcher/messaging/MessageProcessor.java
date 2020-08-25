@@ -82,7 +82,7 @@ public class MessageProcessor {
     private void process(MessageType messageType) {
         DocumentWrapper documentWrapper = messageType.getMessageBody().getGatewayOperationType().getExternalDocumentRequest().getDocumentWrapper();
 
-        List<Session> sessions = MessageProcessorUtils.getUniqueDocuments(documentWrapper.getDocument())
+        List<Session> sessions = documentWrapper.getDocument()
             .stream()
             .flatMap(document -> document.getData().getJob().getSessions().stream())
             .collect(Collectors.toList());

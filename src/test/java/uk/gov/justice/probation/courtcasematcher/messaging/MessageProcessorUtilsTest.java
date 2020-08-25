@@ -1,20 +1,10 @@
 package uk.gov.justice.probation.courtcasematcher.messaging;
 
-import com.fasterxml.jackson.dataformat.xml.JacksonXmlModule;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.time.LocalDate;
-import java.time.Month;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-import javax.validation.Validation;
-import javax.validation.ValidatorFactory;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Block;
@@ -31,22 +21,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static uk.gov.justice.probation.courtcasematcher.messaging.MessageProcessorUtils.getCases;
 import static uk.gov.justice.probation.courtcasematcher.messaging.MessageProcessorUtils.getCourtCodes;
 import static uk.gov.justice.probation.courtcasematcher.messaging.MessageProcessorUtils.getHearingDates;
-import static uk.gov.justice.probation.courtcasematcher.messaging.MessageProcessorUtils.getUniqueDocuments;
 
 class MessageProcessorUtilsTest {
 
     private static final int DAY_OFFSET = 3;
-    private static GatewayMessageParser parser;
-
-    @BeforeAll
-    static void beforeAll() {
-        JacksonXmlModule xmlModule = new JacksonXmlModule();
-        xmlModule.setDefaultUseWrapper(false);
-        XmlMapper mapper = new XmlMapper(xmlModule);
-        mapper.registerModule(new JavaTimeModule());
-        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
-        parser =  new GatewayMessageParser(mapper, factory.getValidator());
-    }
 
     @DisplayName("Gets distinct set of hearing dates sorted")
     @Test
@@ -149,51 +127,6 @@ class MessageProcessorUtilsTest {
 
         assertThat(courtCodes).hasSize(2);
         assertThat(courtCodes).contains("B16BG00", "B01CX00");
-    }
-
-    @DisplayName("Filters a list of 23 input documents to the 4 with highest sequence numbers")
-    @Test
-    void givenDuplicateDocuments_ThenDeDuplicate() throws IOException {
-
-        LocalDate july28 = LocalDate.of(2020, Month.JULY, 28);
-        LocalDate july31 = LocalDate.of(2020, Month.JULY, 31);
-
-        List<Document> inputDocuments = getDocumentsFromSample("src/test/resources/messages/gateway-message-duplicates.xml");
-        assertThat(inputDocuments).hasSize(23);
-
-        List<Document> documents = getUniqueDocuments(inputDocuments);
-
-        assertThat(documents).hasSize(4);
-
-        assertThat(findDocumentSequenceNumber(documents, "B16BG00", july28)).isEqualTo(182);
-        assertThat(findDocumentSequenceNumber(documents, "B01CX00", july28)).isEqualTo(179);
-        assertThat(findDocumentSequenceNumber(documents, "B01OB00", july28)).isEqualTo(174);
-        assertThat(findDocumentSequenceNumber(documents, "B01CX00", july31)).isEqualTo(180);
-    }
-
-    @DisplayName("Filters a list of documents where there are no duplicates")
-    @Test
-    void givenNoDuplicateDocuments_ThenReturnSame() throws IOException {
-
-        List<Document> inputDocuments = getDocumentsFromSample("src/test/resources/messages/gateway-message-multi-day.xml");
-
-        List<Document> documents = getUniqueDocuments(inputDocuments);
-
-        assertThat(documents).hasSize(2);
-    }
-
-    private long findDocumentSequenceNumber(List<Document> documents, String courtCode, LocalDate hearingDate) {
-        return documents.stream()
-            .filter(document -> (document.getInfo().getDateOfHearing().equals(hearingDate)
-                                && document.getInfo().getInfoSourceDetail().getOuCode().equals(courtCode)))
-            .findFirst()
-            .map(document -> document.getInfo().getInfoSourceDetail().getSequence())
-            .orElse(-1L);
-    }
-
-    private List<Document> getDocumentsFromSample(String path) throws IOException {
-        String content = Files.readString(Paths.get(path));
-        return parser.parseMessage(content).getMessageBody().getGatewayOperationType().getExternalDocumentRequest().getDocumentWrapper().getDocument();
     }
 
     private Case buildCase(String caseNo) {
