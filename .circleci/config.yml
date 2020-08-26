@@ -79,7 +79,8 @@ jobs:
             APP_VERSION=$(grep 'build.version=' BOOT-INF/classes/META-INF/build-info.properties | awk -F= '{print $2}')
             rm BOOT-INF/classes/META-INF/build-info.properties
             # make up a good version name
-            TAG=${APP_VERSION}.${CIRCLE_BRANCH}
+            SHORT_HASH=$(git rev-parse --short HEAD)
+            TAG=${APP_VERSION}.${SHORT_HASH}
             if [[ "${CIRCLE_BRANCH}" == "main" ]]; then
               TAG=${APP_VERSION}
             fi
