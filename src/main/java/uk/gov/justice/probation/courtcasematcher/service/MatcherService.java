@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCase;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.GroupedOffenderMatches;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.MatchIdentifiers;
@@ -59,11 +60,11 @@ public class MatcherService {
                 .map(SearchResponse::getMatches)
                 .flatMap(matches -> {
                     if (matches != null && matches.size() == 1)
-                        return Mono.just(matches.get(0));
+                        return Mono.zip(Mono.just(matches.get(0)), restClient.getOffenderProbationStatus(matches.get(0).getOffender().getOtherIds().getCrn()));
                     else
                         return Mono.empty();
                 })
-                .map( match -> caseMapper.newFromCaseAndOffender(incomingCase, match.getOffender(), buildGroupedOffenderMatch(match, MatchType.of(ALL_SUPPLIED))))
+                .map(tuple2 -> buildNewCase(tuple2, incomingCase))
                 // Ideally we would avoid blocking at this point and continue with Mono processing
                 .doOnSuccess((data) -> {
                     if (data == null) {
@@ -71,6 +72,12 @@ public class MatcherService {
                             incomingCase.getCaseNo(), incomingCase.getBlock().getSession().getCourtCode()));
                     }
                 });
+    }
+
+    private CourtCase buildNewCase(Tuple2<Match, String> tuple, Case incomingCase) {
+        Match match = tuple.getT1();
+        String probationStatus = tuple.getT2();
+        return caseMapper.newFromCaseAndOffender(incomingCase, match.getOffender(), probationStatus, buildGroupedOffenderMatch(match, MatchType.of(ALL_SUPPLIED)));
     }
 
     private GroupedOffenderMatches buildGroupedOffenderMatch (Match offenderMatch, MatchType matchType) {

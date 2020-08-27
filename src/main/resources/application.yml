@@ -50,6 +50,7 @@ court-case-service:
   case-put-url-template: /court/%s/case/%s
   matches-post-url-template: /court/%s/case/%s/grouped-offender-matches
   purge-absent-put-url-template: /court/%s/cases/purgeAbsent
+  offender-detail-get-url-template: /offender/%s/detail
 
 
 offender-search:
@@ -62,7 +63,6 @@ web:
     read-timeout-ms: 5000
     write-timeout-ms: 5000
 
-# court name to codes is a simple look up until we resolve our reference data tickets
 case-mapper-reference:
   defaultProbationStatus: "No record"
 

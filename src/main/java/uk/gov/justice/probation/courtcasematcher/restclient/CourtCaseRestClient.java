@@ -19,6 +19,7 @@ import uk.gov.justice.probation.courtcasematcher.event.CourtCaseFailureEvent;
 import uk.gov.justice.probation.courtcasematcher.event.CourtCaseSuccessEvent;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCase;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.GroupedOffenderMatches;
+import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.OffenderDetail;
 import uk.gov.justice.probation.courtcasematcher.restclient.exception.CourtCaseNotFoundException;
 import uk.gov.justice.probation.courtcasematcher.restclient.exception.CourtNotFoundException;
 
@@ -45,6 +46,8 @@ public class CourtCaseRestClient {
     private String matchesPostTemplate;
     @Value("${court-case-service.purge-absent-put-url-template}")
     private String purgeAbsentPutTemplate;
+    @Value("${court-case-service.offender-detail-get-url-template}")
+    private String offenderDetailGetTemplate;
 
     @Value("${court-case-service.disable-authentication:false}")
     private Boolean disableAuthentication;
@@ -123,6 +126,23 @@ public class CourtCaseRestClient {
             });
     }
 
+    public Mono<String> getOffenderProbationStatus(String crn) {
+        final String path = String.format(offenderDetailGetTemplate, crn);
+
+        // Get the existing case. Not a problem if it's not there. So return a Mono.empty() if it's not
+        return get(path)
+            .retrieve()
+            .bodyToMono(OffenderDetail.class)
+            .onErrorResume((e) -> {
+                log.info("GET failed for retrieving the offender probation status for path {}", path, e);
+                return Mono.empty();
+            })
+            .map(offenderDetail -> {
+                log.info("GET succeeded for retrieving the offender probation status for path {}", path);
+                return offenderDetail.getProbationStatus();
+            });
+    }
+
     private WebClient.RequestHeadersSpec<?> get(String path) {
         final WebClient.RequestHeadersSpec<?> spec = webClient
             .get()
@@ -188,6 +208,24 @@ public class CourtCaseRestClient {
             StandardCharsets.UTF_8);
     }
 
+    private Mono<String> handleGetError(ClientResponse clientResponse, String crn) {
+        final HttpStatus httpStatus = clientResponse.statusCode();
+        // This is expected for new cases
+        if (HttpStatus.NOT_FOUND.equals(httpStatus)) {
+            log.info("Failed to get offender detail for CRN {}", crn);
+            return Mono.empty();
+        }
+        else if(HttpStatus.UNAUTHORIZED.equals(httpStatus) || HttpStatus.FORBIDDEN.equals(httpStatus)) {
+            log.error("HTTP status {} to to GET the case from court case service", httpStatus);
+            return Mono.empty();
+        }
+        throw WebClientResponseException.create(httpStatus.value(),
+            httpStatus.name(),
+            clientResponse.headers().asHttpHeaders(),
+            clientResponse.toString().getBytes(),
+            StandardCharsets.UTF_8);
+    }
+
     private Mono<? extends Throwable> handleError(ClientResponse clientResponse, String courtCode, String caseNo) {
         final HttpStatus httpStatus = clientResponse.statusCode();
         if (HttpStatus.NOT_FOUND.equals(httpStatus)) {
@@ -215,4 +253,6 @@ public class CourtCaseRestClient {
     private void postErrorToBus(String failureMessage) {
         eventBus.post(CourtCaseFailureEvent.builder().failureMessage(failureMessage).build());
     }
+
+
 }

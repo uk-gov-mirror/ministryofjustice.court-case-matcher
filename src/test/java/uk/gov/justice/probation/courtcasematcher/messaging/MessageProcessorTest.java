@@ -32,7 +32,6 @@ import org.mockito.Captor;
 import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.justice.probation.courtcasematcher.application.CaseMapperReference;
 import uk.gov.justice.probation.courtcasematcher.event.CourtCaseFailureEvent;
 import uk.gov.justice.probation.courtcasematcher.model.MessageType;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Case;
@@ -49,7 +48,6 @@ class MessageProcessorTest {
     public static final String CASE_NO = "1600032952";
 
     private static final long MATCHER_THREAD_TIMEOUT = 4000;
-    private static final CaseMapperReference caseMapperReference = new CaseMapperReference();
     private static String singleCaseXml;
     private static String multiSessionXml;
     private static String multiDayXml;
@@ -101,7 +99,6 @@ class MessageProcessorTest {
         multiCourtXml = Files.readString(Paths.get(multiCourtPath));
         multiCourtXml = multiCourtXml.replace("[TODAY]", LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
 
-        caseMapperReference.setDefaultProbationStatus("No record");
     }
 
     @BeforeEach

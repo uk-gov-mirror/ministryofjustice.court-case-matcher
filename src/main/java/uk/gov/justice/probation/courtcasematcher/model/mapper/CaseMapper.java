@@ -1,9 +1,8 @@
 package uk.gov.justice.probation.courtcasematcher.model.mapper;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import uk.gov.justice.probation.courtcasematcher.application.CaseMapperReference;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.Address;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCase;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.GroupedOffenderMatches;
@@ -22,12 +21,13 @@ import static java.util.Comparator.comparing;
 @Slf4j
 public class CaseMapper {
 
-    private final CaseMapperReference caseMapperReference;
+    private final String defaultProbationStatus;
 
-    public CaseMapper(@Autowired CaseMapperReference caseMapperReference) {
+    public CaseMapper(@Value("${case-mapper-reference.defaultProbationStatus}") String defaultProbationStatus) {
         super();
-        this.caseMapperReference = caseMapperReference;
+        this.defaultProbationStatus = defaultProbationStatus;
     }
+
 
     public CourtCase newFromCase(Case aCase) {
         return getCourtCaseBuilderFromCase(aCase)
@@ -48,7 +48,7 @@ public class CaseMapper {
             .pnc(aCase.getPnc())
             .listNo(aCase.getListNo())
             .sessionStartTime(aCase.getBlock().getSession().getSessionStartTime())
-            .probationStatus(caseMapperReference.getDefaultProbationStatus())
+            .probationStatus(defaultProbationStatus)
             .offences(Optional.ofNullable(aCase.getOffences()).map(CaseMapper::fromOffences).orElse(Collections.emptyList()));
     }
 
@@ -100,13 +100,14 @@ public class CaseMapper {
             .build();
     }
 
-    public CourtCase newFromCaseAndOffender(Case incomingCase, Offender offender, GroupedOffenderMatches groupedOffenderMatches) {
+    public CourtCase newFromCaseAndOffender(Case incomingCase, Offender offender, String probationStatus, GroupedOffenderMatches groupedOffenderMatches) {
         return getCourtCaseBuilderFromCase(incomingCase)
-                .probationStatus("Previously Known")
+                .probationStatus(probationStatus != null ? probationStatus : defaultProbationStatus)
                 .crn(offender.getOtherIds().getCrn())
                 .cro(offender.getOtherIds().getCro())
                 .pnc(offender.getOtherIds().getPnc())
                 .groupedOffenderMatches(groupedOffenderMatches)
                 .build();
     }
+
 }

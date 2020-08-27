@@ -1,11 +1,14 @@
 package uk.gov.justice.probation.courtcasematcher.model.mapper;
 
-import org.junit.jupiter.api.BeforeAll;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.Month;
+import java.util.Arrays;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
-import uk.gov.justice.probation.courtcasematcher.application.CaseMapperReference;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCase;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.GroupedOffenderMatches;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.Offence;
@@ -23,12 +26,6 @@ import uk.gov.justice.probation.courtcasematcher.model.offendersearch.MatchType;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.Offender;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.OtherIds;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.Month;
-import java.util.Arrays;
-
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -45,19 +42,11 @@ class CaseMapperTest {
     public static final String CRO = "CRO456";
     public static final String PNC = "PNC789";
 
-
-    private static CaseMapper caseMapper;
+    private CaseMapper caseMapper;
 
     private Block block;
 
     private Case aCase;
-
-    @BeforeAll
-    static void beforeAll() {
-        CaseMapperReference caseMapperReference = new CaseMapperReference();
-        caseMapperReference.setDefaultProbationStatus(DEFAULT_PROBATION_STATUS);
-        caseMapper = new CaseMapper(caseMapperReference);
-    }
 
     @BeforeEach
     void beforeEach() {
@@ -93,6 +82,8 @@ class CaseMapperTest {
             .seq(1)
             .offences(singletonList(buildOffence("NEW Theft from a person", 1)))
             .build();
+
+        caseMapper = new CaseMapper(DEFAULT_PROBATION_STATUS);
     }
 
     @DisplayName("Map a new case from gateway case but with no offences")
@@ -135,7 +126,9 @@ class CaseMapperTest {
                         .cro(CRO)
                         .pnc(PNC)
                         .build())
-                .build(), matches);
+                .build(),
+                DEFAULT_PROBATION_STATUS,
+                matches);
 
         assertThat(courtCase.getCrn()).isEqualTo(CRN);
         assertThat(courtCase.getCro()).isEqualTo(CRO);
@@ -145,7 +138,7 @@ class CaseMapperTest {
         assertThat(courtCase.getCaseId()).isEqualTo("321321");
         assertThat(courtCase.getCourtCode()).isEqualTo(COURT_CODE);
         assertThat(courtCase.getCourtRoom()).isEqualTo("00");
-        assertThat(courtCase.getProbationStatus()).isEqualTo("Previously Known");
+        assertThat(courtCase.getProbationStatus()).isEqualTo(DEFAULT_PROBATION_STATUS);
         assertThat(courtCase.getDefendantAddress().getLine1()).isEqualTo("line 1");
         assertThat(courtCase.getDefendantAddress().getLine2()).isEqualTo("line 2");
         assertThat(courtCase.getDefendantAddress().getLine3()).isEqualTo("line 3");

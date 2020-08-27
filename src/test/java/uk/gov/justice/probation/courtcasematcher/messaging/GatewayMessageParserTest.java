@@ -18,7 +18,6 @@ import java.util.List;
 import javax.validation.ConstraintViolationException;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,7 +25,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import uk.gov.justice.probation.courtcasematcher.application.CaseMapperReference;
 import uk.gov.justice.probation.courtcasematcher.model.MessageHeader;
 import uk.gov.justice.probation.courtcasematcher.model.MessageHeader.MessageID;
 import uk.gov.justice.probation.courtcasematcher.model.MessageType;
@@ -45,15 +43,9 @@ public class GatewayMessageParserTest {
     private static final LocalDate HEARING_DATE = LocalDate.of(2020, Month.FEBRUARY, 20);
     private static final LocalTime START_TIME = LocalTime.of(9, 1);
     private static final LocalDateTime SESSION_START_TIME = LocalDateTime.of(HEARING_DATE, START_TIME);
-    private static final CaseMapperReference caseMapperReference = new CaseMapperReference();
 
     @Autowired
     private GatewayMessageParser gatewayMessageParser;
-
-    @BeforeAll
-    static void beforeAll() {
-        caseMapperReference.setDefaultProbationStatus("No record");
-    }
 
     @Test
     void whenInvalidMessage() throws IOException {

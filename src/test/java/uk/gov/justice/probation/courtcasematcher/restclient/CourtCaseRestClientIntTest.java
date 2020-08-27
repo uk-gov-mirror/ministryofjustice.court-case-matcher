@@ -96,7 +96,7 @@ public class CourtCaseRestClientIntTest {
 
     @Before
     public void before() {
-        MockitoAnnotations.initMocks(this);
+        MockitoAnnotations.openMocks(this);
         Logger logger = (Logger) getLogger(LoggerFactory.getLogger(CourtCaseRestClient.class).getName());
         logger.addAppender(mockAppender);
     }
@@ -271,5 +271,19 @@ public class CourtCaseRestClientIntTest {
         assertThat(loggingEvent.getFormattedMessage()).contains("Unexpected exception when applying PUT to purge absent cases for court 'X500'");
     }
 
+    @Test
+    public void whenGetOffenderProbationStatus_thenMakeRestCallToCourtCaseService() {
 
+        Optional<String> optional = restClient.getOffenderProbationStatus("X320741").blockOptional();
+
+        assertThat(optional.get()).isEqualTo("Current");
+    }
+
+    @Test
+    public void givenUnknownCrn_whenGetOffenderProbationStatus_thenMakeReturnEmpty() {
+
+        String optional = restClient.getOffenderProbationStatus("X500").block();
+
+        assertThat(optional).isNull();
+    }
 }

@@ -1,0 +1,12 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/offender/X500/detail"
+  },
+  "response": {
+    "status": 404,
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}
