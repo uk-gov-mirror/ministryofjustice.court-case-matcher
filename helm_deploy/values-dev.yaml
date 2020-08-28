@@ -10,11 +10,11 @@ image:
   port: 8080
 
 ingress:
+  controller: court-probation-dev
   enabled: true
   enable_whitelist: true
   hosts:
     - host: court-case-matcher-dev.apps.live-1.cloud-platform.service.justice.gov.uk
-      cert_secret: court-case-matcher-cert
   path: /
 
 env:
