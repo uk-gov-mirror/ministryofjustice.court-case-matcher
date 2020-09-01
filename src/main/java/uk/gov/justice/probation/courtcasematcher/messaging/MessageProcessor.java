@@ -1,14 +1,12 @@
 package uk.gov.justice.probation.courtcasematcher.messaging;
 
-import com.google.common.eventbus.EventBus;
 import java.io.IOException;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+import com.google.common.eventbus.EventBus;
 import javax.validation.ConstraintViolationException;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +19,6 @@ import uk.gov.justice.probation.courtcasematcher.model.MessageType;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Case;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.DocumentWrapper;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Session;
-import uk.gov.justice.probation.courtcasematcher.service.CourtCaseService;
 import uk.gov.justice.probation.courtcasematcher.service.MatcherService;
 
 @Setter
@@ -39,18 +36,14 @@ public class MessageProcessor {
 
     private final MatcherService matcherService;
 
-    private final CourtCaseService courtCaseService;
-
     @Autowired
     public MessageProcessor(GatewayMessageParser gatewayMessageParser,
                             EventBus eventBus,
-                            MatcherService matcherService,
-                            CourtCaseService courtCaseService) {
+                            MatcherService matcherService) {
         super();
         this.parser = gatewayMessageParser;
         this.eventBus = eventBus;
         this.matcherService = matcherService;
-        this.courtCaseService = courtCaseService;
     }
 
     public void process(String message) {
@@ -89,11 +82,9 @@ public class MessageProcessor {
 
         List<CompletableFuture<Long>> futures = matchCases(sessions);
 
-        Set<LocalDate> hearingDates = MessageProcessorUtils.getHearingDates(sessions, caseFeedFutureDateOffset);
         CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).thenRun(() -> {
             MessageProcessorUtils.getCourtCodes(sessions).forEach(courtCode ->  {
-                log.debug("Purging cases for court {}", courtCode);
-                courtCaseService.purgeAbsent(courtCode, hearingDates, MessageProcessorUtils.getCases(courtCode, sessions));
+                log.debug("Completed handling cases for court {}", courtCode);
             });
         });
     }

@@ -2,8 +2,6 @@ package uk.gov.justice.probation.courtcasematcher.messaging;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
@@ -16,9 +14,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDate;
-import java.time.Month;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 import java.util.Set;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
@@ -29,13 +25,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
-import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.justice.probation.courtcasematcher.event.CourtCaseFailureEvent;
 import uk.gov.justice.probation.courtcasematcher.model.MessageType;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Case;
-import uk.gov.justice.probation.courtcasematcher.service.CourtCaseService;
 import uk.gov.justice.probation.courtcasematcher.service.MatcherService;
 
 @DisplayName("Message Processor")
@@ -43,8 +37,6 @@ import uk.gov.justice.probation.courtcasematcher.service.MatcherService;
 class MessageProcessorTest {
 
     private static final String COURT_CODE = "B01CX00";
-    private static final String WEST_LONDON_COURT_CODE = "B01OB00";
-    private static final String BEVERLEY_COURT_CODE = "B16BG00";
     public static final String CASE_NO = "1600032952";
 
     private static final long MATCHER_THREAD_TIMEOUT = 4000;
@@ -62,18 +54,12 @@ class MessageProcessorTest {
     private MatcherService matcherService;
 
     @Mock
-    private CourtCaseService courtCaseService;
-
-    @Mock
     private Validator validator;
 
     private MessageProcessor messageProcessor;
 
     @Captor
     private ArgumentCaptor<Case> captor;
-
-    @Captor
-    private ArgumentCaptor<List<Case>> captorCases;
 
     @BeforeAll
     static void beforeAll() throws IOException {
@@ -106,7 +92,7 @@ class MessageProcessorTest {
         JacksonXmlModule xmlModule = new JacksonXmlModule();
         xmlModule.setDefaultUseWrapper(false);
         GatewayMessageParser parser = new GatewayMessageParser(new XmlMapper(xmlModule), validator);
-        messageProcessor = new MessageProcessor(parser, eventBus, matcherService, courtCaseService);
+        messageProcessor = new MessageProcessor(parser, eventBus, matcherService);
         messageProcessor.setCaseFeedFutureDateOffset(3);
     }
 
@@ -125,84 +111,45 @@ class MessageProcessorTest {
     @Test
     void whenValidMessageReceivedWithMultipleSessions_ThenAttemptMatch() {
 
-        LocalDate expectedDate1 = LocalDate.of(2020, Month.FEBRUARY, 20);
-        LocalDate expectedDate2 = LocalDate.of(2020, Month.FEBRUARY, 23);
-
         messageProcessor.process(multiSessionXml);
 
         verify(matcherService, timeout(MATCHER_THREAD_TIMEOUT).times(3)).match(any(Case.class));
-        verify(courtCaseService, timeout(MATCHER_THREAD_TIMEOUT)).purgeAbsent(eq(COURT_CODE), eq(Set.of(expectedDate1, expectedDate2)), captorCases.capture());
-
-        assertThat(captorCases.getValue().size()).isEqualTo(3);
     }
 
     @DisplayName("Receive multiple valid cases then attempt to match")
     @Test
     void whenValidMessageReceivedWithMultipleDays_ThenAttemptMatch() {
 
-        LocalDate date1 = LocalDate.of(2020, Month.JULY, 25);
-        LocalDate date2 = LocalDate.of(2020, Month.JULY, 28);
-
         messageProcessor.process(multiDayXml);
 
-        InOrder inOrder = inOrder(matcherService, courtCaseService);
-        inOrder.verify(matcherService, timeout(MATCHER_THREAD_TIMEOUT).times(6)).match(any(Case.class));
-        inOrder.verify(courtCaseService, timeout(MATCHER_THREAD_TIMEOUT)).purgeAbsent(eq(COURT_CODE), eq(Set.of(date1, date2)), captorCases.capture());
-
-        assertThat(captorCases.getValue().size()).isEqualTo(6);
+        verify(matcherService, timeout(MATCHER_THREAD_TIMEOUT).times(6)).match(any(Case.class));
     }
 
     @DisplayName("Receive only a single day (document) for cases today. Need to purge for the second date.")
     @Test
     void whenValidMessageReceivedWithSingleDay_ThenPurgeForSecondExpected() {
 
-        LocalDate date1 = LocalDate.now();
-        LocalDate date2 = date1.plusDays(3);
-
         messageProcessor.process(singleDayXml);
 
-        InOrder inOrder = inOrder(matcherService, courtCaseService);
-        inOrder.verify(matcherService, timeout(MATCHER_THREAD_TIMEOUT).times(2)).match(any(Case.class));
-        inOrder.verify(courtCaseService, timeout(MATCHER_THREAD_TIMEOUT)).purgeAbsent(eq(COURT_CODE), eq(Set.of(date1, date2)), captorCases.capture());
-
-        assertThat(captorCases.getValue().size()).isEqualTo(2);
+        verify(matcherService, timeout(MATCHER_THREAD_TIMEOUT).times(2)).match(any(Case.class));
     }
 
     @DisplayName("Receive only a single day (document) for cases in 3 days time. None for today. We need to purge for today's cases.")
     @Test
     void whenValidMessageReceivedWithSingleDayNoCasesToday_ThenPurgeForTodayExpected() {
 
-        LocalDate date1 = LocalDate.now();
-        LocalDate date2 = date1.plusDays(3);
-
         messageProcessor.process(singleDayFutureXml);
 
-        InOrder inOrder = inOrder(matcherService, courtCaseService);
-        inOrder.verify(matcherService, timeout(MATCHER_THREAD_TIMEOUT).times(1)).match(any(Case.class));
-        inOrder.verify(courtCaseService, timeout(MATCHER_THREAD_TIMEOUT)).purgeAbsent(eq(COURT_CODE), eq(Set.of(date1, date2)), captorCases.capture());
-
-        assertThat(captorCases.getValue().size()).isEqualTo(1);
+        verify(matcherService, timeout(MATCHER_THREAD_TIMEOUT).times(1)).match(any(Case.class));
     }
 
     @DisplayName("Two courts means two calls to purgeAbsent")
     @Test
     void whenValidMessageReceivedWithMultipleCourts_ThenPurgeForBoth() {
 
-        LocalDate date1 = LocalDate.now();
-        LocalDate date2 = date1.plusDays(3);
-
         messageProcessor.process(multiCourtXml);
 
         verify(matcherService, timeout(MATCHER_THREAD_TIMEOUT).times(2)).match(any(Case.class));
-        verify(courtCaseService, timeout(MATCHER_THREAD_TIMEOUT)).purgeAbsent(eq(BEVERLEY_COURT_CODE), eq(Set.of(date1, date2)), captorCases.capture());
-        List<Case> bevCases = captorCases.getValue();
-        assertThat(bevCases.size()).isEqualTo(1);
-        assertThat(bevCases.get(0).getCaseNo()).isEqualTo("1000000001");
-
-        verify(courtCaseService, timeout(MATCHER_THREAD_TIMEOUT)).purgeAbsent(eq(WEST_LONDON_COURT_CODE), eq(Set.of(date1, date2)), captorCases.capture());
-        List<Case> westLondonCases = captorCases.getValue();
-        assertThat(westLondonCases.size()).isEqualTo(1);
-        assertThat(westLondonCases.get(0).getCaseNo()).isEqualTo("1000000005");
     }
 
     @DisplayName("An XML message which is invalid")
