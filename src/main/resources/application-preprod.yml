@@ -15,4 +15,4 @@ court-case-service:
   base-url: https://court-case-service-preprod.apps.live-1.cloud-platform.service.justice.gov.uk
 
 nomis-oauth:
-  base-url: https://gateway.preprod.nomis-api.service.hmpps.dsd.io
+  base-url: https://sign-in-preprod.hmpps.service.justice.gov.uk

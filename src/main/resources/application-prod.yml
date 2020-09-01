@@ -7,4 +7,4 @@ court-case-service:
   base-url: https://court-case-service.apps.live-1.cloud-platform.service.justice.gov.uk
 
 nomis-oauth:
-  base-url: https://gateway.nomis-api.service.justice.gov.uk
+  base-url: https://sign-in.hmpps.service.justice.gov.uk
