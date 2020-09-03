@@ -107,6 +107,7 @@ class MatcherServiceTest {
     private final OffenderMatch offenderMatch = OffenderMatch.builder()
         .matchType(MatchType.NAME_DOB)
         .confirmed(false)
+        .rejected(false)
         .matchIdentifiers(MatchIdentifiers.builder()
             .crn(CRN)
             .cro("CRO")
@@ -187,16 +188,17 @@ class MatcherServiceTest {
 
     @Test
     void givenIncomingCaseDoesNotMatchExistingCase_andItExactlyMatchesASingleOffender_whenMatchCalled_thenCreateANewRecordWithOffenderData(){
+
         when(courtCaseRestClient.getCourtCase(COURT_CODE, CASE_NO)).thenReturn(Mono.empty());
         when(offenderSearchRestClient.search(DEF_NAME, DEF_DOB)).thenReturn(Mono.just(singleExactMatch));
         when(courtCaseRestClient.getOffenderProbationStatus(CRN)).thenReturn(Mono.just("Previously known"));
-        when(caseMapper.newFromCaseAndOffender(eq(incomingCase), eq(offender), eq("Previously known"), any(GroupedOffenderMatches.class))).thenReturn(courtCase);
+        when(caseMapper.newFromCaseAndOffender(incomingCase, offender, "Previously known", groupedOffenderMatches)).thenReturn(courtCase);
 
         when(courtCaseRestClient.putCourtCase(COURT_CODE, CASE_NO, courtCase)).thenReturn(mock(Disposable.class));
 
         matcherService.match(incomingCase);
 
-        verify(caseMapper).newFromCaseAndOffender(eq(incomingCase), eq(offender), eq("Previously known"), any(GroupedOffenderMatches.class));
+        verify(caseMapper).newFromCaseAndOffender(incomingCase, offender, "Previously known", groupedOffenderMatches);
         verify(caseMapper, never()).merge(any(Case.class), eq(courtCase));
         verify(caseMapper, never()).newFromCase(incomingCase);
         verify(courtCaseRestClient).getCourtCase(COURT_CODE, CASE_NO);
