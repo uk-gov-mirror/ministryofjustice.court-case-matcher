@@ -85,6 +85,7 @@ public class MatcherService {
         return GroupedOffenderMatches.builder()
             .matches(Collections.singletonList(OffenderMatch.builder()
                         .confirmed(false)
+                        .rejected(false)
                         .matchType(matchType)
                         .matchIdentifiers(MatchIdentifiers.builder()
                             .pnc(offenderMatch.getOffender().getOtherIds().getPnc())
