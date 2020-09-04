@@ -78,11 +78,14 @@ public class GatewayMessageParserTest {
             .timeStamp("2020-05-29T09:16:40.594Z")
             .build();
 
-        assertThat(message.getMessageHeader()).isEqualToIgnoringGivenFields(expectedHeader, "messageID");
-        assertThat(message.getMessageHeader().getMessageID()).isEqualToComparingFieldByField(MessageID.builder()
-            .uuid("6be22d98-a8f6-4b2a-b9e7-ca8735037c68")
-            .relatesTo("relatesTo")
-            .build());
+        assertThat(message.getMessageHeader()).usingRecursiveComparison()
+            .ignoringFields("messageID")
+            .isEqualTo(expectedHeader);
+        assertThat(message.getMessageHeader().getMessageID()).usingRecursiveComparison()
+            .isEqualTo(MessageID.builder()
+                        .uuid("6be22d98-a8f6-4b2a-b9e7-ca8735037c68")
+                        .relatesTo("relatesTo")
+                        .build());
 
         assertThat(message.getMessageBody().getGatewayOperationType().getExternalDocumentRequest().getDocumentWrapper().getDocument()).hasSize(2);
 
@@ -131,11 +134,13 @@ public class GatewayMessageParserTest {
         assertThat(aCase.getDef_age()).isEqualTo("20");
         assertThat(aCase.getPnc()).isEqualTo("PNC-ID1");
         assertThat(aCase.getCro()).isEqualTo("11111/79J");
-        assertThat(aCase.getDef_addr()).isEqualToComparingFieldByField(Address.builder()
+        assertThat(aCase.getDef_addr()).usingRecursiveComparison().isEqualTo(Address.builder()
                                                                     .line1("39 The Street")
                                                                     .line2("Newtown")
                                                                     .pcode("NT4 6YH").build());
         assertThat(aCase.getDef_dob()).isEqualTo(LocalDate.of(2002, Month.FEBRUARY, 2));
+        assertThat(aCase.getNationality1()).isEqualTo("Angolan");
+        assertThat(aCase.getNationality2()).isEqualTo("Austrian");
         assertThat(aCase.getSeq()).isEqualTo(1);
         assertThat(aCase.getListNo()).isEqualTo("1st");
         assertThat(aCase.getOffences()).hasSize(1);

@@ -11,7 +11,6 @@ import java.time.LocalDate;
 import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 import javax.validation.constraints.PositiveOrZero;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -58,6 +57,12 @@ public class Case {
 
     @JacksonXmlProperty(localName = "listno")
     private final String listNo;
+
+    @JacksonXmlProperty(localName = "nationality_1")
+    private final String nationality1;
+
+    @JacksonXmlProperty(localName = "nationality_2")
+    private final String nationality2;
 
     @ToString.Exclude
     @JacksonXmlElementWrapper

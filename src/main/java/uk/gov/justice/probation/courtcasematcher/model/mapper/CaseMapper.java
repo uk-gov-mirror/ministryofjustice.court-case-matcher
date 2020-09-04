@@ -49,6 +49,8 @@ public class CaseMapper {
             .listNo(aCase.getListNo())
             .sessionStartTime(aCase.getBlock().getSession().getSessionStartTime())
             .probationStatus(defaultProbationStatus)
+            .nationality1(aCase.getNationality1())
+            .nationality2(aCase.getNationality2())
             .offences(Optional.ofNullable(aCase.getOffences()).map(CaseMapper::fromOffences).orElse(Collections.emptyList()));
     }
 
@@ -90,6 +92,8 @@ public class CaseMapper {
             .listNo(incomingCase.getListNo())
             .sessionStartTime(incomingCase.getBlock().getSession().getSessionStartTime())
             .offences(fromOffences(incomingCase.getOffences()))
+            .nationality1(incomingCase.getNationality1())
+            .nationality2(incomingCase.getNationality2())
             // Fields to be retained from existing court case
             .breach(existingCourtCase.getBreach())
             .crn(existingCourtCase.getCrn())

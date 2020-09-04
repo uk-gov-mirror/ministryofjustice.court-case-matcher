@@ -142,7 +142,7 @@ public class CourtCaseRestClientIntTest {
 
         Optional<CourtCase> optional = restClient.getCourtCase(COURT_CODE, "123456").blockOptional();
 
-        assertThat(optional.get()).isEqualToComparingFieldByField(expected);
+        assertThat(optional.get()).usingRecursiveComparison().isEqualTo(expected);
     }
 
     @Test
