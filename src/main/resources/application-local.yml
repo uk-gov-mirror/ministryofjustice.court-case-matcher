@@ -18,7 +18,7 @@ court-case-service:
   base-url: http://localhost:8082/
 
 offender-search:
-  base-url: https://offender-search.test.delius.probation.hmpps.dsd.io
+  base-url: https://probation-offender-search-dev.hmpps.service.justice.gov.uk
 
 nomis-oauth:
   base-url: https://sign-in-dev.hmpps.service.justice.gov.uk

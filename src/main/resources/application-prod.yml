@@ -1,7 +1,7 @@
 GATEWAY_JMS_HOST: crime-portal-mirror-gateway-jms.crime-portal-mirror-gateway-prod
 
 offender-search:
-  base-url: https://offender-search.probation.service.justice.gov.uk
+  base-url: https://probation-offender-search.hmpps.service.justice.gov.uk
 
 court-case-service:
   base-url: https://court-case-service.apps.live-1.cloud-platform.service.justice.gov.uk
