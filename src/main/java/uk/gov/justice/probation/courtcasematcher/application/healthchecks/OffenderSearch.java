@@ -18,7 +18,7 @@ public class OffenderSearch implements ReactiveHealthIndicator {
     @Autowired
     private Pinger pinger;
 
-    @Value("${offender-search.ping-url}")
+    @Value("${offender-search.ping-path}")
     private String path;
 
     @Override

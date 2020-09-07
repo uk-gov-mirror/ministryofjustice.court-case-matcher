@@ -55,7 +55,10 @@ court-case-service:
 
 offender-search:
   post-match-url: /match
-  ping-url: /health/ping
+  ping-path: /health/ping
+
+nomis-oauth:
+  ping-path: /auth/ping
 
 web:
   client:

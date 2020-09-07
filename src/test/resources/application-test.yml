@@ -21,11 +21,12 @@ court-case-service:
 offender-search:
   base-url: http://localhost:8090
   disable-authentication: true
-  ping-url: /ping
+  ping-path: /ping
 
 nomis-oauth:
   base-url: http://localhost:8090
   disable-authentication: true
+  ping-path: /ping
 
 case-mapper-reference:
   defaultProbationStatus: "No record"
