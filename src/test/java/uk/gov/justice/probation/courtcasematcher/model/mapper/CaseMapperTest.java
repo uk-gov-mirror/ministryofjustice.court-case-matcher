@@ -5,12 +5,13 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Month;
 import java.util.Arrays;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCase;
-import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.GroupedOffenderMatches;
+import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.MatchIdentifiers;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.Offence;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.OffenderMatch;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Address;
@@ -22,9 +23,12 @@ import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.I
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.InfoSourceDetail;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Job;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Session;
+import uk.gov.justice.probation.courtcasematcher.model.offendersearch.Match;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.MatchType;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.Offender;
+import uk.gov.justice.probation.courtcasematcher.model.offendersearch.OffenderSearchMatchType;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.OtherIds;
+import uk.gov.justice.probation.courtcasematcher.model.offendersearch.SearchResponse;
 
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -109,46 +113,98 @@ class CaseMapperTest {
         assertThat(courtCase.getOffences()).isEmpty();
     }
 
-    @DisplayName("Map a new case from gateway case but with no offences")
+    @DisplayName("Map a court case to a new court case when search response has yielded no matches")
     @Test
-    void whenMapNewFromCaseAndOffender_thenCreateNewCaseWithOffenderData() {
+    void givenNoMatches_whenMapNewFromCaseAndSearchResponse_thenCreateNewCaseWithEmptyListOfMatches() {
 
-        ReflectionTestUtils.setField(aCase, "offences", null);
-        GroupedOffenderMatches matches = GroupedOffenderMatches.builder()
-            .matches(singletonList(
-                        OffenderMatch.builder()
-                            .matchType(MatchType.NAME_DOB)
-                            .build()))
+        CourtCase courtCase = caseMapper.newFromCase(aCase);
+        SearchResponse searchResponse = SearchResponse.builder()
+            .matchedBy(OffenderSearchMatchType.NOTHING)
             .build();
-        CourtCase courtCase = caseMapper.newFromCaseAndOffender(aCase, Offender.builder()
-                .otherIds(OtherIds.builder()
-                        .crn(CRN)
-                        .cro(CRO)
-                        .pnc(PNC)
-                        .build())
-                .build(),
-                DEFAULT_PROBATION_STATUS,
-                matches);
 
-        assertThat(courtCase.getCrn()).isEqualTo(CRN);
-        assertThat(courtCase.getCro()).isEqualTo(CRO);
-        assertThat(courtCase.getPnc()).isEqualTo(PNC);
+        CourtCase courtCaseNew = caseMapper.newFromCourtCaseAndSearchResponse(courtCase, searchResponse);
 
-        assertThat(courtCase.getCaseNo()).isEqualTo("123");
-        assertThat(courtCase.getCaseId()).isEqualTo("321321");
-        assertThat(courtCase.getCourtCode()).isEqualTo(COURT_CODE);
-        assertThat(courtCase.getCourtRoom()).isEqualTo("00");
-        assertThat(courtCase.getProbationStatus()).isEqualTo(DEFAULT_PROBATION_STATUS);
-        assertThat(courtCase.getDefendantAddress().getLine1()).isEqualTo("line 1");
-        assertThat(courtCase.getDefendantAddress().getLine2()).isEqualTo("line 2");
-        assertThat(courtCase.getDefendantAddress().getLine3()).isEqualTo("line 3");
-        assertThat(courtCase.getDefendantAddress().getPostcode()).isEqualTo("LD1 1AA");
-        assertThat(courtCase.getDefendantDob()).isEqualTo(DATE_OF_BIRTH);
-        assertThat(courtCase.getDefendantName()).isEqualTo("Mr James BLUNT");
-        assertThat(courtCase.getDefendantSex()).isEqualTo("M");
-        assertThat(courtCase.getSessionStartTime()).isEqualTo(SESSION_START_TIME);
-        assertThat(courtCase.getOffences()).isEmpty();
-        assertThat(courtCase.getGroupedOffenderMatches().getMatches()).hasSize(1);
+        assertThat(courtCaseNew).isNotSameAs(courtCase);
+        assertThat(courtCaseNew.getCrn()).isNull();
+        assertThat(courtCaseNew.getGroupedOffenderMatches().getMatches()).hasSize(0);
+    }
+
+    @DisplayName("Map a court case to a new court case when search response has yielded a single match")
+    @Test
+    void givenSingleMatch_whenMapNewFromCaseAndSearchResponse_thenCreateNewCaseWithSingleMatch() {
+        Match match = Match.builder().offender(Offender.builder()
+            .otherIds(OtherIds.builder().crn(CRN).cro(CRO).pnc(PNC).build())
+            .build())
+            .build();
+
+        CourtCase courtCase = caseMapper.newFromCase(aCase);
+        SearchResponse searchResponse = SearchResponse.builder()
+            .matchedBy(OffenderSearchMatchType.ALL_SUPPLIED)
+            .matches(List.of(match))
+            .probationStatus("Current")
+            .build();
+
+        CourtCase courtCaseNew = caseMapper.newFromCourtCaseAndSearchResponse(courtCase, searchResponse);
+
+        assertThat(courtCaseNew).isNotSameAs(courtCase);
+        assertThat(courtCaseNew.getCrn()).isEqualTo(CRN);
+        assertThat(courtCaseNew.getProbationStatus()).isEqualTo("Current");
+        assertThat(courtCaseNew.getGroupedOffenderMatches().getMatches()).hasSize(1);
+        OffenderMatch offenderMatch1 = buildOffenderMatch(MatchType.NAME_DOB, CRN, CRO, PNC);
+        assertThat(courtCaseNew.getGroupedOffenderMatches().getMatches()).containsExactly(offenderMatch1);
+    }
+
+    @DisplayName("Map a court case to a new court case when search response has yielded a single match but null probation status")
+    @Test
+    void givenSingleMatchWithNoProbationStatus_whenMapNewFromCaseAndSearchResponse_thenCreateNewCaseWithSingleMatch() {
+        Match match = Match.builder().offender(Offender.builder()
+            .otherIds(OtherIds.builder().crn(CRN).cro(CRO).pnc(PNC).build())
+            .build())
+            .build();
+
+        CourtCase courtCase = caseMapper.newFromCase(aCase);
+        SearchResponse searchResponse = SearchResponse.builder()
+            .matchedBy(OffenderSearchMatchType.ALL_SUPPLIED)
+            .matches(List.of(match))
+            .build();
+
+        CourtCase courtCaseNew = caseMapper.newFromCourtCaseAndSearchResponse(courtCase, searchResponse);
+
+        assertThat(courtCaseNew).isNotSameAs(courtCase);
+        assertThat(courtCaseNew.getCrn()).isEqualTo(CRN);
+        assertThat(courtCaseNew.getProbationStatus()).isEqualTo(DEFAULT_PROBATION_STATUS);
+        assertThat(courtCaseNew.getGroupedOffenderMatches().getMatches()).hasSize(1);
+        OffenderMatch offenderMatch1 = buildOffenderMatch(MatchType.NAME_DOB, CRN, CRO, PNC);
+        assertThat(courtCaseNew.getGroupedOffenderMatches().getMatches()).containsExactly(offenderMatch1);
+    }
+
+    @DisplayName("Map a court case to a new court case when search response has yielded multiple matches")
+    @Test
+    void givenMultipleMatches_whenMapNewFromCaseAndSearchResponse_thenCreateNewCaseWithListOfMatches() {
+        Match match1 = Match.builder().offender(Offender.builder()
+            .otherIds(OtherIds.builder().crn(CRN).cro(CRO).pnc(PNC).build())
+            .build())
+            .build();
+        Match match2 = Match.builder().offender(Offender.builder()
+            .otherIds(OtherIds.builder().crn("CRN1").build())
+            .build())
+            .build();
+
+        CourtCase courtCase = caseMapper.newFromCase(aCase);
+        SearchResponse searchResponse = SearchResponse.builder()
+            .matchedBy(OffenderSearchMatchType.PARTIAL_NAME)
+            .matches(List.of(match1, match2))
+            .build();
+
+        CourtCase courtCaseNew = caseMapper.newFromCourtCaseAndSearchResponse(courtCase, searchResponse);
+
+        assertThat(courtCaseNew).isNotSameAs(courtCase);
+        assertThat(courtCaseNew.getCrn()).isNull();
+        assertThat(courtCaseNew.getProbationStatus()).isEqualTo(DEFAULT_PROBATION_STATUS);
+        assertThat(courtCaseNew.getGroupedOffenderMatches().getMatches()).hasSize(2);
+        OffenderMatch offenderMatch1 = buildOffenderMatch(MatchType.PARTIAL_NAME, CRN, CRO, PNC);
+        OffenderMatch offenderMatch2 = buildOffenderMatch(MatchType.PARTIAL_NAME, "CRN1", null, null);
+        assertThat(courtCaseNew.getGroupedOffenderMatches().getMatches()).containsExactlyInAnyOrder(offenderMatch1, offenderMatch2);
     }
 
     @DisplayName("Map from a new case composed of nulls. Ensures no null pointers.")
@@ -262,6 +318,15 @@ class CaseMapperTest {
             .sum("On 02/02/2022 at Town, stole Article, to the value of £0.02, belonging to Person.")
             .title(title)
             .seq(seq)
+            .build();
+    }
+
+    private OffenderMatch buildOffenderMatch(MatchType matchType, String crn, String cro, String pnc) {
+        return OffenderMatch.builder()
+            .matchType(matchType)
+            .confirmed(false)
+            .rejected(false)
+            .matchIdentifiers(MatchIdentifiers.builder().pnc(pnc).cro(cro).crn(crn).build())
             .build();
     }
 

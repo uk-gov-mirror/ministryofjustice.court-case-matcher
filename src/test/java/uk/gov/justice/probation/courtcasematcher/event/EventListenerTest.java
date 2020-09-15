@@ -13,6 +13,9 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.LoggingEvent;
 import ch.qos.logback.core.Appender;
 import com.google.common.eventbus.EventBus;
+import java.time.LocalDate;
+import java.time.Month;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import javax.validation.ConstraintViolation;
@@ -26,10 +29,33 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import reactor.core.publisher.Mono;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCase;
+import uk.gov.justice.probation.courtcasematcher.model.offendersearch.OffenderSearchMatchType;
+import uk.gov.justice.probation.courtcasematcher.model.offendersearch.SearchResponse;
+import uk.gov.justice.probation.courtcasematcher.service.CourtCaseService;
+import uk.gov.justice.probation.courtcasematcher.service.MatcherService;
 
 @ExtendWith(MockitoExtension.class)
 class EventListenerTest {
+
+
+    private final static String DEFENDANT_NAME = "Nic CAGE";
+    private final static LocalDate DEFENDANT_DOB = LocalDate.of(1955, Month.SEPTEMBER, 25);
+    private final static String CASE = "123456";
+    private final static String COURT_CODE = "B10JQ00";
+    private final static CourtCase courtCase = CourtCase.builder()
+        .defendantName(DEFENDANT_NAME)
+        .defendantDob(DEFENDANT_DOB)
+        .courtCode(COURT_CODE)
+        .caseNo(CASE)
+        .build();
+
+    @Mock
+    private MatcherService matcherService;
+
+    @Mock
+    private CourtCaseService courtCaseService;
 
     @Mock
     private Appender<ILoggingEvent> mockAppender;
@@ -47,7 +73,7 @@ class EventListenerTest {
         logger.addAppender(mockAppender);
 
         eventBus = new EventBus();
-        eventListener = new EventListener(eventBus);
+        eventListener = new EventListener(eventBus, matcherService, courtCaseService);
     }
 
     @DisplayName("Ensure that successful events are logged and counted")
@@ -55,7 +81,7 @@ class EventListenerTest {
     void testSuccessEvent() {
         CourtCase courtCaseApi = CourtCase.builder().caseNo("123").courtCode("SHF").build();
 
-        eventListener.courtCaseEvent(CourtCaseSuccessEvent.builder().courtCaseApi(courtCaseApi).build());
+        eventListener.courtCaseEvent(CourtCaseSuccessEvent.builder().courtCase(courtCaseApi).build());
 
         verify(mockAppender, atLeast(1)).doAppend(captorLoggingEvent.capture());
         List<LoggingEvent> events = captorLoggingEvent.getAllValues();
@@ -115,6 +141,39 @@ class EventListenerTest {
         eventBus.post(CourtCaseFailureEvent.builder().failureMessage("Problem").build());
 
         assertThat(eventListener.getFailureCount()).isEqualTo(1);
+    }
+
+    @DisplayName("Check the match event when the call to the matcher service returns")
+    @Test
+    void whenCourtCaseUpdated_thenSave() {
+        eventListener.courtCaseUpdateEvent(CourtCaseUpdateEvent.builder().courtCase(courtCase).build());
+
+        verify(courtCaseService).saveCourtCase(courtCase);
+    }
+
+    @DisplayName("Check the match event when the call to the matcher service returns")
+    @Test
+    void givenSearch_whenCourtCaseMatched_thenSave() {
+        SearchResponse searchResponse = SearchResponse.builder().build();
+        when(matcherService.getSearchResponse(DEFENDANT_NAME, DEFENDANT_DOB, COURT_CODE, CASE)).thenReturn(Mono.just(searchResponse));
+
+        eventBus.post(CourtCaseMatchEvent.builder().courtCase(courtCase).build());
+
+        verify(courtCaseService).createCase(courtCase, searchResponse);
+    }
+
+    @DisplayName("Check the match event when the call to the matcher service returns an empty response")
+    @Test
+    void givenSearchWhichFails_whenCourtCaseMatched_thenSave() {
+        when(matcherService.getSearchResponse(DEFENDANT_NAME, DEFENDANT_DOB, COURT_CODE, CASE)).thenReturn(Mono.empty());
+
+        eventListener.courtCaseMatchEvent(CourtCaseMatchEvent.builder().courtCase(courtCase).build());
+
+        verify(matcherService).getSearchResponse(DEFENDANT_NAME, DEFENDANT_DOB, COURT_CODE, CASE);
+        verify(courtCaseService).createCase(courtCase, SearchResponse.builder()
+                                                                        .matches(Collections.emptyList())
+                                                                        .matchedBy(OffenderSearchMatchType.NOTHING)
+                                                                        .build());
     }
 
 }

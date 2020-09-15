@@ -1,5 +1,11 @@
 package uk.gov.justice.probation.courtcasematcher.restclient;
 
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Supplier;
 import com.google.common.eventbus.EventBus;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,13 +28,6 @@ import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.GroupedO
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.OffenderDetail;
 import uk.gov.justice.probation.courtcasematcher.restclient.exception.CourtCaseNotFoundException;
 import uk.gov.justice.probation.courtcasematcher.restclient.exception.CourtNotFoundException;
-
-import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Supplier;
 
 import static org.springframework.security.oauth2.client.web.reactive.function.client.ServletOAuth2AuthorizedClientExchangeFilterFunction.clientRegistrationId;
 
@@ -91,7 +90,7 @@ public class CourtCaseRestClient {
             .bodyToMono(CourtCase.class)
             .doOnError(e -> postErrorToBus(String.format(ERR_MSG_FORMAT_PUT_CASE, caseNo, courtCode) + ".Exception : " + e))
             .subscribe(courtCaseApi -> {
-                eventBus.post(CourtCaseSuccessEvent.builder().courtCaseApi(courtCaseApi).build());
+                eventBus.post(CourtCaseSuccessEvent.builder().courtCase(courtCaseApi).build());
                 postMatches(courtCaseApi.getCourtCode(), courtCaseApi.getCaseNo(), offenderMatches);
             });
     }
@@ -126,20 +125,20 @@ public class CourtCaseRestClient {
             });
     }
 
-    public Mono<String> getOffenderProbationStatus(String crn) {
+    public Mono<String> getProbationStatus(String crn) {
         final String path = String.format(offenderDetailGetTemplate, crn);
 
         // Get the existing case. Not a problem if it's not there. So return a Mono.empty() if it's not
         return get(path)
             .retrieve()
             .bodyToMono(OffenderDetail.class)
-            .onErrorResume((e) -> {
-                log.info("GET failed for retrieving the offender probation status for path {}", path, e);
-                return Mono.empty();
-            })
             .map(offenderDetail -> {
                 log.info("GET succeeded for retrieving the offender probation status for path {}", path);
                 return offenderDetail.getProbationStatus();
+            })
+            .onErrorResume((e) -> {
+                log.info("GET failed for retrieving the offender probation status for path {}. Will return empty status", path, e);
+                return Mono.just("");
             });
     }
 

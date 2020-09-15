@@ -2,11 +2,6 @@ package uk.gov.justice.probation.courtcasematcher.service;
 
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -30,18 +25,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.LoggerFactory;
-import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
-import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCase;
-import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.GroupedOffenderMatches;
-import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.MatchIdentifiers;
-import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.OffenderMatch;
-import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Block;
-import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Case;
-import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Session;
-import uk.gov.justice.probation.courtcasematcher.model.mapper.CaseMapper;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.Match;
-import uk.gov.justice.probation.courtcasematcher.model.offendersearch.MatchType;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.Offender;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.OffenderSearchMatchType;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.OtherIds;
@@ -53,27 +38,17 @@ import uk.gov.justice.probation.courtcasematcher.restclient.OffenderSearchRestCl
 class MatcherServiceTest {
     private static final String COURT_CODE = "SHF";
     private static final String CASE_NO = "1600032952";
-    private static final long REST_CLIENT_WAIT_MS = 2000;
     private static final String CRN = "X123456";
-    private static final String DEFAULT_PROBATION_STATUS = "Not known";
+    private static final String PROBATION_STATUS = "Current";
 
     private final LocalDate DEF_DOB = LocalDate.of(2000, 6, 17);
     private final String DEF_NAME = "Arthur MORGAN";
-
-    @Mock
-    private Session session;
-
-    private Case incomingCase;
 
     private final OtherIds otherIds = OtherIds.builder()
         .crn(CRN)
         .cro("CRO")
         .pnc("PNC")
         .build();
-    private final CourtCase courtCase = CourtCase.builder()
-            .caseNo(CASE_NO)
-            .courtCode(COURT_CODE)
-            .build();
     private final Offender offender = Offender.builder()
             .otherIds(otherIds)
             .build();
@@ -97,33 +72,9 @@ class MatcherServiceTest {
             .matchedBy(OffenderSearchMatchType.NOTHING)
             .matches(Collections.emptyList())
             .build();
-    private final SearchResponse singleFuzzyMatch = SearchResponse.builder()
-            .matches(singletonList(Match.builder()
-                    .offender(offender)
-                    .build()))
-            .matchedBy(OffenderSearchMatchType.PARTIAL_NAME_DOB_LENIENT)
-            .build();
-
-    private final OffenderMatch offenderMatch = OffenderMatch.builder()
-        .matchType(MatchType.NAME_DOB)
-        .confirmed(false)
-        .rejected(false)
-        .matchIdentifiers(MatchIdentifiers.builder()
-            .crn(CRN)
-            .cro("CRO")
-            .pnc("PNC")
-            .build())
-        .build();
-
-    private final GroupedOffenderMatches groupedOffenderMatches = GroupedOffenderMatches.builder()
-        .matches(singletonList(offenderMatch))
-        .build();
 
     @Mock
     private CourtCaseRestClient courtCaseRestClient;
-
-    @Mock
-    private CaseMapper caseMapper;
 
     @Mock
     private OffenderSearchRestClient offenderSearchRestClient;
@@ -141,156 +92,57 @@ class MatcherServiceTest {
         Logger logger = (Logger) getLogger(LoggerFactory.getLogger(MatcherService.class).getName());
         logger.addAppender(mockAppender);
 
-        incomingCase = Case.builder()
-            .caseNo(CASE_NO)
-            .def_dob(DEF_DOB)
-            .def_name(DEF_NAME)
-            .block(Block.builder()
-                .session(session)
-                .build())
-            .build();
-
-        when(session.getCourtCode()).thenReturn(COURT_CODE);
-
-        matcherService = new MatcherService(courtCaseRestClient, offenderSearchRestClient, caseMapper);
+        matcherService = new MatcherService(courtCaseRestClient, offenderSearchRestClient);
     }
 
     @Test
-    public void givenIncomingCaseMatchesExisting_whenMatchCalled_thenMergeAndStore() {
-        when(courtCaseRestClient.getCourtCase(COURT_CODE, CASE_NO)).thenReturn(Mono.just(courtCase));
-        when(caseMapper.merge(incomingCase, courtCase)).thenReturn(courtCase);
-        when(courtCaseRestClient.putCourtCase(COURT_CODE, CASE_NO, courtCase)).thenReturn(mock(Disposable.class));
-
-        matcherService.match(incomingCase);
-
-        verify(caseMapper).merge(incomingCase, courtCase);
-        verify(caseMapper, never()).newFromCaseAndOffender(eq(incomingCase), eq(offender), any(String.class), any(GroupedOffenderMatches.class));
-        verify(caseMapper, never()).newFromCase(incomingCase);
-        verify(courtCaseRestClient, timeout(REST_CLIENT_WAIT_MS)).putCourtCase(COURT_CODE, CASE_NO, courtCase);
-        verify(courtCaseRestClient, never()).postMatches(COURT_CODE, CASE_NO, groupedOffenderMatches);
-    }
-
-    @Test
-    void givenIncomingCaseDoesNotMatchExistingCase_andItDoesNotMatchAnOffender_whenMatchCalled_thenCreateANewRecord(){
-        when(courtCaseRestClient.getCourtCase(COURT_CODE, CASE_NO)).thenReturn(Mono.empty());
+    void givenIncomingDefendantDoesNotMatchAnOffender_whenMatchCalled_thenLog(){
         when(offenderSearchRestClient.search(DEF_NAME, DEF_DOB)).thenReturn(Mono.empty());
-        when(caseMapper.newFromCase(incomingCase)).thenReturn(courtCase);
-        when(courtCaseRestClient.putCourtCase(COURT_CODE, CASE_NO, courtCase)).thenReturn(mock(Disposable.class));
 
-        matcherService.match(incomingCase);
+        SearchResponse searchResponse = matcherService.getSearchResponse(DEF_NAME, DEF_DOB, COURT_CODE, CASE_NO).block();
 
-        verify(caseMapper).newFromCase(incomingCase);
-        verify(caseMapper, never()).merge(any(Case.class), eq(courtCase));
-        verify(caseMapper, never()).newFromCaseAndOffender(eq(incomingCase), eq(offender), any(String.class), any(GroupedOffenderMatches.class));
-        verify(courtCaseRestClient, timeout(REST_CLIENT_WAIT_MS)).putCourtCase(COURT_CODE, CASE_NO, courtCase);
-        verify(courtCaseRestClient, never()).postMatches(COURT_CODE, CASE_NO, groupedOffenderMatches);
-    }
-
-    @Test
-    void givenIncomingCaseDoesNotMatchExistingCase_andItExactlyMatchesASingleOffender_whenMatchCalled_thenCreateANewRecordWithOffenderData(){
-
-        when(courtCaseRestClient.getCourtCase(COURT_CODE, CASE_NO)).thenReturn(Mono.empty());
-        when(offenderSearchRestClient.search(DEF_NAME, DEF_DOB)).thenReturn(Mono.just(singleExactMatch));
-        when(courtCaseRestClient.getOffenderProbationStatus(CRN)).thenReturn(Mono.just("Previously known"));
-        when(caseMapper.newFromCaseAndOffender(incomingCase, offender, "Previously known", groupedOffenderMatches)).thenReturn(courtCase);
-
-        when(courtCaseRestClient.putCourtCase(COURT_CODE, CASE_NO, courtCase)).thenReturn(mock(Disposable.class));
-
-        matcherService.match(incomingCase);
-
-        verify(caseMapper).newFromCaseAndOffender(incomingCase, offender, "Previously known", groupedOffenderMatches);
-        verify(caseMapper, never()).merge(any(Case.class), eq(courtCase));
-        verify(caseMapper, never()).newFromCase(incomingCase);
-        verify(courtCaseRestClient).getCourtCase(COURT_CODE, CASE_NO);
-        verify(courtCaseRestClient).getOffenderProbationStatus(CRN);
-        verify(courtCaseRestClient, timeout(REST_CLIENT_WAIT_MS)).putCourtCase(COURT_CODE, CASE_NO, courtCase);
-        verifyNoMoreInteractions(courtCaseRestClient);
-    }
-
-    @Test
-    void givenIncomingCaseDoesNotMatchExistingCase_andItExactlyMatchesAMultipleOffenders_whenMatchCalled_thenCreateANewRecordWithoutOffenderData(){
-        when(courtCaseRestClient.getCourtCase(COURT_CODE, CASE_NO)).thenReturn(Mono.empty());
-        when(offenderSearchRestClient.search(DEF_NAME, DEF_DOB)).thenReturn(Mono.just(multipleExactMatches));
-        when(caseMapper.newFromCase(incomingCase)).thenReturn(courtCase);
-        when(courtCaseRestClient.putCourtCase(COURT_CODE, CASE_NO, courtCase)).thenReturn(mock(Disposable.class));
-
-        matcherService.match(incomingCase);
-
-        verify(caseMapper).newFromCase(incomingCase);
-        verify(caseMapper, never()).merge(any(Case.class), eq(courtCase));
-        verify(caseMapper, never()).newFromCaseAndOffender(eq(incomingCase), eq(offender), any(String.class), any(GroupedOffenderMatches.class));
-        verify(courtCaseRestClient).getCourtCase(COURT_CODE, CASE_NO);
-        verify(courtCaseRestClient, timeout(REST_CLIENT_WAIT_MS)).putCourtCase(COURT_CODE, CASE_NO, courtCase);
-        verifyNoMoreInteractions(courtCaseRestClient);
-    }
-
-    @Test
-    void givenIncomingCaseDoesNotMatchExistingCase_andItHasNoExactMatches_whenMatchCalled_thenCreateANewRecordWithoutOffenderData(){
-        when(courtCaseRestClient.getCourtCase(COURT_CODE, CASE_NO)).thenReturn(Mono.empty());
-        when(offenderSearchRestClient.search(DEF_NAME, DEF_DOB)).thenReturn(Mono.just(noMatches));
-        when(caseMapper.newFromCase(incomingCase)).thenReturn(courtCase);
-        when(courtCaseRestClient.putCourtCase(COURT_CODE, CASE_NO, courtCase)).thenReturn(mock(Disposable.class));
-
-        matcherService.match(incomingCase);
-
-        verify(caseMapper).newFromCase(incomingCase);
-        verify(caseMapper, never()).merge(any(Case.class), eq(courtCase));
-        verify(caseMapper, never()).newFromCaseAndOffender(eq(incomingCase), eq(offender), any(String.class), any(GroupedOffenderMatches.class));
-        verify(courtCaseRestClient, timeout(REST_CLIENT_WAIT_MS)).putCourtCase(COURT_CODE, CASE_NO, courtCase);
-        verifyNoMoreInteractions(courtCaseRestClient);
-    }
-
-    @Test
-    void givenIncomingCaseDoesNotMatchExistingCase_andItHasOnePartialMatch_whenMatchCalled_thenCreateANewRecordWithoutOffenderData(){
-        when(courtCaseRestClient.getCourtCase(COURT_CODE, CASE_NO)).thenReturn(Mono.empty());
-        when(offenderSearchRestClient.search(DEF_NAME, DEF_DOB)).thenReturn(Mono.just(singleFuzzyMatch));
-        when(caseMapper.newFromCase(incomingCase)).thenReturn(courtCase);
-        when(courtCaseRestClient.putCourtCase(eq(COURT_CODE), eq(CASE_NO), eq(courtCase))).thenReturn(mock(Disposable.class));
-
-        matcherService.match(incomingCase);
-
-        verify(caseMapper).newFromCase(incomingCase);
-        verify(caseMapper, never()).merge(any(Case.class), eq(courtCase));
-        verify(caseMapper, never()).newFromCaseAndOffender(eq(incomingCase), eq(offender), any(String.class), any(GroupedOffenderMatches.class));
-        verify(courtCaseRestClient, timeout(REST_CLIENT_WAIT_MS)).putCourtCase(COURT_CODE, CASE_NO, courtCase);
-        verifyNoMoreInteractions(courtCaseRestClient);
-    }
-
-    @Test
-    public void whenMatchesReturned_thenPostMatchesAndLogTheDetails() {
-        when(courtCaseRestClient.getCourtCase(COURT_CODE, CASE_NO)).thenReturn(Mono.empty());
-        when(offenderSearchRestClient.search(DEF_NAME, DEF_DOB)).thenReturn(Mono.just(singleExactMatch));
-        when(courtCaseRestClient.getOffenderProbationStatus(CRN)).thenReturn(Mono.just("Current"));
-        when(caseMapper.newFromCaseAndOffender(eq(incomingCase), any(Offender.class), eq("Current"), any(GroupedOffenderMatches.class))).thenReturn(courtCase);
-        when(courtCaseRestClient.putCourtCase(COURT_CODE, CASE_NO, courtCase)).thenReturn(mock(Disposable.class));
-
-        matcherService.match(incomingCase);
-
-        LoggingEvent loggingEvent = captureFirstLogEvent();
-        assertThat(loggingEvent.getLevel()).isEqualTo(Level.INFO);
-        assertThat(loggingEvent.getFormattedMessage().trim())
-                .contains("Match results for caseNo: 1600032952, courtCode: SHF - matchedBy: ALL_SUPPLIED, matchCount: 1");
-
-        verify(courtCaseRestClient).getCourtCase(COURT_CODE, CASE_NO);
-        verify(courtCaseRestClient).getOffenderProbationStatus(CRN);
-        verify(courtCaseRestClient).putCourtCase(COURT_CODE, CASE_NO, courtCase);
-        verifyNoMoreInteractions(courtCaseRestClient);
-    }
-
-    @Test
-    void whenEmptyMonoReturned_thenLogDetails(){
-        when(courtCaseRestClient.getCourtCase(COURT_CODE, CASE_NO)).thenReturn(Mono.empty());
-        when(offenderSearchRestClient.search(DEF_NAME, DEF_DOB)).thenReturn(Mono.empty());
-        when(caseMapper.newFromCase(incomingCase)).thenReturn(courtCase);
-        when(courtCaseRestClient.putCourtCase(COURT_CODE, CASE_NO, courtCase)).thenReturn(mock(Disposable.class));
-
-        matcherService.match(incomingCase);
-
+        assertThat(searchResponse).isNull();
         LoggingEvent loggingEvent = captureFirstLogEvent();
         assertThat(loggingEvent.getLevel()).isEqualTo(Level.ERROR);
         assertThat(loggingEvent.getFormattedMessage().trim())
-                .contains("Match results for caseNo: 1600032952, courtCode: SHF - Empty response from OffenderSearchRestClient");
+            .contains("Match results for caseNo: 1600032952, courtCode: SHF - Empty response from OffenderSearchRestClient");
         verifyNoMoreInteractions(courtCaseRestClient);
+    }
+
+    @Test
+    void givenMatchesToMultipleOffenders_whenMatchCalled_thenReturn(){
+        when(offenderSearchRestClient.search(DEF_NAME, DEF_DOB)).thenReturn(Mono.just(multipleExactMatches));
+
+        SearchResponse searchResponse = matcherService.getSearchResponse(DEF_NAME, DEF_DOB, COURT_CODE, CASE_NO).block();
+
+        assertThat(searchResponse.getMatches()).hasSize(2);
+        assertThat(searchResponse.getMatchedBy()).isSameAs(OffenderSearchMatchType.ALL_SUPPLIED);
+        assertThat(searchResponse.getProbationStatus()).isNull();
+    }
+
+    @Test
+    void givenMatchesToSingleOffender_whenSearchResponse_thenReturnWithProbationStatus(){
+
+        when(offenderSearchRestClient.search(DEF_NAME, DEF_DOB)).thenReturn(Mono.just(singleExactMatch));
+        when(courtCaseRestClient.getProbationStatus(CRN)).thenReturn(Mono.just(PROBATION_STATUS));
+
+        SearchResponse searchResponse = matcherService.getSearchResponse(DEF_NAME, DEF_DOB, COURT_CODE, CASE_NO).block();
+
+        assertThat(searchResponse.getMatches()).hasSize(1);
+        assertThat(searchResponse.getMatchedBy()).isSameAs(OffenderSearchMatchType.ALL_SUPPLIED);
+        assertThat(searchResponse.getProbationStatus()).isEqualTo(PROBATION_STATUS);
+    }
+
+    @Test
+    void givenZeroMatches_whenSearchResponse_thenReturn(){
+
+        when(offenderSearchRestClient.search(DEF_NAME, DEF_DOB)).thenReturn(Mono.just(noMatches));
+
+        SearchResponse searchResponse = matcherService.getSearchResponse(DEF_NAME, DEF_DOB, COURT_CODE, CASE_NO).block();
+
+        assertThat(searchResponse.getMatches()).hasSize(0);
+        assertThat(searchResponse.getMatchedBy()).isSameAs(OffenderSearchMatchType.NOTHING);
+        assertThat(searchResponse.getProbationStatus()).isNull();
     }
 
     private LoggingEvent captureFirstLogEvent() {

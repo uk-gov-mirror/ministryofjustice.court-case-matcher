@@ -64,4 +64,7 @@ public class CourtCase implements Serializable {
     @JsonIgnore
     private final GroupedOffenderMatches groupedOffenderMatches;
 
+    @JsonIgnore
+    private final boolean isNew;
+
 }

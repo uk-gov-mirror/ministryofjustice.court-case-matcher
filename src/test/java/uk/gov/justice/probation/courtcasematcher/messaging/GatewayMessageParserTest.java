@@ -117,7 +117,7 @@ public class GatewayMessageParserTest {
 
     private void checkBlock(Block block) {
         assertThat(block.getCases()).hasSize(2);
-        checkCase(block.getCases().stream().filter(aCase -> aCase.getCaseNo().equals("1600032952")).findFirst().orElseThrow());
+        checkCase(block.getCases().stream().filter(aCase -> aCase.getCaseNo().equals("1600032953")).findFirst().orElseThrow());
     }
 
     private void checkCase(Case aCase) {

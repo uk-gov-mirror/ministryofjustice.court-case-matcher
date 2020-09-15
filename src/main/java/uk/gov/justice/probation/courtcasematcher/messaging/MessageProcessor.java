@@ -1,10 +1,8 @@
 package uk.gov.justice.probation.courtcasematcher.messaging;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import com.google.common.eventbus.EventBus;
 import javax.validation.ConstraintViolationException;
@@ -14,11 +12,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import uk.gov.justice.probation.courtcasematcher.event.CourtCaseFailureEvent;
+import uk.gov.justice.probation.courtcasematcher.event.CourtCaseMatchEvent;
+import uk.gov.justice.probation.courtcasematcher.event.CourtCaseUpdateEvent;
 import uk.gov.justice.probation.courtcasematcher.model.MessageHeader;
 import uk.gov.justice.probation.courtcasematcher.model.MessageType;
-import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Case;
+import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCase;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.DocumentWrapper;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Session;
+import uk.gov.justice.probation.courtcasematcher.service.CourtCaseService;
 import uk.gov.justice.probation.courtcasematcher.service.MatcherService;
 
 @Setter
@@ -36,14 +37,18 @@ public class MessageProcessor {
 
     private final MatcherService matcherService;
 
+    private final CourtCaseService courtCaseService;
+
     @Autowired
     public MessageProcessor(GatewayMessageParser gatewayMessageParser,
                             EventBus eventBus,
-                            MatcherService matcherService) {
+                            MatcherService matcherService,
+                            CourtCaseService courtCaseService) {
         super();
         this.parser = gatewayMessageParser;
         this.eventBus = eventBus;
         this.matcherService = matcherService;
+        this.courtCaseService = courtCaseService;
     }
 
     public void process(String message) {
@@ -80,31 +85,33 @@ public class MessageProcessor {
             .flatMap(document -> document.getData().getJob().getSessions().stream())
             .collect(Collectors.toList());
 
-        List<CompletableFuture<Long>> futures = matchCases(sessions);
-
-        CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).thenRun(() -> {
-            MessageProcessorUtils.getCourtCodes(sessions).forEach(courtCode ->  {
-                log.debug("Completed handling cases for court {}", courtCode);
-            });
-        });
+        saveCases(sessions);
     }
 
-    private List<CompletableFuture<Long>> matchCases(List<Session> sessions) {
-
-        List<CompletableFuture<Long>> allFutures = new ArrayList<>();
+    private void saveCases(List<Session> sessions) {
         sessions.forEach(session -> {
-            List<Case> cases = session.getBlocks().stream()
+            log.debug("Starting to process cases in session court {}, room {}, date {}",
+                session.getCourtCode(), session.getCourtRoom(), session.getDateOfHearing());
+
+            List<String> cases = session.getBlocks().stream()
                 .flatMap(block -> block.getCases().stream())
+                .map(aCase -> {
+                    courtCaseService.getCourtCase(aCase)
+                        .subscribe(this::postCaseEvent);
+                    return aCase.getCaseNo();
+                })
                 .collect(Collectors.toList());
-            allFutures.add(CompletableFuture.supplyAsync(() -> matchCases(session, cases)));
+            log.debug("Completed {} cases for {}, {}, {}", cases.size(), session.getCourtCode(), session.getCourtRoom(), session.getDateOfHearing());
         });
-        return allFutures;
     }
 
-    private Long matchCases(Session session, List<Case> cases) {
-        log.debug("Matching {} cases for court {}, session {}", cases.size(), session.getCourtCode(), session.getId());
-        cases.forEach(matcherService::match);
-        return session.getId();
+    void postCaseEvent(CourtCase courtCase) {
+        if (courtCase.isNew()) {
+            eventBus.post(new CourtCaseMatchEvent(courtCase));
+        }
+        else {
+            eventBus.post(new CourtCaseUpdateEvent(courtCase));
+        }
     }
 
     private void logMessageReceipt(MessageHeader messageHeader) {
