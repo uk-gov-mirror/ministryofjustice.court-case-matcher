@@ -36,6 +36,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class CaseMapperTest {
 
     private static final String DEFAULT_PROBATION_STATUS = "No record";
+    private static final String MATCHES_PROBATION_STATUS = "Possible nDelius record";
     private static final LocalDate DATE_OF_BIRTH = LocalDate.of(1969, Month.AUGUST, 26);
     private static final LocalDate DATE_OF_HEARING = LocalDate.of(2020, Month.FEBRUARY, 29);
     private static final LocalTime START_TIME = LocalTime.of(9, 10);
@@ -193,6 +194,7 @@ class CaseMapperTest {
         CourtCase courtCase = caseMapper.newFromCase(aCase);
         SearchResponse searchResponse = SearchResponse.builder()
             .matchedBy(OffenderSearchMatchType.PARTIAL_NAME)
+            .probationStatus(MATCHES_PROBATION_STATUS)
             .matches(List.of(match1, match2))
             .build();
 
@@ -200,7 +202,7 @@ class CaseMapperTest {
 
         assertThat(courtCaseNew).isNotSameAs(courtCase);
         assertThat(courtCaseNew.getCrn()).isNull();
-        assertThat(courtCaseNew.getProbationStatus()).isEqualTo(DEFAULT_PROBATION_STATUS);
+        assertThat(courtCaseNew.getProbationStatus()).isEqualTo(MATCHES_PROBATION_STATUS);
         assertThat(courtCaseNew.getGroupedOffenderMatches().getMatches()).hasSize(2);
         OffenderMatch offenderMatch1 = buildOffenderMatch(MatchType.PARTIAL_NAME, CRN, CRO, PNC);
         OffenderMatch offenderMatch2 = buildOffenderMatch(MatchType.PARTIAL_NAME, "CRN1", null, null);

@@ -2,11 +2,13 @@ package uk.gov.justice.probation.courtcasematcher.service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
@@ -28,6 +30,12 @@ public class MatcherService {
     @Autowired
     private final OffenderSearchRestClient offenderSearchRestClient;
 
+    @Value("${probation-status-reference.default}")
+    private final String defaultProbationStatus;
+
+    @Value("${probation-status-reference.multiMatch}")
+    private final String multiMatchProbationStatus;
+
     public Mono<SearchResponse> getSearchResponse(String defendantName, LocalDate dateOfBirth, String courtCode, String caseNo) {
         return offenderSearchRestClient.search(defendantName, dateOfBirth)
                 .map(searchResponse -> {
@@ -37,13 +45,15 @@ public class MatcherService {
                 })
                 .flatMap(searchResponse -> {
                     List<Match> matches = searchResponse.getMatches();
-                    if (matches != null && matches.size() == 1) {
+                    int matchCount = Optional.ofNullable(matches).map(List::size).orElse(0);
+                    if (matchCount == 1) {
                         return Mono.zip(Mono.just(searchResponse), restClient.getProbationStatus(matches.get(0).getOffender().getOtherIds().getCrn()));
                     }
                     else {
                         log.debug("Got {} matches for defendant name {}, dob {}, match type {}",
-                            searchResponse.getMatches().size(), defendantName, dateOfBirth, searchResponse.getMatchedBy());
-                        return Mono.zip(Mono.just(searchResponse), Mono.just(""));
+                            matchCount, defendantName, dateOfBirth, searchResponse.getMatchedBy());
+                        String probationStatus = matchCount > 1 ? multiMatchProbationStatus : defaultProbationStatus;
+                        return Mono.zip(Mono.just(searchResponse), Mono.just(probationStatus));
                     }
                 })
                 .map(this::combine)

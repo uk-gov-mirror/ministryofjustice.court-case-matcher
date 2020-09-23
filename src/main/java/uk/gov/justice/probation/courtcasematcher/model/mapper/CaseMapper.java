@@ -28,7 +28,7 @@ public class CaseMapper {
 
     private final String defaultProbationStatus;
 
-    public CaseMapper(@Value("${case-mapper-reference.defaultProbationStatus}") String defaultProbationStatus) {
+    public CaseMapper(@Value("${probation-status-reference.default}") String defaultProbationStatus) {
         super();
         this.defaultProbationStatus = defaultProbationStatus;
     }
@@ -40,7 +40,7 @@ public class CaseMapper {
             .build();
     }
 
-    private CourtCase.CourtCaseBuilder getCourtCaseBuilderFromCase(CourtCase courtCase) {
+    private CourtCase.CourtCaseBuilder getCourtCaseBuilderFromCase(CourtCase courtCase, String probationStatus) {
         return CourtCase.builder()
             .caseNo(courtCase.getCaseNo())
             .courtCode(courtCase.getCourtCode())
@@ -54,7 +54,7 @@ public class CaseMapper {
             .pnc(courtCase.getPnc())
             .listNo(courtCase.getListNo())
             .sessionStartTime(courtCase.getSessionStartTime())
-            .probationStatus(defaultProbationStatus)
+            .probationStatus(Optional.ofNullable(probationStatus).orElse(defaultProbationStatus))
             .nationality1(courtCase.getNationality1())
             .nationality2(courtCase.getNationality2())
             .offences(courtCase.getOffences());
@@ -137,7 +137,7 @@ public class CaseMapper {
 
         CourtCaseBuilder courtCaseBuilder;
 
-        courtCaseBuilder = getCourtCaseBuilderFromCase(incomingCase)
+        courtCaseBuilder = getCourtCaseBuilderFromCase(incomingCase, searchResponse.getProbationStatus())
             .groupedOffenderMatches(buildGroupedOffenderMatch(searchResponse.getMatches(), matchType));
 
         if (matches.size() == 1) {

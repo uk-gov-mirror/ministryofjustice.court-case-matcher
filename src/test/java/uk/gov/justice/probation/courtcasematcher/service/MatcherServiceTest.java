@@ -40,6 +40,8 @@ class MatcherServiceTest {
     private static final String CASE_NO = "1600032952";
     private static final String CRN = "X123456";
     private static final String PROBATION_STATUS = "Current";
+    private static final String DEFAULT_PROBATION_STATUS = "No record";
+    private static final String MATCHES_PROBATION_STATUS = "Possible nDelius record";
 
     private final LocalDate DEF_DOB = LocalDate.of(2000, 6, 17);
     private final String DEF_NAME = "Arthur MORGAN";
@@ -92,7 +94,7 @@ class MatcherServiceTest {
         Logger logger = (Logger) getLogger(LoggerFactory.getLogger(MatcherService.class).getName());
         logger.addAppender(mockAppender);
 
-        matcherService = new MatcherService(courtCaseRestClient, offenderSearchRestClient);
+        matcherService = new MatcherService(courtCaseRestClient, offenderSearchRestClient, DEFAULT_PROBATION_STATUS, MATCHES_PROBATION_STATUS);
     }
 
     @Test
@@ -117,7 +119,7 @@ class MatcherServiceTest {
 
         assertThat(searchResponse.getMatches()).hasSize(2);
         assertThat(searchResponse.getMatchedBy()).isSameAs(OffenderSearchMatchType.ALL_SUPPLIED);
-        assertThat(searchResponse.getProbationStatus()).isNull();
+        assertThat(searchResponse.getProbationStatus()).isEqualTo(MATCHES_PROBATION_STATUS);
     }
 
     @Test
@@ -142,7 +144,7 @@ class MatcherServiceTest {
 
         assertThat(searchResponse.getMatches()).hasSize(0);
         assertThat(searchResponse.getMatchedBy()).isSameAs(OffenderSearchMatchType.NOTHING);
-        assertThat(searchResponse.getProbationStatus()).isNull();
+        assertThat(searchResponse.getProbationStatus()).isEqualTo(DEFAULT_PROBATION_STATUS);
     }
 
     private LoggingEvent captureFirstLogEvent() {

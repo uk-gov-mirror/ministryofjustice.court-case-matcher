@@ -66,8 +66,9 @@ web:
     read-timeout-ms: 5000
     write-timeout-ms: 5000
 
-case-mapper-reference:
-  defaultProbationStatus: "No record"
+probation-status-reference:
+  default: "No record"
+  multiMatch: "Possible nDelius record"
 
 # Libra feed has today's case list and another case list for this many days hence. e.g. 25th and 28th July
 case-feed-future-date-offset: 3
