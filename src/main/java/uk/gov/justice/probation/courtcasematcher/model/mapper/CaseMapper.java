@@ -132,15 +132,12 @@ public class CaseMapper {
 
     public CourtCase newFromCourtCaseAndSearchResponse(CourtCase incomingCase, SearchResponse searchResponse) {
 
-        List<Match> matches = searchResponse.getMatches() != null ? searchResponse.getMatches() : Collections.emptyList();
         MatchType matchType = MatchType.of(searchResponse.getMatchedBy());
 
-        CourtCaseBuilder courtCaseBuilder;
-
-        courtCaseBuilder = getCourtCaseBuilderFromCase(incomingCase, searchResponse.getProbationStatus())
+        CourtCaseBuilder courtCaseBuilder = getCourtCaseBuilderFromCase(incomingCase, searchResponse.getProbationStatus())
             .groupedOffenderMatches(buildGroupedOffenderMatch(searchResponse.getMatches(), matchType));
 
-        if (matches.size() == 1) {
+        if (searchResponse.isExactMatch()) {
             Match match = searchResponse.getMatches().get(0);
             courtCaseBuilder
                 .probationStatus(Optional.ofNullable(searchResponse.getProbationStatus()).orElse(defaultProbationStatus))

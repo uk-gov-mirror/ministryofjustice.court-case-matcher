@@ -20,6 +20,7 @@ import uk.gov.justice.probation.courtcasematcher.model.offendersearch.OffenderSe
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.SearchResponse;
 
 import java.time.LocalDate;
+import java.time.Month;
 import java.util.Optional;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
@@ -45,8 +46,8 @@ public class OffenderSearchResponseRestClientIntTest {
             .port(8090)
             .stubRequestLoggingDisabled(false)
             .usingFilesUnderClasspath("mocks"));
-    private ArgumentCaptor<OffenderSearchFailureEvent> failureCaptor = ArgumentCaptor.forClass(OffenderSearchFailureEvent.class);
-    private ArgumentCaptor<OffenderSearchValidationFailureEvent> validationFailureCaptor = ArgumentCaptor.forClass(OffenderSearchValidationFailureEvent.class);
+    private final ArgumentCaptor<OffenderSearchFailureEvent> failureCaptor = ArgumentCaptor.forClass(OffenderSearchFailureEvent.class);
+    private final ArgumentCaptor<OffenderSearchValidationFailureEvent> validationFailureCaptor = ArgumentCaptor.forClass(OffenderSearchValidationFailureEvent.class);
 
 
     @Test
@@ -57,11 +58,23 @@ public class OffenderSearchResponseRestClientIntTest {
         assertThat(match).isPresent();
         assertThat(match.get().getMatchedBy()).isEqualTo(OffenderSearchMatchType.ALL_SUPPLIED);
         assertThat(match.get().getMatches().size()).isEqualTo(1);
+        assertThat(match.get().isExactMatch()).isTrue();
 
         Offender offender = match.get().getMatches().get(0).getOffender();
         assertThat(offender.getOtherIds().getCrn()).isEqualTo("X346204");
         assertThat(offender.getOtherIds().getCro()).isEqualTo("1234ABC");
         assertThat(offender.getOtherIds().getPnc()).isEqualTo("ABCD1234");
+    }
+
+    @Test
+    public void givenSingleMatchNonExactMatchReturned_whenSearch_thenReturnIt() {
+        Optional<SearchResponse> match = restClient.search("Calvin HARRIS", LocalDate.of(1969, Month.AUGUST, 26))
+            .blockOptional();
+
+        assertThat(match).isPresent();
+        assertThat(match.get().getMatchedBy()).isEqualTo(OffenderSearchMatchType.NAME);
+        assertThat(match.get().getMatches().size()).isEqualTo(1);
+        assertThat(match.get().isExactMatch()).isFalse();
     }
 
     @Test

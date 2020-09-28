@@ -1,8 +1,14 @@
 package uk.gov.justice.probation.courtcasematcher.model.offendersearch;
 
-import lombok.*;
-
 import java.util.List;
+import java.util.Optional;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Builder
 @Data
@@ -13,4 +19,10 @@ public class SearchResponse {
     private final List<Match> matches;
     private final OffenderSearchMatchType matchedBy;
     private final String probationStatus;
+
+    @JsonIgnore
+    public boolean isExactMatch() {
+        int matchCount = Optional.ofNullable(matches).map(List::size).orElse(0);
+        return matchCount == 1 && matchedBy == OffenderSearchMatchType.ALL_SUPPLIED;
+    }
 }

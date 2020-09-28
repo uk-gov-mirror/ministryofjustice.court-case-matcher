@@ -33,8 +33,8 @@ public class MatcherService {
     @Value("${probation-status-reference.default}")
     private final String defaultProbationStatus;
 
-    @Value("${probation-status-reference.multiMatch}")
-    private final String multiMatchProbationStatus;
+    @Value("${probation-status-reference.nonExactMatch}")
+    private final String nonExactProbationStatus;
 
     public Mono<SearchResponse> getSearchResponse(String defendantName, LocalDate dateOfBirth, String courtCode, String caseNo) {
         return offenderSearchRestClient.search(defendantName, dateOfBirth)
@@ -45,14 +45,14 @@ public class MatcherService {
                 })
                 .flatMap(searchResponse -> {
                     List<Match> matches = searchResponse.getMatches();
-                    int matchCount = Optional.ofNullable(matches).map(List::size).orElse(0);
-                    if (matchCount == 1) {
+                    if (searchResponse.isExactMatch()) {
                         return Mono.zip(Mono.just(searchResponse), restClient.getProbationStatus(matches.get(0).getOffender().getOtherIds().getCrn()));
                     }
                     else {
+                        int matchCount = Optional.ofNullable(matches).map(List::size).orElse(0);
                         log.debug("Got {} matches for defendant name {}, dob {}, match type {}",
                             matchCount, defendantName, dateOfBirth, searchResponse.getMatchedBy());
-                        String probationStatus = matchCount > 1 ? multiMatchProbationStatus : defaultProbationStatus;
+                        String probationStatus = matchCount >= 1 ? nonExactProbationStatus : defaultProbationStatus;
                         return Mono.zip(Mono.just(searchResponse), Mono.just(probationStatus));
                     }
                 })
