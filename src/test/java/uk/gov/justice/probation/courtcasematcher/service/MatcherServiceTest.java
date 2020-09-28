@@ -80,6 +80,7 @@ class MatcherServiceTest {
 
     @Mock
     private OffenderSearchRestClient offenderSearchRestClient;
+
     @Mock
     private Appender<ILoggingEvent> mockAppender;
 
@@ -94,7 +95,8 @@ class MatcherServiceTest {
         Logger logger = (Logger) getLogger(LoggerFactory.getLogger(MatcherService.class).getName());
         logger.addAppender(mockAppender);
 
-        matcherService = new MatcherService(courtCaseRestClient, offenderSearchRestClient, DEFAULT_PROBATION_STATUS, MATCHES_PROBATION_STATUS);
+        matcherService =
+            new MatcherService(courtCaseRestClient, offenderSearchRestClient, DEFAULT_PROBATION_STATUS, MATCHES_PROBATION_STATUS);
     }
 
     @Test

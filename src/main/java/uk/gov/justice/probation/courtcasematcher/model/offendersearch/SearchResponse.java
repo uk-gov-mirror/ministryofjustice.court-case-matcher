@@ -22,7 +22,11 @@ public class SearchResponse {
 
     @JsonIgnore
     public boolean isExactMatch() {
-        int matchCount = Optional.ofNullable(matches).map(List::size).orElse(0);
-        return matchCount == 1 && matchedBy == OffenderSearchMatchType.ALL_SUPPLIED;
+        return getMatchCount() == 1 && matchedBy == OffenderSearchMatchType.ALL_SUPPLIED;
+    }
+
+    @JsonIgnore
+    public int getMatchCount() {
+        return Optional.ofNullable(matches).map(List::size).orElse(0);
     }
 }

@@ -29,16 +29,19 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import reactor.core.publisher.Mono;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCase;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.OffenderSearchMatchType;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.SearchResponse;
 import uk.gov.justice.probation.courtcasematcher.service.CourtCaseService;
 import uk.gov.justice.probation.courtcasematcher.service.MatcherService;
+import uk.gov.justice.probation.courtcasematcher.service.TelemetryService;
 
-@ExtendWith(MockitoExtension.class)
+@ExtendWith({MockitoExtension.class})
+@MockitoSettings(strictness = Strictness.STRICT_STUBS)
 class EventListenerTest {
-
 
     private final static String DEFENDANT_NAME = "Nic CAGE";
     private final static LocalDate DEFENDANT_DOB = LocalDate.of(1955, Month.SEPTEMBER, 25);
@@ -58,6 +61,9 @@ class EventListenerTest {
     private CourtCaseService courtCaseService;
 
     @Mock
+    private TelemetryService telemetryService;
+
+    @Mock
     private Appender<ILoggingEvent> mockAppender;
 
     @Captor
@@ -73,7 +79,7 @@ class EventListenerTest {
         logger.addAppender(mockAppender);
 
         eventBus = new EventBus();
-        eventListener = new EventListener(eventBus, matcherService, courtCaseService);
+        eventListener = new EventListener(eventBus, matcherService, courtCaseService, telemetryService);
     }
 
     @DisplayName("Ensure that successful events are logged and counted")
@@ -159,7 +165,9 @@ class EventListenerTest {
 
         eventBus.post(CourtCaseMatchEvent.builder().courtCase(courtCase).build());
 
+        verify(matcherService).getSearchResponse(DEFENDANT_NAME, DEFENDANT_DOB, COURT_CODE, CASE);
         verify(courtCaseService).createCase(courtCase, searchResponse);
+        verify(telemetryService).trackOffenderMatchEvent(COURT_CODE, CASE, searchResponse);
     }
 
     @DisplayName("Check the match event when the call to the matcher service returns an empty response")
@@ -169,11 +177,13 @@ class EventListenerTest {
 
         eventListener.courtCaseMatchEvent(CourtCaseMatchEvent.builder().courtCase(courtCase).build());
 
+        SearchResponse searchResponse = SearchResponse.builder()
+            .matches(Collections.emptyList())
+            .matchedBy(OffenderSearchMatchType.NOTHING)
+            .build();
         verify(matcherService).getSearchResponse(DEFENDANT_NAME, DEFENDANT_DOB, COURT_CODE, CASE);
-        verify(courtCaseService).createCase(courtCase, SearchResponse.builder()
-                                                                        .matches(Collections.emptyList())
-                                                                        .matchedBy(OffenderSearchMatchType.NOTHING)
-                                                                        .build());
+        verify(courtCaseService).createCase(courtCase, searchResponse);
+        verify(telemetryService).trackOffenderMatchEvent(COURT_CODE, CASE, searchResponse);
     }
 
 }

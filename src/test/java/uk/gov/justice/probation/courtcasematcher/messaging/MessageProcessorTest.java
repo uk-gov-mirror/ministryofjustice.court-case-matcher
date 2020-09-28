@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
+import java.time.Month;
 import java.util.Set;
 import com.fasterxml.jackson.dataformat.xml.JacksonXmlModule;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -17,9 +17,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatcher;
-import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
@@ -29,14 +27,17 @@ import uk.gov.justice.probation.courtcasematcher.event.CourtCaseUpdateEvent;
 import uk.gov.justice.probation.courtcasematcher.model.MessageType;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCase;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Case;
+import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Info;
 import uk.gov.justice.probation.courtcasematcher.service.CourtCaseService;
-import uk.gov.justice.probation.courtcasematcher.service.MatcherService;
+import uk.gov.justice.probation.courtcasematcher.service.TelemetryService;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.timeout;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @DisplayName("Message Processor")
@@ -44,6 +45,7 @@ import static org.mockito.Mockito.when;
 class MessageProcessorTest {
 
     private static final long MATCHER_THREAD_TIMEOUT = 4000;
+    private static final String COURT_CODE = "B01CX00";
     private static String singleCaseXml;
     private static String multiSessionXml;
     private static String multiDayXml;
@@ -52,7 +54,7 @@ class MessageProcessorTest {
     private EventBus eventBus;
 
     @Mock
-    private MatcherService matcherService;
+    private TelemetryService telemetryService;
 
     @Mock
     private CourtCaseService courtCaseService;
@@ -61,9 +63,6 @@ class MessageProcessorTest {
     private Validator validator;
 
     private MessageProcessor messageProcessor;
-
-    @Captor
-    private ArgumentCaptor<Case> captor;
 
     @BeforeAll
     static void beforeAll() throws IOException {
@@ -76,19 +75,6 @@ class MessageProcessorTest {
 
         String multiDayPath = "src/test/resources/messages/gateway-message-multi-day.xml";
         multiDayXml = Files.readString(Paths.get(multiDayPath));
-
-        String singleDayPath = "src/test/resources/messages/gateway-message-single-day.xml";
-        String singleDayXml = Files.readString(Paths.get(singleDayPath));
-        singleDayXml = singleDayXml.replace("[TODAY]", LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
-
-        String singleDayFuturePath = "src/test/resources/messages/gateway-message-single-day-future.xml";
-        String singleDayFutureXml = Files.readString(Paths.get(singleDayFuturePath));
-        singleDayFutureXml = singleDayFutureXml.replace("[FUTURE]", LocalDate.now().plusDays(3).format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
-
-        String multiCourtPath = "src/test/resources/messages/gateway-message-multi-court.xml";
-        String multiCourtXml = Files.readString(Paths.get(multiCourtPath));
-        multiCourtXml = multiCourtXml.replace("[TODAY]", LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
-
     }
 
     @BeforeEach
@@ -96,7 +82,7 @@ class MessageProcessorTest {
         JacksonXmlModule xmlModule = new JacksonXmlModule();
         xmlModule.setDefaultUseWrapper(false);
         GatewayMessageParser parser = new GatewayMessageParser(new XmlMapper(xmlModule), validator);
-        messageProcessor = new MessageProcessor(parser, eventBus, matcherService, courtCaseService);
+        messageProcessor = new MessageProcessor(parser, eventBus, telemetryService, courtCaseService);
         messageProcessor.setCaseFeedFutureDateOffset(3);
     }
 
@@ -110,6 +96,9 @@ class MessageProcessorTest {
         messageProcessor.process(singleCaseXml);
 
         verify(eventBus, timeout(1000)).post(any(CourtCaseUpdateEvent.class));
+        verify(telemetryService).trackCourtListEvent(any(Info.class));
+        verify(telemetryService).trackCourtCaseEvent(any(Case.class));
+        verifyNoMoreInteractions(eventBus, telemetryService);
     }
 
     @DisplayName("Receive multiple valid cases then attempt to match one and update two")
@@ -132,6 +121,13 @@ class MessageProcessorTest {
         verify(eventBus, timeout(1000)).post(argThat(CourtCaseUpdateEventMatcher.builder().caseNo("1600032953").build()));
         verify(eventBus, timeout(1000)).post(argThat(CourtCaseUpdateEventMatcher.builder().caseNo("1600032979").build()));
         verify(eventBus, timeout(1000)).post(argThat(CourtCaseMatchEventMatcher.builder().caseNo("1600032952").build()));
+        verify(telemetryService).trackCourtListEvent(argThat(matchesInfoWith(LocalDate.of(2020, Month.FEBRUARY, 20))));
+        verify(telemetryService).trackCourtListEvent(argThat(matchesInfoWith(LocalDate.of(2020, Month.FEBRUARY, 23))));
+        verify(telemetryService).trackCourtCaseEvent(argThat(case1));
+        verify(telemetryService).trackCourtCaseEvent(argThat(case2));
+        verify(telemetryService).trackCourtCaseEvent(argThat(case3));
+
+        verifyNoMoreInteractions(eventBus, telemetryService);
     }
 
     @DisplayName("Receive multiple valid cases then attempt post as updates.")
@@ -144,6 +140,11 @@ class MessageProcessorTest {
         messageProcessor.process(multiDayXml);
 
         verify(eventBus, timeout(MATCHER_THREAD_TIMEOUT).times(6)).post(any(CourtCaseUpdateEvent.class));
+
+        verify(telemetryService).trackCourtListEvent(argThat(matchesInfoWith(LocalDate.of(2020, Month.JULY, 25))));
+        verify(telemetryService).trackCourtListEvent(argThat(matchesInfoWith(LocalDate.of(2020, Month.JULY, 28))));
+        verify(telemetryService, times(6)).trackCourtCaseEvent(any(Case.class));
+        verifyNoMoreInteractions(eventBus, telemetryService);
     }
 
     @DisplayName("An XML message which is invalid")
@@ -209,5 +210,26 @@ class MessageProcessorTest {
         public boolean matches(Case otherCase) {
             return otherCase != null && caseNo.equals(otherCase.getCaseNo());
         }
+    }
+
+    @Builder
+    public static class InfoMatcher implements ArgumentMatcher<Info> {
+
+        private final LocalDate dateOfHearing;
+        private final String courtCode;
+
+        @Override
+        public boolean matches(Info otherInfo) {
+            return otherInfo != null
+                && dateOfHearing.equals(otherInfo.getDateOfHearing())
+                && courtCode.equalsIgnoreCase(otherInfo.getInfoSourceDetail().getOuCode());
+        }
+    }
+
+    private InfoMatcher matchesInfoWith(LocalDate dateOfHearing) {
+        return InfoMatcher.builder()
+            .courtCode(COURT_CODE)
+            .dateOfHearing(dateOfHearing)
+            .build();
     }
 }

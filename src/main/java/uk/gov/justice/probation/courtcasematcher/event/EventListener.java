@@ -15,6 +15,7 @@ import uk.gov.justice.probation.courtcasematcher.model.offendersearch.OffenderSe
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.SearchResponse;
 import uk.gov.justice.probation.courtcasematcher.service.CourtCaseService;
 import uk.gov.justice.probation.courtcasematcher.service.MatcherService;
+import uk.gov.justice.probation.courtcasematcher.service.TelemetryService;
 
 /**
  * We intend to replace EventBus with an external message queue.
@@ -27,15 +28,21 @@ public class EventListener {
 
     private final MatcherService matcherService;
 
+    private final TelemetryService telemetryService;
+
     private final AtomicLong successCount = new AtomicLong(0);
 
     private final AtomicLong failureCount = new AtomicLong(0);
 
     @Autowired
-    public EventListener(EventBus eventBus, MatcherService matcherService, CourtCaseService courtCaseService) {
+    public EventListener(EventBus eventBus,
+                        MatcherService matcherService,
+                        CourtCaseService courtCaseService,
+                        TelemetryService telemetryService) {
         super();
         this.matcherService = matcherService;
         this.courtCaseService = courtCaseService;
+        this.telemetryService = telemetryService;
         eventBus.register(this);
     }
 
@@ -82,6 +89,7 @@ public class EventListener {
                                                             .matches(Collections.emptyList())
                                                             .build())))
             .subscribe(searchResponse -> {
+                telemetryService.trackOffenderMatchEvent(courtCase.getCourtCode(), courtCase.getCaseNo(), searchResponse);
                 courtCaseService.createCase(courtCase, searchResponse);
             });
     }
