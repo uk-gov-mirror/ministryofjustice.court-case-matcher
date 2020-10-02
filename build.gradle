@@ -78,7 +78,7 @@ dependencies {
     compile group: 'com.google.guava', name: 'guava', version: '29.0-jre'
     implementation 'org.springframework.boot:spring-boot-starter-artemis'
     compile 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.11.3'
-    compile 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.11.2'
+    compile 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.11.3'
 
     compile 'org.springframework.boot:spring-boot-starter-webflux'
     compile 'org.projectreactor:reactor-spring:1.0.1.RELEASE'
