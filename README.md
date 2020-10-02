@@ -1,5 +1,7 @@
 Court Case Matcher
 ==================
+[![CircleCI](https://circleci.com/gh/ministryofjustice/court-case-matcher.svg?style=svg)](https://circleci.com/gh/ministryofjustice/court-case-matcher)
+
 Service to receive details of cases, incoming from Libra, match against existing cases in court case service, match to offenders (offender-search) and update court case service.
 
 Dev Setup
