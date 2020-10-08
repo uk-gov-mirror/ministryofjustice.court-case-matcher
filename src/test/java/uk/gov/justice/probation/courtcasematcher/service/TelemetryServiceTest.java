@@ -16,6 +16,7 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCase;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Block;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Case;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.DataJob;
@@ -38,7 +39,7 @@ import static uk.gov.justice.probation.courtcasematcher.service.TelemetryService
 import static uk.gov.justice.probation.courtcasematcher.service.TelemetryService.COURT_CODE_KEY;
 import static uk.gov.justice.probation.courtcasematcher.service.TelemetryService.COURT_ROOM_KEY;
 import static uk.gov.justice.probation.courtcasematcher.service.TelemetryService.CRNS_KEY;
-import static uk.gov.justice.probation.courtcasematcher.service.TelemetryService.DATE_OF_HEARING_KEY;
+import static uk.gov.justice.probation.courtcasematcher.service.TelemetryService.HEARING_DATE_KEY;
 import static uk.gov.justice.probation.courtcasematcher.service.TelemetryService.MATCHED_BY_KEY;
 import static uk.gov.justice.probation.courtcasematcher.service.TelemetryService.MATCHES_KEY;
 import static uk.gov.justice.probation.courtcasematcher.service.TelemetryService.PNC_KEY;
@@ -54,6 +55,7 @@ class TelemetryServiceTest {
     private static final LocalDate DATE_OF_HEARING = LocalDate.of(2020, Month.NOVEMBER, 5);
     private static Info info;
     private static Case aCase;
+    private static CourtCase courtCase;
 
     @Captor
     private ArgumentCaptor<Map<String, String>> propertiesCaptor;
@@ -89,6 +91,12 @@ class TelemetryServiceTest {
                 .build())
             .caseNo(CASE_NO)
             .build();
+
+        courtCase = CourtCase.builder()
+                .courtCode(COURT_CODE)
+                .caseNo(CASE_NO)
+                .sessionStartTime(DATE_OF_HEARING.atStartOfDay())
+                .build();
     }
 
     @DisplayName("Simple record of event with no properties")
@@ -109,15 +117,16 @@ class TelemetryServiceTest {
             .probationStatus("Current")
             .build();
 
-        telemetryService.trackOffenderMatchEvent(COURT_CODE, CASE_NO, response);
+        telemetryService.trackOffenderMatchEvent(courtCase, response);
 
         verify(telemetryClient).trackEvent(eq("PiCOffenderExactMatch"), propertiesCaptor.capture(), eq(Collections.emptyMap()));
 
         Map<String, String> properties = propertiesCaptor.getValue();
-        assertThat(properties).hasSize(6);
+        assertThat(properties).hasSize(7);
         assertThat(properties).contains(
             entry(COURT_CODE_KEY, COURT_CODE),
             entry(CASE_NO_KEY, CASE_NO),
+            entry(HEARING_DATE_KEY, "2020-11-05"),
             entry(MATCHES_KEY, "1"),
             entry(MATCHED_BY_KEY, OffenderSearchMatchType.ALL_SUPPLIED.name()),
             entry(CRNS_KEY, CRN),
@@ -135,15 +144,16 @@ class TelemetryServiceTest {
             .probationStatus("Possible nDelius records")
             .build();
 
-        telemetryService.trackOffenderMatchEvent(COURT_CODE, CASE_NO, response);
+        telemetryService.trackOffenderMatchEvent(courtCase, response);
 
         verify(telemetryClient).trackEvent(eq("PiCOffenderPartialMatch"), propertiesCaptor.capture(), eq(Collections.emptyMap()));
 
         Map<String, String> properties = propertiesCaptor.getValue();
-        assertThat(properties).hasSize(6);
+        assertThat(properties).hasSize(7);
         assertThat(properties).contains(
             entry(COURT_CODE_KEY, COURT_CODE),
             entry(CASE_NO_KEY, CASE_NO),
+            entry(HEARING_DATE_KEY, "2020-11-05"),
             entry(MATCHES_KEY, "2"),
             entry(MATCHED_BY_KEY, OffenderSearchMatchType.PARTIAL_NAME.name()),
             entry(CRNS_KEY, CRN + "," + "X123454"),
@@ -160,15 +170,16 @@ class TelemetryServiceTest {
             .probationStatus("Possible nDelius records")
             .build();
 
-        telemetryService.trackOffenderMatchEvent(COURT_CODE, CASE_NO, response);
+        telemetryService.trackOffenderMatchEvent(courtCase, response);
 
         verify(telemetryClient).trackEvent(eq("PiCOffenderPartialMatch"), propertiesCaptor.capture(), eq(Collections.emptyMap()));
 
         Map<String, String> properties = propertiesCaptor.getValue();
-        assertThat(properties).hasSize(6);
+        assertThat(properties).hasSize(7);
         assertThat(properties).contains(
             entry(COURT_CODE_KEY, COURT_CODE),
             entry(CASE_NO_KEY, CASE_NO),
+            entry(HEARING_DATE_KEY, "2020-11-05"),
             entry(MATCHES_KEY, "1"),
             entry(MATCHED_BY_KEY, OffenderSearchMatchType.PARTIAL_NAME.name()),
             entry(CRNS_KEY, CRN),
@@ -184,15 +195,16 @@ class TelemetryServiceTest {
             .probationStatus("No record")
             .build();
 
-        telemetryService.trackOffenderMatchEvent(COURT_CODE, CASE_NO, response);
+        telemetryService.trackOffenderMatchEvent(courtCase, response);
 
         verify(telemetryClient).trackEvent(eq("PiCOffenderNoMatch"), propertiesCaptor.capture(), eq(Collections.emptyMap()));
 
         Map<String, String> properties = propertiesCaptor.getValue();
-        assertThat(properties).hasSize(3);
+        assertThat(properties).hasSize(4);
         assertThat(properties).contains(
             entry(COURT_CODE_KEY, COURT_CODE),
             entry(CASE_NO_KEY, CASE_NO),
+            entry(HEARING_DATE_KEY, "2020-11-05"),
             entry(PNC_KEY, null)
         );
     }
@@ -212,7 +224,7 @@ class TelemetryServiceTest {
             entry(COURT_CODE_KEY, COURT_CODE),
             entry(COURT_ROOM_KEY, COURT_ROOM),
             entry(CASE_NO_KEY, CASE_NO),
-            entry(DATE_OF_HEARING_KEY, "2020-11-05")
+            entry(HEARING_DATE_KEY, "2020-11-05")
         );
     }
 
@@ -228,7 +240,7 @@ class TelemetryServiceTest {
         assertThat(properties).hasSize(2);
         assertThat(properties).contains(
             entry(COURT_CODE_KEY, COURT_CODE),
-            entry(DATE_OF_HEARING_KEY, "2020-11-05")
+            entry(HEARING_DATE_KEY, "2020-11-05")
         );
     }
 

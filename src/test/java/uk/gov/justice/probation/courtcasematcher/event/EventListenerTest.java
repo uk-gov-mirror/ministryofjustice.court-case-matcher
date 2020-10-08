@@ -14,6 +14,7 @@ import ch.qos.logback.classic.spi.LoggingEvent;
 import ch.qos.logback.core.Appender;
 import com.google.common.eventbus.EventBus;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.Collections;
 import java.util.List;
@@ -47,11 +48,13 @@ class EventListenerTest {
     private final static LocalDate DEFENDANT_DOB = LocalDate.of(1955, Month.SEPTEMBER, 25);
     private final static String CASE = "123456";
     private final static String COURT_CODE = "B10JQ00";
+    private static final LocalDateTime DATE_OF_HEARING = LocalDate.of(2020, Month.NOVEMBER, 5).atStartOfDay();
     private final static CourtCase courtCase = CourtCase.builder()
         .defendantName(DEFENDANT_NAME)
         .defendantDob(DEFENDANT_DOB)
         .courtCode(COURT_CODE)
         .caseNo(CASE)
+        .sessionStartTime(DATE_OF_HEARING)
         .build();
 
     @Mock
@@ -167,7 +170,7 @@ class EventListenerTest {
 
         verify(matcherService).getSearchResponse(DEFENDANT_NAME, DEFENDANT_DOB, COURT_CODE, CASE);
         verify(courtCaseService).createCase(courtCase, searchResponse);
-        verify(telemetryService).trackOffenderMatchEvent(COURT_CODE, CASE, searchResponse);
+        verify(telemetryService).trackOffenderMatchEvent(courtCase, searchResponse);
     }
 
     @DisplayName("Check the match event when the call to the matcher service returns an empty response")
@@ -183,7 +186,7 @@ class EventListenerTest {
             .build();
         verify(matcherService).getSearchResponse(DEFENDANT_NAME, DEFENDANT_DOB, COURT_CODE, CASE);
         verify(courtCaseService).createCase(courtCase, searchResponse);
-        verify(telemetryService).trackOffenderMatchEvent(COURT_CODE, CASE, searchResponse);
+        verify(telemetryService).trackOffenderMatchEvent(courtCase, searchResponse);
     }
 
 }

@@ -1,5 +1,6 @@
 package uk.gov.justice.probation.courtcasematcher.service;
 
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -7,6 +8,7 @@ import java.util.stream.Collectors;
 import com.microsoft.applicationinsights.TelemetryClient;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCase;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Case;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Info;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.SearchResponse;
@@ -24,7 +26,7 @@ public class TelemetryService {
     static final String MATCHES_KEY = "matches";
     static final String PNC_KEY = "pnc";
     static final String CRNS_KEY = "crns";
-    static final String DATE_OF_HEARING_KEY = "dateOfHearing";
+    static final String HEARING_DATE_KEY = "hearingDate";
 
     private final TelemetryClient telemetryClient;
 
@@ -32,20 +34,23 @@ public class TelemetryService {
         telemetryClient.trackEvent(eventType.eventName);
     }
 
-    public void trackOffenderMatchEvent(String courtCode, String caseNo, SearchResponse searchResponse) {
+    public void trackOffenderMatchEvent(CourtCase courtCase, SearchResponse searchResponse) {
         if (searchResponse == null) {
             return;
         }
 
         int matchCount = searchResponse.getMatchCount();
-        Map<String, String> properties = new HashMap<>(6);
-        ofNullable(courtCode)
+        Map<String, String> properties = new HashMap<>(7);
+        ofNullable(courtCase.getCourtCode())
             .ifPresent((code) -> properties.put(COURT_CODE_KEY, code));
-        ofNullable(caseNo)
-            .ifPresent((aCase) -> properties.put(CASE_NO_KEY, aCase));
+        ofNullable(courtCase.getCaseNo())
+            .ifPresent((caseNo) -> properties.put(CASE_NO_KEY, caseNo));
         ofNullable(searchResponse.getMatchedBy())
-            .filter((matchedBy) -> matchCount >= 1)
-            .ifPresent((matchedBy) -> properties.put(MATCHED_BY_KEY, matchedBy.name()));
+                .filter((matchedBy) -> matchCount >= 1)
+                .ifPresent((matchedBy) -> properties.put(MATCHED_BY_KEY, matchedBy.name()));
+        ofNullable(courtCase.getSessionStartTime())
+                .map(date -> date.format(DateTimeFormatter.ISO_DATE))
+                .ifPresent((date) -> properties.put(HEARING_DATE_KEY, date));
         ofNullable(searchResponse.getMatches())
             .ifPresent((matches -> {
                 String allCrns = matches.stream()
@@ -70,13 +75,13 @@ public class TelemetryService {
 
     public void trackCourtCaseEvent(Case aCase) {
 
-        Map<String, String> properties = new HashMap<>(4);
+        Map<String, String> properties = new HashMap<>(5);
         ofNullable(aCase.getBlock().getSession().getCourtCode())
             .ifPresent((code) -> properties.put(COURT_CODE_KEY, code));
         ofNullable(aCase.getBlock().getSession().getCourtRoom())
             .ifPresent((courtRoom) -> properties.put(COURT_ROOM_KEY, courtRoom));
         ofNullable(aCase.getBlock().getSession().getDateOfHearing())
-            .ifPresent((dateOfHearing) -> properties.put(DATE_OF_HEARING_KEY, dateOfHearing.toString()));
+            .ifPresent((dateOfHearing) -> properties.put(HEARING_DATE_KEY, dateOfHearing.toString()));
         ofNullable(aCase.getCaseNo())
             .ifPresent((caseNo) -> properties.put(CASE_NO_KEY, caseNo));
 
@@ -89,7 +94,7 @@ public class TelemetryService {
         ofNullable(info.getInfoSourceDetail().getOuCode())
             .ifPresent((courtCode) -> properties.put(COURT_CODE_KEY, courtCode));
         ofNullable(info.getDateOfHearing())
-            .ifPresent((dateOfHearing) -> properties.put(DATE_OF_HEARING_KEY, dateOfHearing.toString()));
+            .ifPresent((dateOfHearing) -> properties.put(HEARING_DATE_KEY, dateOfHearing.toString()));
 
         telemetryClient.trackEvent(TelemetryEventType.COURT_LIST_RECEIVED.eventName, properties, Collections.emptyMap());
     }
