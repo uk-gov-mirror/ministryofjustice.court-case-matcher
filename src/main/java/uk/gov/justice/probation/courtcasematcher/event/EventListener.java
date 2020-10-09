@@ -89,7 +89,7 @@ public class EventListener {
                                                             .matches(Collections.emptyList())
                                                             .build())))
             .subscribe(searchResponse -> {
-                telemetryService.trackOffenderMatchEvent(courtCase.getCourtCode(), courtCase.getCaseNo(), searchResponse);
+                telemetryService.trackOffenderMatchEvent(courtCase, searchResponse);
                 courtCaseService.createCase(courtCase, searchResponse);
             });
     }
