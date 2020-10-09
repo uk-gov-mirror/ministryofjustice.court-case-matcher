@@ -5,8 +5,8 @@
     "bodyPatterns" : [
       {
         "equalToJson" : {
-          "firstName": "arthur",
-          "surname": "morgan",
+          "firstName": "Arthur",
+          "surname": "MORGAN",
           "dateOfBirth": "1975-01-01"
         }
       }

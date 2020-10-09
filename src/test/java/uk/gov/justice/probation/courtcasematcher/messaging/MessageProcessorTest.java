@@ -28,6 +28,7 @@ import uk.gov.justice.probation.courtcasematcher.model.MessageType;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCase;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Case;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Info;
+import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Name;
 import uk.gov.justice.probation.courtcasematcher.service.CourtCaseService;
 import uk.gov.justice.probation.courtcasematcher.service.TelemetryService;
 
@@ -39,13 +40,16 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+import static uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.DefendantType.ORGANISATION;
+import static uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.DefendantType.PERSON;
 
 @DisplayName("Message Processor")
 @ExtendWith(MockitoExtension.class)
 class MessageProcessorTest {
 
     private static final long MATCHER_THREAD_TIMEOUT = 4000;
-    private static final String COURT_CODE = "B01CX00";
+    private static final String COURT_CODE_00 = "B01CX00";
+    private static final String COURT_CODE_02 = "B01CX02";
     private static String singleCaseXml;
     private static String multiSessionXml;
     private static String multiDayXml;
@@ -90,7 +94,8 @@ class MessageProcessorTest {
     @Test
     void whenValidMessageReceived_ThenAttemptMatch() {
 
-        CourtCase courtCase =  CourtCase.builder().isNew(false).defendantName("NAME").build();
+        Name name = Name.builder().forename1("Donald").surname("TRUMP").build();
+        CourtCase courtCase =  CourtCase.builder().isNew(false).name(name).build();
         when(courtCaseService.getCourtCase(any(Case.class))).thenReturn(Mono.just(courtCase));
 
         messageProcessor.process(singleCaseXml);
@@ -101,31 +106,37 @@ class MessageProcessorTest {
         verifyNoMoreInteractions(eventBus, telemetryService);
     }
 
-    @DisplayName("Receive multiple valid cases then attempt to match one and update two")
+    @DisplayName("Receive multiple valid cases then attempt to match two and update two")
     @Test
     void givenTwoExistingAndOneNew_whenValidMessageReceivedWithMultipleSessions_ThenAttemptMatchOnOneAndUpdateOnTwo() {
 
         CaseMatcher case1 = CaseMatcher.builder().caseNo("1600032953").build();
-        CourtCase courtCase1 = CourtCase.builder().isNew(false).caseNo("1600032953").build();
+        CourtCase courtCase1 = CourtCase.builder().isNew(false).caseNo("1600032953").defendantType(PERSON).build();
         CaseMatcher case2 = CaseMatcher.builder().caseNo("1600032979").build();
-        CourtCase courtCase2 = CourtCase.builder().isNew(false).caseNo("1600032979").build();
+        CourtCase courtCase2 = CourtCase.builder().isNew(false).caseNo("1600032979").defendantType(PERSON).build();
         CaseMatcher case3 = CaseMatcher.builder().caseNo("1600032952").build();
-        CourtCase courtCase3 = CourtCase.builder().isNew(true).caseNo("1600032952").build();
+        CourtCase courtCase3 = CourtCase.builder().isNew(true).caseNo("1600032952").defendantType(PERSON).build();
+        CaseMatcher case4 = CaseMatcher.builder().caseNo("1600011111").build();
+        CourtCase courtCase4 = CourtCase.builder().isNew(true).caseNo("1600011111").defendantType(ORGANISATION).build();
 
         when(courtCaseService.getCourtCase(argThat(case1))).thenReturn(Mono.just(courtCase1));
         when(courtCaseService.getCourtCase(argThat(case2))).thenReturn(Mono.just(courtCase2));
         when(courtCaseService.getCourtCase(argThat(case3))).thenReturn(Mono.just(courtCase3));
+        when(courtCaseService.getCourtCase(argThat(case4))).thenReturn(Mono.just(courtCase4));
 
         messageProcessor.process(multiSessionXml);
 
+        // 2 new cases get matcher events. The organisation does not get a matching event despite the fact it is new
         verify(eventBus, timeout(1000)).post(argThat(CourtCaseUpdateEventMatcher.builder().caseNo("1600032953").build()));
         verify(eventBus, timeout(1000)).post(argThat(CourtCaseUpdateEventMatcher.builder().caseNo("1600032979").build()));
         verify(eventBus, timeout(1000)).post(argThat(CourtCaseMatchEventMatcher.builder().caseNo("1600032952").build()));
-        verify(telemetryService).trackCourtListEvent(argThat(matchesInfoWith(LocalDate.of(2020, Month.FEBRUARY, 20))));
-        verify(telemetryService).trackCourtListEvent(argThat(matchesInfoWith(LocalDate.of(2020, Month.FEBRUARY, 23))));
+        verify(eventBus, timeout(1000)).post(argThat(CourtCaseUpdateEventMatcher.builder().caseNo("1600011111").build()));
+        verify(telemetryService).trackCourtListEvent(argThat(matchesInfoWith(LocalDate.of(2020, Month.FEBRUARY, 20), COURT_CODE_00)));
+        verify(telemetryService).trackCourtListEvent(argThat(matchesInfoWith(LocalDate.of(2020, Month.FEBRUARY, 23), COURT_CODE_02)));
         verify(telemetryService).trackCourtCaseEvent(argThat(case1));
         verify(telemetryService).trackCourtCaseEvent(argThat(case2));
         verify(telemetryService).trackCourtCaseEvent(argThat(case3));
+        verify(telemetryService).trackCourtCaseEvent(argThat(case4));
 
         verifyNoMoreInteractions(eventBus, telemetryService);
     }
@@ -178,6 +189,41 @@ class MessageProcessorTest {
         verify(eventBus).post(any(CourtCaseFailureEvent.class));
     }
 
+    @DisplayName("An existing case based on a person does not match")
+    @Test
+    void givenExistingPersonCase_whenPostCase_thenDoNotMatch() {
+
+        CourtCase courtCase = CourtCase.builder().isNew(false).caseNo("1").defendantType(PERSON).build();
+
+        messageProcessor.postCaseEvent(courtCase);
+
+        verify(eventBus).post(argThat(CourtCaseUpdateEventMatcher.builder().caseNo("1").build()));
+        verifyNoMoreInteractions(eventBus);
+    }
+
+    @DisplayName("A new case based on a person does not match")
+    @Test
+    void givenNewPersonCase_whenPostCase_thenMatch() {
+
+        CourtCase courtCase = CourtCase.builder().isNew(true).caseNo("1").defendantType(PERSON).build();
+
+        messageProcessor.postCaseEvent(courtCase);
+
+        verify(eventBus).post(argThat(CourtCaseMatchEventMatcher.builder().caseNo("1").build()));
+        verifyNoMoreInteractions(eventBus);
+    }
+
+    @DisplayName("A new case based on an organisation does not match")
+    @Test
+    void givenNewOrganisationCase_whenPostCase_thenDoNotMatch() {
+
+        CourtCase courtCase = CourtCase.builder().isNew(true).caseNo("1").defendantType(ORGANISATION).build();
+
+        messageProcessor.postCaseEvent(courtCase);
+
+        verify(eventBus).post(argThat(CourtCaseUpdateEventMatcher.builder().caseNo("1").build()));
+        verifyNoMoreInteractions(eventBus);
+    }
 
     @Builder
     public static class CourtCaseUpdateEventMatcher implements ArgumentMatcher<CourtCaseUpdateEvent> {
@@ -226,10 +272,14 @@ class MessageProcessorTest {
         }
     }
 
-    private InfoMatcher matchesInfoWith(LocalDate dateOfHearing) {
+    private InfoMatcher matchesInfoWith(LocalDate dateOfHearing, String courtCode) {
         return InfoMatcher.builder()
-            .courtCode(COURT_CODE)
+            .courtCode(courtCode)
             .dateOfHearing(dateOfHearing)
             .build();
+    }
+
+    private InfoMatcher matchesInfoWith(LocalDate dateOfHearing) {
+        return matchesInfoWith(dateOfHearing, COURT_CODE_00);
     }
 }

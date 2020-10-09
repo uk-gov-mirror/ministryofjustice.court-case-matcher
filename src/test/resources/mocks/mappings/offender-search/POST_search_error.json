@@ -6,7 +6,7 @@
       {
         "equalToJson" : {
           "firstName": "error",
-          "surname": "",
+          "surname": "error",
           "dateOfBirth": "1982-04-05"
         }
       }

@@ -11,6 +11,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCase;
+import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.DefendantType;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.MatchIdentifiers;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.Offence;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.OffenderMatch;
@@ -22,6 +23,7 @@ import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.D
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Info;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.InfoSourceDetail;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Job;
+import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Name;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Session;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.Match;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.MatchType;
@@ -43,6 +45,13 @@ class CaseMapperTest {
     private static final LocalDateTime SESSION_START_TIME = LocalDateTime.of(2020, Month.FEBRUARY, 29, 9, 10);
     private static final String COURT_CODE = "B10JQ00";
     private static final String COURT_NAME = "North Shields Magistrates Court";
+
+    private static final Name name = Name.builder().title("Mr")
+                                                    .forename1("Patrick")
+                                                    .forename2("Floyd")
+                                                    .forename3("Jarvis")
+                                                    .surname("Garrett")
+                                                    .build();
     public static final String CRN = "CRN123";
     public static final String CRO = "CRO456";
     public static final String PNC = "PNC789";
@@ -79,9 +88,9 @@ class CaseMapperTest {
             .def_addr(Address.builder().line1("line 1").line2("line 2").line3("line 3").pcode("LD1 1AA").build())
             .def_age("13")
             .def_dob(DATE_OF_BIRTH)
-            .def_name("Mr James BLUNT")
+            .name(name)
             .def_sex("M")
-            .def_type("C")
+            .def_type("P")
             .id(321321L)
             .listNo("1st")
             .seq(1)
@@ -108,8 +117,10 @@ class CaseMapperTest {
         assertThat(courtCase.getDefendantAddress().getLine3()).isEqualTo("line 3");
         assertThat(courtCase.getDefendantAddress().getPostcode()).isEqualTo("LD1 1AA");
         assertThat(courtCase.getDefendantDob()).isEqualTo(DATE_OF_BIRTH);
-        assertThat(courtCase.getDefendantName()).isEqualTo("Mr James BLUNT");
+        assertThat(courtCase.getDefendantName()).isEqualTo("Mr Patrick Floyd Jarvis Garrett");
+        assertThat(courtCase.getName()).isEqualTo(name);
         assertThat(courtCase.getDefendantSex()).isEqualTo("M");
+        assertThat(courtCase.getDefendantType()).isSameAs(DefendantType.PERSON);
         assertThat(courtCase.getSessionStartTime()).isEqualTo(SESSION_START_TIME);
         assertThat(courtCase.getOffences()).isEmpty();
     }
@@ -294,6 +305,7 @@ class CaseMapperTest {
             .courtCode(COURT_CODE)
             .defendantAddress(null)
             .defendantName("Pat Garrett")
+            .defendantType(DefendantType.ORGANISATION)
             .defendantDob(LocalDate.of(1969, Month.JANUARY, 1))
             .nationality1("USA")
             .nationality2("Irish")
@@ -329,7 +341,9 @@ class CaseMapperTest {
         assertThat(courtCase.getDefendantAddress().getLine3()).isEqualTo("line 3");
         assertThat(courtCase.getDefendantAddress().getPostcode()).isEqualTo("LD1 1AA");
         assertThat(courtCase.getDefendantDob()).isNull();
-        assertThat(courtCase.getDefendantName()).isEqualTo("Mr James BLUNT");
+        assertThat(courtCase.getDefendantName()).isEqualTo("Mr Patrick Floyd Jarvis Garrett");
+        assertThat(courtCase.getName()).isEqualTo(name);
+        assertThat(courtCase.getDefendantType()).isSameAs(DefendantType.PERSON);
         assertThat(courtCase.getDefendantSex()).isEqualTo("M");
         assertThat(courtCase.getSessionStartTime()).isEqualTo(SESSION_START_TIME);
         assertThat(courtCase.getNationality1()).isNull();

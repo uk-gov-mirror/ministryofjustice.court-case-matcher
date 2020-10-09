@@ -42,10 +42,12 @@ import uk.gov.justice.probation.courtcasematcher.event.CourtCaseFailureEvent;
 import uk.gov.justice.probation.courtcasematcher.event.CourtCaseSuccessEvent;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.Address;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCase;
+import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.DefendantType;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.GroupedOffenderMatches;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.MatchIdentifiers;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.Offence;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.OffenderMatch;
+import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Name;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.MatchType;
 
 @RunWith(SpringRunner.class)
@@ -133,7 +135,12 @@ public class CourtCaseRestClientIntTest {
             .caseNo("12345")
             .defendantAddress(address)
             .defendantDob(LocalDate.of(1977, Month.DECEMBER, 11))
-            .defendantName("Mr Dylan Adam Armstrong")
+            .name(Name.builder().title("Mr")
+                .forename1("Dylan")
+                .forename2("Adam")
+                .surname("ARMSTRONG")
+                .build())
+            .defendantType(DefendantType.PERSON)
             .defendantSex("M")
             .nationality1("British")
             .nationality2("Czech")

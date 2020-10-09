@@ -2,6 +2,7 @@ package uk.gov.justice.probation.courtcasematcher.restclient;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Name;
 
 import java.util.Arrays;
 import java.util.stream.Collectors;
@@ -19,5 +20,12 @@ public class NameHelper {
         return Arrays.stream(fullName.split(" "))
                 .takeWhile(s -> !s.matches(ALL_CAPS_REGEX))
                 .collect(Collectors.joining(" "));
+    }
+
+    public static Name getNameFromFields(String fullName) {
+        return Name.builder()
+            .forename1(getFirstName(fullName))
+            .surname(getSurname(fullName))
+            .build();
     }
 }

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
+import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Name;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.SearchResponse;
 import uk.gov.justice.probation.courtcasematcher.restclient.CourtCaseRestClient;
 import uk.gov.justice.probation.courtcasematcher.restclient.OffenderSearchRestClient;
@@ -34,7 +35,7 @@ public class MatcherService {
     @Value("${probation-status-reference.nonExactMatch}")
     private final String nonExactProbationStatus;
 
-    public Mono<SearchResponse> getSearchResponse(String defendantName, LocalDate dateOfBirth, String courtCode, String caseNo) {
+    public Mono<SearchResponse> getSearchResponse(Name defendantName, LocalDate dateOfBirth, String courtCode, String caseNo) {
         return offenderSearchRestClient.search(defendantName, dateOfBirth)
                 .map(searchResponse -> {
                     log.info(String.format("Match results for caseNo: %s, courtCode: %s - matchedBy: %s, matchCount: %s",

@@ -100,6 +100,13 @@ public class GatewayMessageParserTest {
         assertThat(document.getInfo().getInfoSourceDetail().getOuCode()).isEqualTo("B01CX00");
         assertThat(document.getData().getJob().getSessions()).hasSize(1);
         checkSession(document.getData().getJob().getSessions().get(0));
+
+        // Check fallback for ou_code when it is not in the session
+        Document document2 = documents.stream()
+            .filter(doc -> doc.getInfo().getInfoSourceDetail().getOuCode().equals("B01CX02"))
+            .findFirst().orElseThrow();
+        Session session = document2.getData().getJob().getSessions().get(0);
+        assertThat(session.getCourtCode()).isEqualTo("B01CX02");
     }
 
     private void checkSession(Session session) {

@@ -13,7 +13,13 @@
   "suspendedSentenceOrder": true,
   "breach": true,
   "offences": [],
-  "defendantName": "Mr Dylan Adam Armstrong",
+  "defendantName": "Mr Dylan Adam ARMSTRONG",
+  "name": {
+    "title": "Mr",
+    "forename1": "Dylan",
+    "forename2": "Adam",
+    "surname": "ARMSTRONG"
+  },
   "defendantAddress": {
     "line1": "27",
     "line2": "Elm Place",
@@ -22,5 +28,6 @@
   },
   "defendantDob": "1977-12-11",
   "defendantSex": "M",
+  "defendantType": "PERSON",
   "nationality1": "British"
 }

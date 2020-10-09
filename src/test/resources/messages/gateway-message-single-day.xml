@@ -30,6 +30,7 @@
                                 <means>N</means>
                                 <sessions>
                                     <session>
+                                        <ou_code>B01CX00</ou_code>
                                         <s_id>1</s_id>
                                         <doh>[TODAY]</doh>
                                         <lja>North West London Magistrates' Court</lja>

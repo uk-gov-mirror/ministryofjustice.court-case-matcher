@@ -4,6 +4,7 @@ import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import java.util.Collections;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,8 +12,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Mono;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCase;
+import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Name;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.OffenderSearchMatchType;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.SearchResponse;
+import uk.gov.justice.probation.courtcasematcher.restclient.NameHelper;
 import uk.gov.justice.probation.courtcasematcher.service.CourtCaseService;
 import uk.gov.justice.probation.courtcasematcher.service.MatcherService;
 import uk.gov.justice.probation.courtcasematcher.service.TelemetryService;
@@ -83,7 +86,10 @@ public class EventListener {
         log.info("Matching offender and saving case no {} for court {}, defendant name {}",
             courtCase.getCaseNo(), courtCase.getCourtCode(), courtCase.getDefendantName());
 
-        matcherService.getSearchResponse(courtCase.getDefendantName(), courtCase.getDefendantDob(), courtCase.getCourtCode(), courtCase.getCaseNo())
+        Name name = Optional.ofNullable(courtCase.getName())
+                            .orElseGet(() -> NameHelper.getNameFromFields(courtCase.getDefendantName()));
+
+        matcherService.getSearchResponse(name, courtCase.getDefendantDob(), courtCase.getCourtCode(), courtCase.getCaseNo())
             .switchIfEmpty(Mono.defer(() -> Mono.just(SearchResponse.builder()
                                                             .matchedBy(OffenderSearchMatchType.NOTHING)
                                                             .matches(Collections.emptyList())
@@ -92,6 +98,12 @@ public class EventListener {
                 telemetryService.trackOffenderMatchEvent(courtCase, searchResponse);
                 courtCaseService.createCase(courtCase, searchResponse);
             });
+    }
+
+    @AllowConcurrentEvents
+    @Subscribe
+    public void offenderSearchFailureEvent(OffenderSearchFailureEvent event) {
+        log.error("Failed to complete a search with search body {}. Error {}", event.getRequestJson(), event.getFailureMessage());
     }
 
     public long getSuccessCount() {

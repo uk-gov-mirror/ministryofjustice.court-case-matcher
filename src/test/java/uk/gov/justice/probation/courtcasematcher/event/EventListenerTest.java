@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Set;
 import javax.validation.ConstraintViolation;
 import javax.validation.Path;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
@@ -34,6 +35,7 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import reactor.core.publisher.Mono;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCase;
+import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Name;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.OffenderSearchMatchType;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.SearchResponse;
 import uk.gov.justice.probation.courtcasematcher.service.CourtCaseService;
@@ -44,13 +46,13 @@ import uk.gov.justice.probation.courtcasematcher.service.TelemetryService;
 @MockitoSettings(strictness = Strictness.STRICT_STUBS)
 class EventListenerTest {
 
-    private final static String DEFENDANT_NAME = "Nic CAGE";
+    private final static Name DEFENDANT_NAME = Name.builder().forename1("Nic").surname("CAGE").build();
     private final static LocalDate DEFENDANT_DOB = LocalDate.of(1955, Month.SEPTEMBER, 25);
     private final static String CASE = "123456";
     private final static String COURT_CODE = "B10JQ00";
     private static final LocalDateTime DATE_OF_HEARING = LocalDate.of(2020, Month.NOVEMBER, 5).atStartOfDay();
     private final static CourtCase courtCase = CourtCase.builder()
-        .defendantName(DEFENDANT_NAME)
+        .defendantName(DEFENDANT_NAME.getFullName())
         .defendantDob(DEFENDANT_DOB)
         .courtCode(COURT_CODE)
         .caseNo(CASE)
@@ -112,14 +114,14 @@ class EventListenerTest {
         List<LoggingEvent> events = captorLoggingEvent.getAllValues();
         assertThat(events).hasSize(1);
         LoggingEvent loggingEvent = events.get(0);
-        assertThat(loggingEvent.getLevel()).isEqualTo(Level.ERROR);
-        assertThat(loggingEvent.getFormattedMessage().trim())
-            .contains("Message processing failed. Current error count: 1");
-        assertThat(eventListener.getFailureCount()).isEqualTo(1);
+        Assertions.assertAll(
+            () -> assertThat(loggingEvent.getLevel()).isEqualTo(Level.ERROR),
+            () -> assertThat(loggingEvent.getFormattedMessage().trim()).contains("Message processing failed. Current error count: 1"),
+            () -> assertThat(eventListener.getFailureCount()).isEqualTo(1));
     }
 
     @DisplayName("Ensure that failure events are logged and counted")
-    @Disabled
+    @Disabled("Issue with capturing logging events")
     @Test
     void testFailureEventWithConstraintViolations() {
 
@@ -187,6 +189,32 @@ class EventListenerTest {
         verify(matcherService).getSearchResponse(DEFENDANT_NAME, DEFENDANT_DOB, COURT_CODE, CASE);
         verify(courtCaseService).createCase(courtCase, searchResponse);
         verify(telemetryService).trackOffenderMatchEvent(courtCase, searchResponse);
+    }
+
+    @DisplayName("Check the match event when the call to the matcher service returns an empty response")
+    @Test
+    void whenOffenderSearchFails_thenLogError() {
+
+        String messageBody = "{\n"
+            + "    \"firstName\": \"David\",\n"
+            + "    \"surname\": \"JONES\",\n"
+            + "    \"dateOfBirth\": \"1990-01-01\"\n"
+            + "}";
+
+        eventListener.offenderSearchFailureEvent(OffenderSearchFailureEvent.builder()
+                                                                            .requestJson(messageBody)
+                                                                            .failureMessage("ERROR")
+                                                                            .build());
+
+        verify(mockAppender, atLeast(1)).doAppend(captorLoggingEvent.capture());
+        List<LoggingEvent> events = captorLoggingEvent.getAllValues();
+        LoggingEvent loggingEvent = events.get(0);
+
+        Assertions.assertAll(() -> assertThat(events.size()).isGreaterThanOrEqualTo(1),
+            () -> assertThat(loggingEvent.getLevel()).isEqualTo(Level.ERROR),
+            () -> assertThat(loggingEvent.getFormattedMessage().trim())
+                                .contains(messageBody)
+        );
     }
 
 }

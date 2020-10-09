@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Name;
 
 import java.io.Serializable;
 import java.time.LocalDate;
@@ -43,11 +44,15 @@ public class CourtCase implements Serializable {
 
     private final String pnc;
 
+    private final Name name;
+
     private final String defendantName;
 
     private final Address defendantAddress;
 
     private final LocalDate defendantDob;
+
+    private final DefendantType defendantType;
 
     private final String defendantSex;
 

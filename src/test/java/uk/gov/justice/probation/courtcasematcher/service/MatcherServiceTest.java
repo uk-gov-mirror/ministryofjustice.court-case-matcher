@@ -26,6 +26,7 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
+import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Name;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.Match;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.Offender;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.OffenderSearchMatchType;
@@ -44,7 +45,9 @@ class MatcherServiceTest {
     private static final String MATCHES_PROBATION_STATUS = "Possible nDelius record";
 
     private final LocalDate DEF_DOB = LocalDate.of(2000, 6, 17);
-    private final String DEF_NAME = "Arthur MORGAN";
+    private final Name DEF_NAME = Name.builder().forename1("Arthur")
+                                                .surname("MORGAN")
+                                                .build();
 
     private final OtherIds otherIds = OtherIds.builder()
         .crn(CRN)
