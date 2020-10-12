@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public enum MatchType {
     NAME_DOB,
+    NAME_DOB_ALIAS,
     NAME,
     PARTIAL_NAME,
     PARTIAL_NAME_DOB_LENIENT,
@@ -15,6 +16,8 @@ public enum MatchType {
         switch (offenderSearchMatchType) {
             case ALL_SUPPLIED:
                 return NAME_DOB;
+            case ALL_SUPPLIED_ALIAS:
+                return NAME_DOB_ALIAS;
             case NAME:
                 return NAME;
             case PARTIAL_NAME:
