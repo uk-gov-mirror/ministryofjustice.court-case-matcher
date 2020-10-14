@@ -3,6 +3,7 @@ package uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Collections;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -14,12 +15,12 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalTimeDeserializer;
 import javax.validation.Valid;
-import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
@@ -54,10 +55,10 @@ public class Session {
     @JacksonXmlProperty(localName = "send")
     private final LocalTime end;
 
+    @Getter(AccessLevel.NONE)
     @JsonManagedReference
     @JacksonXmlElementWrapper
     @ToString.Exclude
-    @NotEmpty
     private final List<@Valid Block> blocks;
 
     @JsonBackReference
@@ -71,5 +72,9 @@ public class Session {
     public LocalDateTime getSessionStartTime() {
         //noinspection ConstantConditions - analysis says these fields may be null but annotations / validation prevents that
         return LocalDateTime.of(dateOfHearing, start);
+    }
+
+    public List<Block> getBlocks() {
+        return blocks != null ? blocks : Collections.emptyList();
     }
 }

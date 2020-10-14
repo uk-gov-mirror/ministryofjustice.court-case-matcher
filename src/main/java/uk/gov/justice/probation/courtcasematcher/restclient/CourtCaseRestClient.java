@@ -75,7 +75,7 @@ public class CourtCaseRestClient {
                 return courtCaseResponse;
             })
             .onErrorResume((e) -> {
-                log.debug("GET failed for retrieving the case for path {}", path, e);
+                // This is normal in the context of CCM, don't log
                 return Mono.empty();
             });
     }

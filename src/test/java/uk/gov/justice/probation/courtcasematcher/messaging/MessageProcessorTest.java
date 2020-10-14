@@ -35,6 +35,7 @@ import uk.gov.justice.probation.courtcasematcher.service.TelemetryService;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -186,7 +187,7 @@ class MessageProcessorTest {
 
         messageProcessor.process(Files.readString(Paths.get(path)));
 
-        verify(eventBus).post(any(CourtCaseFailureEvent.class));
+        verify(eventBus, never()).post(any(CourtCaseFailureEvent.class));
     }
 
     @DisplayName("An existing case based on a person does not match")

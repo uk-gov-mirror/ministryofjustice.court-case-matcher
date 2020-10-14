@@ -234,6 +234,13 @@
                                                     </case>
                                                 </cases>
                                             </block>
+                                            <!-- Deliberately insert a block with a null case list -->
+                                            <block>
+                                                <sb_id>758096</sb_id>
+                                                <bstart>13:30</bstart>
+                                                <bend>16:00</bend>
+                                                <desc>Second Hearings Slot</desc>
+                                            </block>
                                         </blocks>
                                     </session>
                                 </sessions>

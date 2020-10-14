@@ -46,8 +46,7 @@
                                         <room>00</room>
                                         <sstart>09:00</sstart>
                                         <send>12:00</send>
-                                        <blocks>
-                                        </blocks>
+                                        <!-- Deliberately leave null blocks -->
                                     </session>
                                 </sessions>
                             </job>
