@@ -75,7 +75,7 @@ dependencies {
     annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
     runtimeOnly 'org.springframework.boot:spring-boot-devtools'
     annotationProcessor 'org.projectlombok:lombok'
-    compile group: 'com.google.guava', name: 'guava', version: '29.0-jre'
+    compile group: 'com.google.guava', name: 'guava', version: '30.0-jre'
     implementation 'org.springframework.boot:spring-boot-starter-artemis'
     compile 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.11.3'
     compile 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.11.3'
