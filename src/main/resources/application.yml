@@ -56,6 +56,8 @@ court-case-service:
 offender-search:
   post-match-url: /match
   ping-path: /health/ping
+  max-retries: 3
+  min-backoff-seconds: 5
 
 nomis-oauth:
   ping-path: /auth/ping

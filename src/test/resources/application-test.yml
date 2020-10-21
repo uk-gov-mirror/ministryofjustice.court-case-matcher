@@ -22,6 +22,8 @@ offender-search:
   base-url: http://localhost:8090
   disable-authentication: true
   ping-path: /ping
+  min-backoff-seconds: 1
+  max-retries: 2
 
 nomis-oauth:
   base-url: http://localhost:8090

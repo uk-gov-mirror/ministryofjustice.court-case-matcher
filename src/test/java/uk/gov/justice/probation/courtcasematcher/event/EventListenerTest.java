@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -33,6 +34,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.web.reactive.function.client.WebClientResponseException.TooManyRequests;
 import reactor.core.publisher.Mono;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCase;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Name;
@@ -173,12 +175,13 @@ class EventListenerTest {
         verify(matcherService).getSearchResponse(DEFENDANT_NAME, DEFENDANT_DOB, COURT_CODE, CASE);
         verify(courtCaseService).createCase(courtCase, searchResponse);
         verify(telemetryService).trackOffenderMatchEvent(courtCase, searchResponse);
+        verifyNoMoreInteractions(matcherService, courtCaseService, telemetryService);
     }
 
     @DisplayName("Check the match event when the call to the matcher service returns an empty response")
     @Test
     void givenSearchWhichFails_whenCourtCaseMatched_thenSave() {
-        when(matcherService.getSearchResponse(DEFENDANT_NAME, DEFENDANT_DOB, COURT_CODE, CASE)).thenReturn(Mono.empty());
+        when(matcherService.getSearchResponse(DEFENDANT_NAME, DEFENDANT_DOB, COURT_CODE, CASE)).thenReturn(Mono.error(new IllegalArgumentException()));
 
         eventListener.courtCaseMatchEvent(CourtCaseMatchEvent.builder().courtCase(courtCase).build());
 
@@ -188,33 +191,8 @@ class EventListenerTest {
             .build();
         verify(matcherService).getSearchResponse(DEFENDANT_NAME, DEFENDANT_DOB, COURT_CODE, CASE);
         verify(courtCaseService).createCase(courtCase, searchResponse);
-        verify(telemetryService).trackOffenderMatchEvent(courtCase, searchResponse);
-    }
-
-    @DisplayName("Check the match event when the call to the matcher service returns an empty response")
-    @Test
-    void whenOffenderSearchFails_thenLogError() {
-
-        String messageBody = "{\n"
-            + "    \"firstName\": \"David\",\n"
-            + "    \"surname\": \"JONES\",\n"
-            + "    \"dateOfBirth\": \"1990-01-01\"\n"
-            + "}";
-
-        eventListener.offenderSearchFailureEvent(OffenderSearchFailureEvent.builder()
-                                                                            .requestJson(messageBody)
-                                                                            .failureMessage("ERROR")
-                                                                            .build());
-
-        verify(mockAppender, atLeast(1)).doAppend(captorLoggingEvent.capture());
-        List<LoggingEvent> events = captorLoggingEvent.getAllValues();
-        LoggingEvent loggingEvent = events.get(0);
-
-        Assertions.assertAll(() -> assertThat(events.size()).isGreaterThanOrEqualTo(1),
-            () -> assertThat(loggingEvent.getLevel()).isEqualTo(Level.ERROR),
-            () -> assertThat(loggingEvent.getFormattedMessage().trim())
-                                .contains(messageBody)
-        );
+        verify(telemetryService).trackOffenderMatchFailureEvent(courtCase);
+        verifyNoMoreInteractions(matcherService, courtCaseService, telemetryService);
     }
 
 }

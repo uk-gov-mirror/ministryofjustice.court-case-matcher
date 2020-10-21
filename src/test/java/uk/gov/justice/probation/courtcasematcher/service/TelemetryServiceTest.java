@@ -51,6 +51,7 @@ class TelemetryServiceTest {
     private static final String COURT_CODE = "B10JQ00";
     private static final String CASE_NO = "1234567890";
     private static final String CRN = "D12345";
+    private static final String PNC = "PNC/123";
     private static final String COURT_ROOM = "01";
     private static final LocalDate DATE_OF_HEARING = LocalDate.of(2020, Month.NOVEMBER, 5);
     private static Info info;
@@ -90,11 +91,13 @@ class TelemetryServiceTest {
                 .session(session)
                 .build())
             .caseNo(CASE_NO)
+            .pnc(PNC)
             .build();
 
         courtCase = CourtCase.builder()
                 .courtCode(COURT_CODE)
                 .caseNo(CASE_NO)
+                .pnc(PNC)
                 .sessionStartTime(DATE_OF_HEARING.atStartOfDay())
                 .build();
     }
@@ -130,7 +133,7 @@ class TelemetryServiceTest {
             entry(MATCHES_KEY, "1"),
             entry(MATCHED_BY_KEY, OffenderSearchMatchType.ALL_SUPPLIED.name()),
             entry(CRNS_KEY, CRN),
-            entry(PNC_KEY, null)
+            entry(PNC_KEY, PNC)
         );
     }
 
@@ -157,7 +160,7 @@ class TelemetryServiceTest {
             entry(MATCHES_KEY, "2"),
             entry(MATCHED_BY_KEY, OffenderSearchMatchType.PARTIAL_NAME.name()),
             entry(CRNS_KEY, CRN + "," + "X123454"),
-            entry(PNC_KEY, null)
+            entry(PNC_KEY, PNC)
         );
     }
 
@@ -183,7 +186,7 @@ class TelemetryServiceTest {
             entry(MATCHES_KEY, "1"),
             entry(MATCHED_BY_KEY, OffenderSearchMatchType.PARTIAL_NAME.name()),
             entry(CRNS_KEY, CRN),
-            entry(PNC_KEY, null)
+            entry(PNC_KEY, PNC)
         );
     }
 
@@ -205,7 +208,25 @@ class TelemetryServiceTest {
             entry(COURT_CODE_KEY, COURT_CODE),
             entry(CASE_NO_KEY, CASE_NO),
             entry(HEARING_DATE_KEY, "2020-11-05"),
-            entry(PNC_KEY, null)
+            entry(PNC_KEY, PNC)
+        );
+    }
+
+    @DisplayName("Record the event when the call to matcher service fails")
+    @Test
+    void whenMatchEventFails_thenRecord() {
+
+        telemetryService.trackOffenderMatchFailureEvent(courtCase);
+
+        verify(telemetryClient).trackEvent(eq("PiCOffenderMatchError"), propertiesCaptor.capture(), eq(Collections.emptyMap()));
+
+        Map<String, String> properties = propertiesCaptor.getValue();
+        assertThat(properties).hasSize(4);
+        assertThat(properties).contains(
+            entry(COURT_CODE_KEY, COURT_CODE),
+            entry(CASE_NO_KEY, CASE_NO),
+            entry(HEARING_DATE_KEY, "2020-11-05"),
+            entry(PNC_KEY, PNC)
         );
     }
 
@@ -228,6 +249,7 @@ class TelemetryServiceTest {
         );
     }
 
+    @DisplayName("Record the event when a court list is received")
     @Test
     void whenCourtListReceived_thenRecord() {
 

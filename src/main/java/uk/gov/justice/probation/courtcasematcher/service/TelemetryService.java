@@ -19,6 +19,7 @@ import static java.util.Optional.ofNullable;
 @AllArgsConstructor
 public class TelemetryService {
 
+    private static final int MAX_PROPERTY_COUNT = 8;
     static final String COURT_CODE_KEY = "courtCode";
     static final String COURT_ROOM_KEY = "courtRoom";
     static final String CASE_NO_KEY = "caseNo";
@@ -34,23 +35,21 @@ public class TelemetryService {
         telemetryClient.trackEvent(eventType.eventName);
     }
 
+    public void trackOffenderMatchFailureEvent(CourtCase courtCase) {
+        telemetryClient.trackEvent(TelemetryEventType.OFFENDER_MATCH_ERROR.eventName, getCourtCaseProperties(courtCase), Collections.emptyMap());
+    }
+
     public void trackOffenderMatchEvent(CourtCase courtCase, SearchResponse searchResponse) {
         if (searchResponse == null) {
             return;
         }
 
+        Map<String, String> properties = getCourtCaseProperties(courtCase);
+
         int matchCount = searchResponse.getMatchCount();
-        Map<String, String> properties = new HashMap<>(7);
-        ofNullable(courtCase.getCourtCode())
-            .ifPresent((code) -> properties.put(COURT_CODE_KEY, code));
-        ofNullable(courtCase.getCaseNo())
-            .ifPresent((caseNo) -> properties.put(CASE_NO_KEY, caseNo));
         ofNullable(searchResponse.getMatchedBy())
                 .filter((matchedBy) -> matchCount >= 1)
                 .ifPresent((matchedBy) -> properties.put(MATCHED_BY_KEY, matchedBy.name()));
-        ofNullable(courtCase.getSessionStartTime())
-                .map(date -> date.format(DateTimeFormatter.ISO_DATE))
-                .ifPresent((date) -> properties.put(HEARING_DATE_KEY, date));
         ofNullable(searchResponse.getMatches())
             .ifPresent((matches -> {
                 String allCrns = matches.stream()
@@ -59,8 +58,6 @@ public class TelemetryService {
                 properties.put(MATCHES_KEY, String.valueOf(matches.size()));
                 properties.put(CRNS_KEY, allCrns);
             }));
-        // TODO with strategic solution - when we're searching with PNC
-        properties.put(PNC_KEY, null);
 
         TelemetryEventType eventType = TelemetryEventType.OFFENDER_PARTIAL_MATCH;
         if (searchResponse.isExactMatch()) {
@@ -70,7 +67,6 @@ public class TelemetryService {
             eventType = TelemetryEventType.OFFENDER_NO_MATCH;
         }
         telemetryClient.trackEvent(eventType.eventName, properties, Collections.emptyMap());
-
     }
 
     public void trackCourtCaseEvent(Case aCase) {
@@ -97,5 +93,19 @@ public class TelemetryService {
             .ifPresent((dateOfHearing) -> properties.put(HEARING_DATE_KEY, dateOfHearing.toString()));
 
         telemetryClient.trackEvent(TelemetryEventType.COURT_LIST_RECEIVED.eventName, properties, Collections.emptyMap());
+    }
+
+    private Map<String, String> getCourtCaseProperties(CourtCase courtCase) {
+        Map<String, String> properties = new HashMap<>(MAX_PROPERTY_COUNT);
+        ofNullable(courtCase.getCourtCode())
+            .ifPresent((code) -> properties.put(COURT_CODE_KEY, code));
+        ofNullable(courtCase.getCaseNo())
+            .ifPresent((caseNo) -> properties.put(CASE_NO_KEY, caseNo));
+        ofNullable(courtCase.getSessionStartTime())
+            .map(date -> date.format(DateTimeFormatter.ISO_DATE))
+            .ifPresent((date) -> properties.put(HEARING_DATE_KEY, date));
+        ofNullable(courtCase.getPnc())
+            .ifPresent((pnc) -> properties.put(PNC_KEY, pnc));
+        return properties;
     }
 }

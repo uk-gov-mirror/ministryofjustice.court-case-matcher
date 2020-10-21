@@ -16,6 +16,7 @@ import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import com.google.common.eventbus.EventBus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,6 +27,7 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
+import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCase;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Name;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.Match;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.Offender;
@@ -44,10 +46,21 @@ class MatcherServiceTest {
     private static final String DEFAULT_PROBATION_STATUS = "No record";
     private static final String MATCHES_PROBATION_STATUS = "Possible nDelius record";
 
-    private final LocalDate DEF_DOB = LocalDate.of(2000, 6, 17);
-    private final Name DEF_NAME = Name.builder().forename1("Arthur")
+
+
+    private static final LocalDate DEF_DOB = LocalDate.of(2000, 6, 17);
+    private static final Name DEF_NAME = Name.builder().forename1("Arthur")
                                                 .surname("MORGAN")
                                                 .build();
+
+    private static final CourtCase COURT_CASE = CourtCase.builder()
+        .caseNo(CASE_NO)
+        .courtCode(COURT_CODE)
+        .name(DEF_NAME)
+        .defendantDob(DEF_DOB)
+        .defendantName(DEF_NAME.getFullName())
+        .build();
+
 
     private final OtherIds otherIds = OtherIds.builder()
         .crn(CRN)
@@ -83,6 +96,9 @@ class MatcherServiceTest {
 
     @Mock
     private OffenderSearchRestClient offenderSearchRestClient;
+
+    @Mock
+    private EventBus eventBus;
 
     @Mock
     private Appender<ILoggingEvent> mockAppender;

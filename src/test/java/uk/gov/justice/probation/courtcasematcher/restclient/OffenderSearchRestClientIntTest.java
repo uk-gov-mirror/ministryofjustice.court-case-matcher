@@ -1,52 +1,44 @@
 package uk.gov.justice.probation.courtcasematcher.restclient;
 
+import java.time.LocalDate;
+import java.time.Month;
+import java.util.Optional;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import com.google.common.eventbus.EventBus;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 import uk.gov.justice.probation.courtcasematcher.application.TestMessagingConfig;
-import uk.gov.justice.probation.courtcasematcher.event.OffenderSearchFailureEvent;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Name;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.Offender;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.OffenderSearchMatchType;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.SearchResponse;
 
-import java.time.LocalDate;
-import java.time.Month;
-import java.util.Optional;
-
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
 
-@SuppressWarnings("UnstableApiUsage")
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @ActiveProfiles("test")
 @Import(TestMessagingConfig.class)
-public class OffenderSearchResponseRestClientIntTest {
+public class OffenderSearchRestClientIntTest {
 
     @Autowired
     private OffenderSearchRestClient restClient;
-
-    @MockBean
-    private EventBus eventBus;
 
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(wireMockConfig()
             .port(8090)
             .stubRequestLoggingDisabled(false)
             .usingFilesUnderClasspath("mocks"));
-    private final ArgumentCaptor<OffenderSearchFailureEvent> failureCaptor = ArgumentCaptor.forClass(OffenderSearchFailureEvent.class);
 
     @Test
     public void givenSingleMatchReturned_whenSearch_thenReturnIt() {
@@ -62,6 +54,21 @@ public class OffenderSearchResponseRestClientIntTest {
         assertThat(offender.getOtherIds().getCrn()).isEqualTo("X346204");
         assertThat(offender.getOtherIds().getCro()).isEqualTo("1234ABC");
         assertThat(offender.getOtherIds().getPnc()).isEqualTo("ABCD1234");
+    }
+
+    @Test
+    public void givenSingleMatchReturned_whenSearch_thenVerifyMono() {
+        Name name = Name.builder().forename1("Arthur").surname("MORGAN").build();
+        Mono<SearchResponse> matchMono = restClient.search(name, LocalDate.of(1975, 1, 1));
+
+        StepVerifier.create(matchMono)
+            .consumeNextWith(match -> {
+                Assertions.assertAll(
+                    () -> assertThat(match.getMatchedBy()).isEqualTo(OffenderSearchMatchType.ALL_SUPPLIED),
+                    () -> assertThat(match.getMatches().size()).isEqualTo(1)
+                );
+            })
+            .verifyComplete();
     }
 
     @Test
@@ -109,66 +116,33 @@ public class OffenderSearchResponseRestClientIntTest {
     }
 
     @Test
-    public void givenUnexpectedError_whenSearch_thenPushErrorEventToBus() {
+    public void givenUnexpected500_whenSearch_thenRetryAndError() {
         Name name = Name.builder().forename1("error").surname("error").build();
-        Optional<SearchResponse> match = restClient.search(name, LocalDate.of(1982, 4, 5))
-                .blockOptional();
+        Mono<SearchResponse> searchResponseMono = restClient.search(name, LocalDate.of(1982, 4, 5));
 
-        assertThat(match).isEmpty();
-        verify(eventBus).post(any(OffenderSearchFailureEvent.class));
-        verify(eventBus).post(failureCaptor.capture());
-        assertThat(failureCaptor.getValue().getFailureMessage()).isEqualTo("500 Internal Server Error from POST http://localhost:8090/match");
-        assertThat(failureCaptor.getValue().getRequestJson()).isEqualTo("{\"firstName\":\"error\",\"surname\":\"error\",\"dateOfBirth\":\"1982-04-05\"}");
+        StepVerifier.create(searchResponseMono)
+            .expectError(reactor.core.Exceptions.retryExhausted("Retries exhausted: 2/2", null).getClass())
+            .verify();
     }
 
     @Test
-    public void givenUnexpected404_whenSearch_thenPushErrorEventToBus() {
+    public void givenUnexpected404_whenSearch_thenNoRetryButReturnSameError() {
         Name name = Name.builder().forename1("not").surname("found").build();
-        Optional<SearchResponse> match = restClient.search(name, LocalDate.of(1999, 4, 5))
-                .blockOptional();
+        Mono<SearchResponse> searchResponseMono = restClient.search(name, LocalDate.of(1999, 4, 5));
 
-        assertThat(match).isEmpty();
-        verify(eventBus).post(failureCaptor.capture());
-        assertThat(failureCaptor.getValue().getFailureMessage()).isEqualTo("404 Not Found from POST http://localhost:8090/match");
-        assertThat(failureCaptor.getValue().getRequestJson()).isEqualTo("{\"firstName\":\"not\",\"surname\":\"found\",\"dateOfBirth\":\"1999-04-05\"}");
+        StepVerifier.create(searchResponseMono)
+            .expectError(WebClientResponseException.NotFound.class)
+            .verify();
     }
 
     @Test
-    public void givenUnexpected401_whenSearch_thenPushErrorEventToBus() {
+    public void givenUnexpected401_whenSearch_thenNoRetryButReturnSameError() {
         Name name = Name.builder().forename1("unauthorised").surname("unauthorised").build();
-        Optional<SearchResponse> match = restClient.search(name, LocalDate.of(1982, 4, 5))
-                .blockOptional();
+        Mono<SearchResponse> searchResponseMono = restClient.search(name, LocalDate.of(1982, 4, 5));
 
-        assertThat(match).isEmpty();
-        verify(eventBus).post(failureCaptor.capture());
-        assertThat(failureCaptor.getValue().getFailureMessage()).isEqualTo("401 Unauthorized from POST http://localhost:8090/match");
-        assertThat(failureCaptor.getValue().getRequestJson()).isEqualTo("{\"firstName\":\"unauthorised\",\"surname\":\"unauthorised\",\"dateOfBirth\":\"1982-04-05\"}");
-    }
-
-    @Test
-    public void givenNullDateOfBirth_thenReturnEmptyAndPushErrorEventToBus() {
-        Name name = Name.builder().forename1("foo").surname("").build();
-        Optional<SearchResponse> match = restClient.search(name, null)
-                .blockOptional();
-
-        assertThat(match).isEmpty();
-    }
-
-    @Test
-    public void givenNullName_thenReturnEmptyAndPushErrorEventToBus() {
-        Optional<SearchResponse> match = restClient.search(null, LocalDate.of(1982, 4, 5))
-                .blockOptional();
-
-        assertThat(match).isEmpty();
-    }
-
-    @Test
-    public void givenEmptyName_thenReturnEmptyAndPushErrorEventToBus() {
-        Name name = Name.builder().forename1("").surname("").build();
-        Optional<SearchResponse> match = restClient.search(name, LocalDate.of(1982, 4, 5))
-                .blockOptional();
-
-        assertThat(match).isEmpty();
+        StepVerifier.create(searchResponseMono)
+            .expectError(WebClientResponseException.Unauthorized.class)
+            .verify();
     }
 
 }
