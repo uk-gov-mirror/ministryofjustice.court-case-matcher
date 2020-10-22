@@ -34,12 +34,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-import org.springframework.web.reactive.function.client.WebClientResponseException.TooManyRequests;
 import reactor.core.publisher.Mono;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCase;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Name;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.OffenderSearchMatchType;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.SearchResponse;
+import uk.gov.justice.probation.courtcasematcher.restclient.NameHelper;
 import uk.gov.justice.probation.courtcasematcher.service.CourtCaseService;
 import uk.gov.justice.probation.courtcasematcher.service.MatcherService;
 import uk.gov.justice.probation.courtcasematcher.service.TelemetryService;
@@ -60,6 +60,8 @@ class EventListenerTest {
         .caseNo(CASE)
         .sessionStartTime(DATE_OF_HEARING)
         .build();
+
+    private final NameHelper nameHelper = new NameHelper(List.of("MISS","MRS","MS","MASTER","MR","MX","DR"));
 
     @Mock
     private MatcherService matcherService;
@@ -86,7 +88,7 @@ class EventListenerTest {
         logger.addAppender(mockAppender);
 
         eventBus = new EventBus();
-        eventListener = new EventListener(eventBus, matcherService, courtCaseService, telemetryService);
+        eventListener = new EventListener(eventBus, matcherService, courtCaseService, telemetryService, nameHelper);
     }
 
     @DisplayName("Ensure that successful events are logged and counted")
@@ -102,8 +104,7 @@ class EventListenerTest {
         LoggingEvent loggingEvent = events.get(0);
         assertThat(loggingEvent.getLevel()).isEqualTo(Level.INFO);
         assertThat(loggingEvent.getFormattedMessage().trim())
-            .contains("EventBus success event for posting case 123 for court SHF. Total count of successful messages 1");
-        assertThat(eventListener.getSuccessCount()).isEqualTo(1);
+            .contains("EventBus success event for posting case 123 for court SHF.");
     }
 
     @DisplayName("Ensure that failure events are logged and counted")
@@ -118,8 +119,7 @@ class EventListenerTest {
         LoggingEvent loggingEvent = events.get(0);
         Assertions.assertAll(
             () -> assertThat(loggingEvent.getLevel()).isEqualTo(Level.ERROR),
-            () -> assertThat(loggingEvent.getFormattedMessage().trim()).contains("Message processing failed. Current error count: 1"),
-            () -> assertThat(eventListener.getFailureCount()).isEqualTo(1));
+            () -> assertThat(loggingEvent.getFormattedMessage().trim()).contains("Message processing failed."));
     }
 
     @DisplayName("Ensure that failure events are logged and counted")
@@ -145,15 +145,12 @@ class EventListenerTest {
         assertThat(loggingEvent.getLevel()).isEqualTo(Level.ERROR);
         assertThat(loggingEvent.getFormattedMessage().trim())
             .contains("Message processing failed. Current error count: 1");
-        assertThat(eventListener.getFailureCount()).isEqualTo(1);
     }
 
     @DisplayName("Ensure that the EventListener is registered by the EventBus")
     @Test
     void checkEventBusRegistration() {
         eventBus.post(CourtCaseFailureEvent.builder().failureMessage("Problem").build());
-
-        assertThat(eventListener.getFailureCount()).isEqualTo(1);
     }
 
     @DisplayName("Check the match event when the call to the matcher service returns")

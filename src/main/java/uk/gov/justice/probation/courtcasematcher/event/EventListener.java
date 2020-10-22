@@ -5,7 +5,6 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import java.util.Collections;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicLong;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -20,9 +19,6 @@ import uk.gov.justice.probation.courtcasematcher.service.CourtCaseService;
 import uk.gov.justice.probation.courtcasematcher.service.MatcherService;
 import uk.gov.justice.probation.courtcasematcher.service.TelemetryService;
 
-/**
- * We intend to replace EventBus with an external message queue.
- */
 @Component
 @Slf4j
 public class EventListener {
@@ -33,27 +29,26 @@ public class EventListener {
 
     private final TelemetryService telemetryService;
 
-    private final AtomicLong successCount = new AtomicLong(0);
-
-    private final AtomicLong failureCount = new AtomicLong(0);
+    private final NameHelper nameHelper;
 
     @Autowired
     public EventListener(EventBus eventBus,
                         MatcherService matcherService,
                         CourtCaseService courtCaseService,
-                        TelemetryService telemetryService) {
+                        TelemetryService telemetryService,
+                        NameHelper nameHelper) {
         super();
         this.matcherService = matcherService;
         this.courtCaseService = courtCaseService;
         this.telemetryService = telemetryService;
+        this.nameHelper = nameHelper;
         eventBus.register(this);
     }
 
     @AllowConcurrentEvents
     @Subscribe
     public void courtCaseEvent(CourtCaseFailureEvent courtCaseEvent) {
-        log.error("Message processing failed. Current error count: {}. Error: {} ",
-            failureCount.incrementAndGet(), courtCaseEvent.getFailureMessage());
+        log.error("Message processing failed. Error: {} ", courtCaseEvent.getFailureMessage());
         if (!CollectionUtils.isEmpty(courtCaseEvent.getViolations())) {
             courtCaseEvent.getViolations().forEach(
                 cv -> log.error("Validation failed : {} at {} ", cv.getMessage(), cv.getPropertyPath().toString())
@@ -66,8 +61,7 @@ public class EventListener {
     public void courtCaseEvent(CourtCaseSuccessEvent courtCaseEvent) {
         String caseNo = courtCaseEvent.getCourtCase().getCaseNo();
         String court = courtCaseEvent.getCourtCase().getCourtCode();
-        log.info("EventBus success event for posting case {} for court {}. Total count of successful messages {} ",
-            caseNo, court, successCount.incrementAndGet());
+        log.info("EventBus success event for posting case {} for court {}. ", caseNo, court);
     }
 
     @AllowConcurrentEvents
@@ -87,7 +81,7 @@ public class EventListener {
             courtCase.getCaseNo(), courtCase.getCourtCode(), courtCase.getDefendantName());
 
         Name name = Optional.ofNullable(courtCase.getName())
-                            .orElseGet(() -> NameHelper.getNameFromFields(courtCase.getDefendantName()));
+                            .orElseGet(() -> nameHelper.getNameFromFields(courtCase.getDefendantName()));
 
         matcherService.getSearchResponse(name, courtCase.getDefendantDob(), courtCase.getCourtCode(), courtCase.getCaseNo())
             .doOnSuccess(searchResponse -> telemetryService.trackOffenderMatchEvent(courtCase, searchResponse))
@@ -101,11 +95,4 @@ public class EventListener {
 
     }
 
-    public long getSuccessCount() {
-        return successCount.get();
-    }
-
-    public long getFailureCount() {
-        return failureCount.get();
-    }
 }
