@@ -1,0 +1,68 @@
+{
+  "matches": [
+    {
+      "offender": {
+        "offenderId": 2500371167,
+        "title": "Mr",
+        "firstName": "Arthur",
+        "surname": "MORGAN",
+        "dateOfBirth": "1975-01-01",
+        "gender": "Male",
+        "otherIds": {
+          "crn": "X346204",
+          "cro": "1234ABC",
+          "pnc": "2004/0012345U"
+        },
+        "contactDetails": {},
+        "offenderProfile": {
+          "offenderLanguages": {},
+          "previousConviction": {}
+        },
+        "offenderManagers": [
+          {
+            "trustOfficer": {
+              "forenames": "Unallocated Staff(N07)",
+              "surname": "Staff"
+            },
+            "staff": {
+              "forenames": "Unallocated Staff(N07)",
+              "surname": "Staff"
+            },
+            "partitionArea": "National Data",
+            "softDeleted": false,
+            "team": {
+              "description": "Unallocated Team(N07)",
+              "district": {
+                "code": "N07NPSA",
+                "description": "N07 Division"
+              },
+              "borough": {
+                "code": "N07100",
+                "description": "N07 Cluster 1"
+              }
+            },
+            "probationArea": {
+              "code": "N07",
+              "description": "NPS London",
+              "nps": true
+            },
+            "fromDate": "1900-01-01",
+            "active": true,
+            "allocationReason": {
+              "code": "IN1",
+              "description": "Initial Allocation"
+            }
+          }
+        ],
+        "softDeleted": false,
+        "currentDisposal": "1",
+        "partitionArea": "National Data",
+        "currentRestriction": false,
+        "restrictionMessage": "This is a restricted offender record. Please contact a system administrator",
+        "currentExclusion": false,
+        "exclusionMessage": "You are excluded from viewing this offender record. Please contact a system administrator"
+      }
+    }
+  ],
+  "matchedBy": "ALL_SUPPLIED"
+}

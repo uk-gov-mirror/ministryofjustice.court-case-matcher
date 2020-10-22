@@ -1,4 +1,4 @@
-package uk.gov.justice.probation.courtcasematcher.restclient;
+package uk.gov.justice.probation.courtcasematcher.model.offendersearch;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;

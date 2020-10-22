@@ -1,27 +1,11 @@
 package uk.gov.justice.probation.courtcasematcher.event;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.atLeast;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
-import static org.slf4j.LoggerFactory.getLogger;
-
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.LoggingEvent;
 import ch.qos.logback.core.Appender;
 import com.google.common.eventbus.EventBus;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.Month;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import javax.validation.ConstraintViolation;
-import javax.validation.Path;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -39,10 +23,26 @@ import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCas
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Name;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.OffenderSearchMatchType;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.SearchResponse;
-import uk.gov.justice.probation.courtcasematcher.restclient.NameHelper;
 import uk.gov.justice.probation.courtcasematcher.service.CourtCaseService;
 import uk.gov.justice.probation.courtcasematcher.service.MatcherService;
 import uk.gov.justice.probation.courtcasematcher.service.TelemetryService;
+
+import javax.validation.ConstraintViolation;
+import javax.validation.Path;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.Month;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+import static org.slf4j.LoggerFactory.getLogger;
 
 @ExtendWith({MockitoExtension.class})
 @MockitoSettings(strictness = Strictness.STRICT_STUBS)
@@ -53,15 +53,15 @@ class EventListenerTest {
     private final static String CASE = "123456";
     private final static String COURT_CODE = "B10JQ00";
     private static final LocalDateTime DATE_OF_HEARING = LocalDate.of(2020, Month.NOVEMBER, 5).atStartOfDay();
+    private static final String PNC = "PNC";
     private final static CourtCase courtCase = CourtCase.builder()
         .defendantName(DEFENDANT_NAME.getFullName())
         .defendantDob(DEFENDANT_DOB)
         .courtCode(COURT_CODE)
         .caseNo(CASE)
+        .pnc(PNC)
         .sessionStartTime(DATE_OF_HEARING)
         .build();
-
-    private final NameHelper nameHelper = new NameHelper(List.of("MISS","MRS","MS","MASTER","MR","MX","DR"));
 
     @Mock
     private MatcherService matcherService;
@@ -88,7 +88,7 @@ class EventListenerTest {
         logger.addAppender(mockAppender);
 
         eventBus = new EventBus();
-        eventListener = new EventListener(eventBus, matcherService, courtCaseService, telemetryService, nameHelper);
+        eventListener = new EventListener(eventBus, matcherService, courtCaseService, telemetryService);
     }
 
     @DisplayName("Ensure that successful events are logged and counted")
@@ -165,11 +165,11 @@ class EventListenerTest {
     @Test
     void givenSearch_whenCourtCaseMatched_thenSave() {
         SearchResponse searchResponse = SearchResponse.builder().build();
-        when(matcherService.getSearchResponse(DEFENDANT_NAME, DEFENDANT_DOB, COURT_CODE, CASE)).thenReturn(Mono.just(searchResponse));
+        when(matcherService.getSearchResponse(courtCase)).thenReturn(Mono.just(searchResponse));
 
         eventBus.post(CourtCaseMatchEvent.builder().courtCase(courtCase).build());
 
-        verify(matcherService).getSearchResponse(DEFENDANT_NAME, DEFENDANT_DOB, COURT_CODE, CASE);
+        verify(matcherService).getSearchResponse(courtCase);
         verify(courtCaseService).createCase(courtCase, searchResponse);
         verify(telemetryService).trackOffenderMatchEvent(courtCase, searchResponse);
         verifyNoMoreInteractions(matcherService, courtCaseService, telemetryService);
@@ -178,7 +178,7 @@ class EventListenerTest {
     @DisplayName("Check the match event when the call to the matcher service returns an empty response")
     @Test
     void givenSearchWhichFails_whenCourtCaseMatched_thenSave() {
-        when(matcherService.getSearchResponse(DEFENDANT_NAME, DEFENDANT_DOB, COURT_CODE, CASE)).thenReturn(Mono.error(new IllegalArgumentException()));
+        when(matcherService.getSearchResponse(courtCase)).thenReturn(Mono.error(new IllegalArgumentException()));
 
         eventListener.courtCaseMatchEvent(CourtCaseMatchEvent.builder().courtCase(courtCase).build());
 
@@ -186,7 +186,7 @@ class EventListenerTest {
             .matches(Collections.emptyList())
             .matchedBy(OffenderSearchMatchType.NOTHING)
             .build();
-        verify(matcherService).getSearchResponse(DEFENDANT_NAME, DEFENDANT_DOB, COURT_CODE, CASE);
+        verify(matcherService).getSearchResponse(courtCase);
         verify(courtCaseService).createCase(courtCase, searchResponse);
         verify(telemetryService).trackOffenderMatchFailureEvent(courtCase);
         verifyNoMoreInteractions(matcherService, courtCaseService, telemetryService);

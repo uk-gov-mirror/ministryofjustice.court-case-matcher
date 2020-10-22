@@ -3,22 +3,23 @@ package uk.gov.justice.probation.courtcasematcher.event;
 import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
-import java.util.Collections;
-import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Mono;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCase;
-import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Name;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.OffenderSearchMatchType;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.SearchResponse;
-import uk.gov.justice.probation.courtcasematcher.restclient.NameHelper;
 import uk.gov.justice.probation.courtcasematcher.service.CourtCaseService;
 import uk.gov.justice.probation.courtcasematcher.service.MatcherService;
 import uk.gov.justice.probation.courtcasematcher.service.TelemetryService;
 
+import java.util.Collections;
+
+/**
+ * We intend to replace EventBus with an external message queue.
+ */
 @Component
 @Slf4j
 public class EventListener {
@@ -29,19 +30,15 @@ public class EventListener {
 
     private final TelemetryService telemetryService;
 
-    private final NameHelper nameHelper;
-
     @Autowired
     public EventListener(EventBus eventBus,
-                        MatcherService matcherService,
-                        CourtCaseService courtCaseService,
-                        TelemetryService telemetryService,
-                        NameHelper nameHelper) {
+                         MatcherService matcherService,
+                         CourtCaseService courtCaseService,
+                         TelemetryService telemetryService) {
         super();
         this.matcherService = matcherService;
         this.courtCaseService = courtCaseService;
         this.telemetryService = telemetryService;
-        this.nameHelper = nameHelper;
         eventBus.register(this);
     }
 
@@ -80,10 +77,7 @@ public class EventListener {
         log.info("Matching offender and saving case no {} for court {}, defendant name {}",
             courtCase.getCaseNo(), courtCase.getCourtCode(), courtCase.getDefendantName());
 
-        Name name = Optional.ofNullable(courtCase.getName())
-                            .orElseGet(() -> nameHelper.getNameFromFields(courtCase.getDefendantName()));
-
-        matcherService.getSearchResponse(name, courtCase.getDefendantDob(), courtCase.getCourtCode(), courtCase.getCaseNo())
+        matcherService.getSearchResponse(courtCase)
             .doOnSuccess(searchResponse -> telemetryService.trackOffenderMatchEvent(courtCase, searchResponse))
             .doOnError(throwable -> telemetryService.trackOffenderMatchFailureEvent(courtCase))
             .onErrorResume(throwable -> Mono.just(SearchResponse.builder()
