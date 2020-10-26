@@ -16,6 +16,8 @@ public class CourtCaseFailureEvent {
 
     private final String incomingMessage;
 
+    private final Throwable throwable;
+
     private final String failureMessage;
 
     private final Set<ConstraintViolation<?>> violations;

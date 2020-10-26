@@ -1,20 +1,5 @@
 package uk.gov.justice.probation.courtcasematcher.restclient;
 
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.timeout;
-import static org.mockito.Mockito.verify;
-import static org.slf4j.LoggerFactory.getLogger;
-
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.classic.spi.LoggingEvent;
-import ch.qos.logback.core.Appender;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import com.google.common.eventbus.EventBus;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
@@ -22,11 +7,20 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.classic.spi.LoggingEvent;
+import ch.qos.logback.core.Appender;
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.google.common.eventbus.EventBus;
+import lombok.Builder;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatcher;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -34,10 +28,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
-import uk.gov.justice.probation.courtcasematcher.application.TestMessagingConfig;
+import reactor.core.Exceptions;
 import uk.gov.justice.probation.courtcasematcher.event.CourtCaseFailureEvent;
 import uk.gov.justice.probation.courtcasematcher.event.CourtCaseSuccessEvent;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.Address;
@@ -50,16 +44,25 @@ import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.Offender
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Name;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.MatchType;
 
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.timeout;
+import static org.mockito.Mockito.verify;
+import static org.slf4j.LoggerFactory.getLogger;
+import static uk.gov.justice.probation.courtcasematcher.restclient.OffenderSearchRestClientTest.createException;
+
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @ActiveProfiles("test")
-@Import(TestMessagingConfig.class)
 public class CourtCaseRestClientIntTest {
 
     private static final String COURT_CODE = "SHF";
     private static final String CASE_NO = "12345";
     private static final String NEW_CASE_NO = "999999";
-    private static final int WEB_CLIENT_TIMEOUT_MS = 5000;
+    private static final int WEB_CLIENT_TIMEOUT_MS = 10000;
 
     private static final GroupedOffenderMatches matches = GroupedOffenderMatches.builder()
         .matches(Collections.singletonList(OffenderMatch.builder()
@@ -102,7 +105,6 @@ public class CourtCaseRestClientIntTest {
         Logger logger = (Logger) getLogger(LoggerFactory.getLogger(CourtCaseRestClient.class).getName());
         logger.addAppender(mockAppender);
     }
-
 
     @Test
     public void whenGetCourtCase_thenMakeRestCallToCourtCaseService() {
@@ -169,23 +171,29 @@ public class CourtCaseRestClientIntTest {
     }
 
     @Test
-    public void givenUnknownCourt_whenPutCourtCase_thenFailureEvent() {
+    public void givenUnknownCourt_whenPutCourtCase_thenNoRetryFailureEvent() {
 
-        String unknownCourtCode = "XXX";
-        CourtCase courtCaseApi = CourtCase.builder()
+        var unknownCourtCode = "XXX";
+        var courtCaseApi = CourtCase.builder()
             .caseNo("12345")
             .courtCode(unknownCourtCode)
             .build();
 
         restClient.putCourtCase(unknownCourtCode, CASE_NO, courtCaseApi);
 
-        verify(eventBus, timeout(WEB_CLIENT_TIMEOUT_MS)).post(any(CourtCaseFailureEvent.class));
+        var notFoundException = createException(HttpStatus.NOT_FOUND).getClass();
+        var failureEventMatcher
+            = FailureEventMatcher.builder().throwableClass(notFoundException).build();
+        verify(eventBus, timeout(WEB_CLIENT_TIMEOUT_MS)).post(argThat(failureEventMatcher));
     }
 
     @Test
-    public void whenRestClientThrows500OnPut_ThenFailureEvent() {
+    public void whenRestClientThrows500OnPut_ThenRetryWithFailureEvent() {
         restClient.putCourtCase("X500", CASE_NO, A_CASE);
-        verify(eventBus, timeout(WEB_CLIENT_TIMEOUT_MS)).post(any(CourtCaseFailureEvent.class));
+
+        var retryExhaustedException = Exceptions.retryExhausted("Message", new IllegalArgumentException()).getClass();
+        var failureEventMatcher= FailureEventMatcher.builder().throwableClass(retryExhaustedException).build();
+        verify(eventBus, timeout(WEB_CLIENT_TIMEOUT_MS)).post(argThat(failureEventMatcher));
     }
 
     @Test
@@ -200,7 +208,7 @@ public class CourtCaseRestClientIntTest {
     }
 
     @Test
-    public void givenUnknownCourt_whenPostOffenderMatches_thenReportErrorToEventBus() {
+    public void givenUnknownCourt_whenPostOffenderMatches_thenNoRetryAndLogNotFoundError() {
 
         GroupedOffenderMatches matches = GroupedOffenderMatches.builder()
             .matches(Collections.singletonList(OffenderMatch.builder()
@@ -218,10 +226,16 @@ public class CourtCaseRestClientIntTest {
         verify(mockAppender, timeout(WEB_CLIENT_TIMEOUT_MS)).doAppend(captorLoggingEvent.capture());
         List<LoggingEvent> events = captorLoggingEvent.getAllValues();
         assertThat(events).hasSizeGreaterThanOrEqualTo(1);
+        String className = events.stream()
+            .filter(ev -> ev.getLevel() == Level.ERROR)
+            .findFirst()
+            .map(event -> event.getThrowableProxy().getClassName())
+            .orElse(null);
+        assertThat(className).contains("WebClientResponseException$NotFound");
     }
 
     @Test
-    public void whenRestClientThrows500OnPostMatches_ThenFailureEvent() {
+    public void whenRestClientThrows500OnPostMatches_ThenRetryAndLogRetryExhaustedError() {
 
         restClient.postMatches("X500", CASE_NO, matches);
 
@@ -229,10 +243,16 @@ public class CourtCaseRestClientIntTest {
 
         List<LoggingEvent> events = captorLoggingEvent.getAllValues();
         assertThat(events).hasSizeGreaterThanOrEqualTo(1);
+        String className = events.stream()
+            .filter(ev -> ev.getLevel() == Level.ERROR)
+            .findFirst()
+            .map(event -> event.getThrowableProxy().getClassName())
+            .orElse(null);
+        assertThat(className).contains("WebClientResponseException$NotFound");
     }
 
     @Test
-    public void whenRestClientCalledWithEmptyOptional_ThenFailureEvent() {
+    public void whenRestClientCalledWithNull_ThenFailureEvent() {
 
         restClient.postMatches(COURT_CODE, CASE_NO, null);
 
@@ -292,5 +312,17 @@ public class CourtCaseRestClientIntTest {
         String optional = restClient.getProbationStatus("X500").block();
 
         assertThat(optional).isEmpty();
+    }
+
+
+    @Builder
+    public static class FailureEventMatcher implements ArgumentMatcher<CourtCaseFailureEvent> {
+
+        private final Class throwableClass;
+
+        @Override
+        public boolean matches(CourtCaseFailureEvent argument) {
+            return throwableClass.equals(argument.getThrowable().getClass());
+        }
     }
 }

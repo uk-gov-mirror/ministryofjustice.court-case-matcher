@@ -1,12 +1,14 @@
 package uk.gov.justice.probation.courtcasematcher.restclient;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 import com.google.common.eventbus.EventBus;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -20,7 +22,10 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClient.RequestHeadersSpec;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.Disposable;
+import reactor.core.Exceptions;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
+import reactor.util.retry.Retry.RetrySignal;
 import uk.gov.justice.probation.courtcasematcher.event.CourtCaseFailureEvent;
 import uk.gov.justice.probation.courtcasematcher.event.CourtCaseSuccessEvent;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCase;
@@ -30,14 +35,15 @@ import uk.gov.justice.probation.courtcasematcher.restclient.exception.CourtCaseN
 import uk.gov.justice.probation.courtcasematcher.restclient.exception.CourtNotFoundException;
 
 import static org.springframework.security.oauth2.client.web.reactive.function.client.ServletOAuth2AuthorizedClientExchangeFilterFunction.clientRegistrationId;
+import static uk.gov.justice.probation.courtcasematcher.restclient.OffenderSearchRestClient.EXCEPTION_RETRY_FILTER;
 
 @Component
 @Slf4j
 public class CourtCaseRestClient {
 
     private static final String ERR_MSG_FORMAT_PUT_ABSENT = "Unexpected exception when applying PUT to purge absent cases for court '%s'";
-    private static final String ERR_MSG_FORMAT_PUT_CASE = "Unexpected exception when applying PUT to update case number '%s' for court '%s'";
-    private static final String ERR_MSG_FORMAT_POST_MATCH = "Unexpected exception when POST matches for case number '%s' for court '%s'";
+    private static final String ERR_MSG_FORMAT_PUT_CASE = "Unexpected exception when applying PUT to update case number '%s' for court '%s'.";
+    private static final String ERR_MSG_FORMAT_POST_MATCH = "Unexpected exception when POST matches for case number '%s' for court '%s'. Match count was %s";
 
     @Value("${court-case-service.case-put-url-template}")
     private String courtCasePutTemplate;
@@ -54,6 +60,14 @@ public class CourtCaseRestClient {
     private final EventBus eventBus;
 
     private final WebClient webClient;
+
+    @Setter
+    @Value("${court-case-service.max-retries:3}")
+    private int maxRetries;
+
+    @Setter
+    @Value("${court-case-service.min-backoff-seconds:3}")
+    private int minBackOffSeconds;
 
     @Autowired
     public CourtCaseRestClient(@Qualifier("courtCaseServiceWebClient") WebClient webClient, EventBus eventBus) {
@@ -86,30 +100,42 @@ public class CourtCaseRestClient {
 
         return put(path, courtCase)
             .retrieve()
-            .onStatus(HttpStatus::isError, (clientResponse) -> handleError(clientResponse, courtCode, caseNo))
             .bodyToMono(CourtCase.class)
-            .doOnError(e -> postErrorToBus(String.format(ERR_MSG_FORMAT_PUT_CASE, caseNo, courtCode) + ".Exception : " + e))
+            .retryWhen(Retry.backoff(maxRetries, Duration.ofSeconds(minBackOffSeconds))
+                .jitter(0.0d)
+                .doAfterRetryAsync(this::logRetrySignal)
+                .filter(EXCEPTION_RETRY_FILTER))
+            .onErrorResume(this::handleError)
             .subscribe(courtCaseApi -> {
                 eventBus.post(CourtCaseSuccessEvent.builder().courtCase(courtCaseApi).build());
-                postMatches(courtCaseApi.getCourtCode(), courtCaseApi.getCaseNo(), offenderMatches);
-            });
+            }, throwable -> {
+                eventBus.post(CourtCaseFailureEvent.builder()
+                    .failureMessage(String.format(ERR_MSG_FORMAT_PUT_CASE, caseNo, courtCode))
+                    .throwable(throwable)
+                    .build());
+            }, () -> postMatches(courtCase.getCourtCode(), courtCase .getCaseNo(), offenderMatches));
     }
 
     public void postMatches(String courtCode, String caseNo, GroupedOffenderMatches offenderMatches) {
 
-        if (offenderMatches != null) {
+        Optional.ofNullable(offenderMatches).ifPresent(matches -> {
             final String path = String.format(matchesPostTemplate, courtCode, caseNo);
-            post(path, offenderMatches)
+            post(path, matches)
                 .retrieve()
-                .onStatus(HttpStatus::isError, (clientResponse) -> handleError(clientResponse, courtCode, caseNo))
                 .toBodilessEntity()
-                .doOnError(e -> log.error(String.format(ERR_MSG_FORMAT_POST_MATCH, caseNo, courtCode) + ".Exception : " + e))
+                .retryWhen(Retry.backoff(maxRetries, Duration.ofSeconds(minBackOffSeconds))
+                    .jitter(0.0d)
+                    .doAfterRetryAsync(this::logRetrySignal)
+                    .filter(EXCEPTION_RETRY_FILTER))
                 .subscribe(responseEntity -> {
                     log.info("Successful POST of offender matches. Response location: {} ",
                         Optional.ofNullable(responseEntity.getHeaders().getFirst(HttpHeaders.LOCATION))
                             .orElse("[NOT FOUND]"));
+                }, throwable -> {
+                    String error = String.format(ERR_MSG_FORMAT_POST_MATCH, courtCode, caseNo, offenderMatches.getMatches().size());
+                    log.error(error, throwable);
                 });
-        }
+        });
     }
 
     public void purgeAbsent(String courtCode, Map<LocalDate, List<String>> cases) {
@@ -190,6 +216,15 @@ public class CourtCaseRestClient {
         return spec.attributes(clientRegistrationId("offender-search-client"));
     }
 
+    private Mono<? extends CourtCase> handleError(Throwable throwable) {
+
+        if (Exceptions.isRetryExhausted(throwable)) {
+            log.error("Retry error :{} with maximum of {}", throwable.getMessage(), maxRetries);
+            return Mono.error(throwable);
+        }
+        return Mono.error(throwable);
+    }
+
     private Mono<? extends Throwable> handleGetError(ClientResponse clientResponse, String courtCode, String caseNo) {
         final HttpStatus httpStatus = clientResponse.statusCode();
         // This is expected for new cases
@@ -199,36 +234,6 @@ public class CourtCaseRestClient {
         }
         else if(HttpStatus.UNAUTHORIZED.equals(httpStatus) || HttpStatus.FORBIDDEN.equals(httpStatus)) {
             log.error("HTTP status {} to to GET the case from court case service", httpStatus);
-        }
-        throw WebClientResponseException.create(httpStatus.value(),
-            httpStatus.name(),
-            clientResponse.headers().asHttpHeaders(),
-            clientResponse.toString().getBytes(),
-            StandardCharsets.UTF_8);
-    }
-
-    private Mono<String> handleGetError(ClientResponse clientResponse, String crn) {
-        final HttpStatus httpStatus = clientResponse.statusCode();
-        // This is expected for new cases
-        if (HttpStatus.NOT_FOUND.equals(httpStatus)) {
-            log.info("Failed to get offender detail for CRN {}", crn);
-            return Mono.empty();
-        }
-        else if(HttpStatus.UNAUTHORIZED.equals(httpStatus) || HttpStatus.FORBIDDEN.equals(httpStatus)) {
-            log.error("HTTP status {} to to GET the case from court case service", httpStatus);
-            return Mono.empty();
-        }
-        throw WebClientResponseException.create(httpStatus.value(),
-            httpStatus.name(),
-            clientResponse.headers().asHttpHeaders(),
-            clientResponse.toString().getBytes(),
-            StandardCharsets.UTF_8);
-    }
-
-    private Mono<? extends Throwable> handleError(ClientResponse clientResponse, String courtCode, String caseNo) {
-        final HttpStatus httpStatus = clientResponse.statusCode();
-        if (HttpStatus.NOT_FOUND.equals(httpStatus)) {
-            return Mono.error(new CourtCaseNotFoundException(courtCode, caseNo));
         }
         throw WebClientResponseException.create(httpStatus.value(),
             httpStatus.name(),
@@ -249,9 +254,9 @@ public class CourtCaseRestClient {
             StandardCharsets.UTF_8);
     }
 
-    private void postErrorToBus(String failureMessage) {
-        eventBus.post(CourtCaseFailureEvent.builder().failureMessage(failureMessage).build());
+    private Mono<Void> logRetrySignal(RetrySignal retrySignal) {
+        log.error("Error from call to PUT, at attempt {} of {}. Root Cause {} ",
+            retrySignal.totalRetries(), maxRetries, retrySignal.failure());
+        return Mono.empty();
     }
-
-
 }

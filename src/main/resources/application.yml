@@ -51,7 +51,8 @@ court-case-service:
   matches-post-url-template: /court/%s/case/%s/grouped-offender-matches
   purge-absent-put-url-template: /court/%s/cases/purgeAbsent
   offender-detail-get-url-template: /offender/%s/detail
-
+  post-max-retries: 3
+  min-backoff-seconds: 5
 
 offender-search:
   post-match-url: /match

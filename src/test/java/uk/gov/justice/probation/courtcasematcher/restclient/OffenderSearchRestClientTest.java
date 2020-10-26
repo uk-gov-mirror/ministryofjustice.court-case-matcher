@@ -4,7 +4,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
-import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -18,9 +17,6 @@ import static uk.gov.justice.probation.courtcasematcher.restclient.OffenderSearc
 class OffenderSearchRestClientTest {
 
     private static final HttpHeaders HEADERS = new HttpHeaders(new LinkedMultiValueMap<>());
-
-    @InjectMocks
-    private OffenderSearchRestClient restClient;
 
     @DisplayName("Will not retry for these HTTP status codes")
     @ParameterizedTest(name = "{index} => status=''{0}''")
@@ -41,7 +37,7 @@ class OffenderSearchRestClientTest {
         assertThat(EXCEPTION_RETRY_FILTER.test(exception)).isTrue();
     }
 
-    private static WebClientResponseException createException(HttpStatus httpStatus) {
+    static WebClientResponseException createException(HttpStatus httpStatus) {
         return WebClientResponseException.create(httpStatus.value(), "", HEADERS, "".getBytes(), null);
     }
 }

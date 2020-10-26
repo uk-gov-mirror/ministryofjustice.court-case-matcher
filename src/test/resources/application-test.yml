@@ -17,13 +17,15 @@ spring:
 court-case-service:
   base-url: http://localhost:8090
   disable-authentication: true
+  min-backoff-seconds: 1
+  max-retries: 1
 
 offender-search:
   base-url: http://localhost:8090
   disable-authentication: true
   ping-path: /ping
   min-backoff-seconds: 1
-  max-retries: 2
+  max-retries: 1
 
 nomis-oauth:
   base-url: http://localhost:8090
