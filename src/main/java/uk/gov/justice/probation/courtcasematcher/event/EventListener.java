@@ -45,7 +45,7 @@ public class EventListener {
     @AllowConcurrentEvents
     @Subscribe
     public void courtCaseEvent(CourtCaseFailureEvent courtCaseEvent) {
-        log.error("Message processing failed. Error: {} ", courtCaseEvent.getFailureMessage());
+        log.error("Message processing failed. Error: {} ", courtCaseEvent.getFailureMessage(), courtCaseEvent.getThrowable());
         if (!CollectionUtils.isEmpty(courtCaseEvent.getViolations())) {
             courtCaseEvent.getViolations().forEach(
                 cv -> log.error("Validation failed : {} at {} ", cv.getMessage(), cv.getPropertyPath().toString())

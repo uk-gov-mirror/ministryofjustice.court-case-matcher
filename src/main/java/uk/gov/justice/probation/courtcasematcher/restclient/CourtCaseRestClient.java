@@ -45,6 +45,11 @@ public class CourtCaseRestClient {
     private static final String ERR_MSG_FORMAT_PUT_CASE = "Unexpected exception when applying PUT to update case number '%s' for court '%s'.";
     private static final String ERR_MSG_FORMAT_POST_MATCH = "Unexpected exception when POST matches for case number '%s' for court '%s'. Match count was %s";
 
+    private static final String ERROR_MSG_FORMAT_INITIAL_CASE = "Initial error from PUT of the court case. Will retry.";
+    private static final String ERROR_MSG_FORMAT_RETRY_PUT_CASE = "Retry error from PUT of the court case, at attempt %s of %s.";
+    private static final String ERROR_MSG_FORMAT_INITIAL_MATCHES = "Initial error from POST of the offender matches. Will retry.";
+    private static final String ERROR_MSG_FORMAT_RETRY_POST_MATCHES = "Retry error from POST of the offender matches, at attempt %s of %s.";
+
     @Value("${court-case-service.case-put-url-template}")
     private String courtCasePutTemplate;
     @Value("${court-case-service.matches-post-url-template}")
@@ -103,17 +108,19 @@ public class CourtCaseRestClient {
             .bodyToMono(CourtCase.class)
             .retryWhen(Retry.backoff(maxRetries, Duration.ofSeconds(minBackOffSeconds))
                 .jitter(0.0d)
-                .doAfterRetryAsync(this::logRetrySignal)
+                .doAfterRetryAsync((retrySignal) -> logRetrySignal(retrySignal, ERROR_MSG_FORMAT_RETRY_PUT_CASE, ERROR_MSG_FORMAT_INITIAL_CASE))
                 .filter(EXCEPTION_RETRY_FILTER))
             .onErrorResume(this::handleError)
             .subscribe(courtCaseApi -> {
                 eventBus.post(CourtCaseSuccessEvent.builder().courtCase(courtCaseApi).build());
+                postMatches(courtCase.getCourtCode(), courtCase .getCaseNo(), offenderMatches);
             }, throwable -> {
                 eventBus.post(CourtCaseFailureEvent.builder()
                     .failureMessage(String.format(ERR_MSG_FORMAT_PUT_CASE, caseNo, courtCode))
                     .throwable(throwable)
                     .build());
-            }, () -> postMatches(courtCase.getCourtCode(), courtCase .getCaseNo(), offenderMatches));
+                postMatches(courtCase.getCourtCode(), courtCase .getCaseNo(), offenderMatches);
+            });
     }
 
     public void postMatches(String courtCode, String caseNo, GroupedOffenderMatches offenderMatches) {
@@ -125,7 +132,7 @@ public class CourtCaseRestClient {
                 .toBodilessEntity()
                 .retryWhen(Retry.backoff(maxRetries, Duration.ofSeconds(minBackOffSeconds))
                     .jitter(0.0d)
-                    .doAfterRetryAsync(this::logRetrySignal)
+                    .doAfterRetryAsync((retrySignal) -> logRetrySignal(retrySignal, ERROR_MSG_FORMAT_RETRY_POST_MATCHES, ERROR_MSG_FORMAT_INITIAL_MATCHES))
                     .filter(EXCEPTION_RETRY_FILTER))
                 .subscribe(responseEntity -> {
                     log.info("Successful POST of offender matches. Response location: {} ",
@@ -219,8 +226,7 @@ public class CourtCaseRestClient {
     private Mono<? extends CourtCase> handleError(Throwable throwable) {
 
         if (Exceptions.isRetryExhausted(throwable)) {
-            log.error("Retry error :{} with maximum of {}", throwable.getMessage(), maxRetries);
-            return Mono.error(throwable);
+            log.error(String.format(ERROR_MSG_FORMAT_RETRY_PUT_CASE, maxRetries, maxRetries));
         }
         return Mono.error(throwable);
     }
@@ -254,9 +260,13 @@ public class CourtCaseRestClient {
             StandardCharsets.UTF_8);
     }
 
-    private Mono<Void> logRetrySignal(RetrySignal retrySignal) {
-        log.error("Error from call to PUT, at attempt {} of {}. Root Cause {} ",
-            retrySignal.totalRetries(), maxRetries, retrySignal.failure());
+    private Mono<Void> logRetrySignal(RetrySignal retrySignal, String messageFormat, String initialError) {
+        if (retrySignal.totalRetries() > 0 ) {
+            log.error(String.format(messageFormat, retrySignal.totalRetries(), maxRetries));
+        }
+        else {
+            log.error(initialError);
+        }
         return Mono.empty();
     }
 }
