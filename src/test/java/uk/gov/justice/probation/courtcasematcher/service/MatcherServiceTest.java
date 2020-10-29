@@ -131,9 +131,9 @@ class MatcherServiceTest {
         when(matchRequestFactory.buildFrom(COURT_CASE)).thenReturn(matchRequest);
         when(offenderSearchRestClient.search(matchRequest)).thenReturn(Mono.empty());
 
-        SearchResponse searchResponse = matcherService.getSearchResponse(COURT_CASE).block();
+        var searchResult = matcherService.getSearchResponse(COURT_CASE).block();
 
-        assertThat(searchResponse).isNull();
+        assertThat(searchResult).isNull();
         LoggingEvent loggingEvent = captureFirstLogEvent();
         assertThat(loggingEvent.getLevel()).isEqualTo(Level.ERROR);
         assertThat(loggingEvent.getFormattedMessage().trim())
@@ -162,8 +162,10 @@ class MatcherServiceTest {
         when(matchRequestFactory.buildFrom(COURT_CASE)).thenReturn(matchRequest);
         when(offenderSearchRestClient.search(matchRequest)).thenReturn(Mono.just(multipleExactMatches));
 
-        SearchResponse searchResponse = matcherService.getSearchResponse(COURT_CASE).block();
+        var searchResult = matcherService.getSearchResponse(COURT_CASE).block();
+        var searchResponse = searchResult.getSearchResponse();
 
+        assertThat(searchResult.getMatchRequest()).isEqualTo(matchRequest);
         assertThat(searchResponse.getMatches()).hasSize(2);
         assertThat(searchResponse.getMatchedBy()).isSameAs(OffenderSearchMatchType.ALL_SUPPLIED);
         assertThat(searchResponse.getProbationStatus()).isEqualTo(MATCHES_PROBATION_STATUS);
@@ -175,9 +177,10 @@ class MatcherServiceTest {
         when(offenderSearchRestClient.search(matchRequest)).thenReturn(Mono.just(singleExactMatch));
         when(courtCaseRestClient.getProbationStatus(CRN)).thenReturn(Mono.just(PROBATION_STATUS));
 
-        SearchResponse searchResponse = matcherService.getSearchResponse(COURT_CASE).block();
+        var searchResult = matcherService.getSearchResponse(COURT_CASE).block();
+        var searchResponse = searchResult.getSearchResponse();
 
-        assertThat(searchResponse.getMatches()).hasSize(1);
+        assertThat(searchResult.getMatchRequest()).isEqualTo(matchRequest);
         assertThat(searchResponse.getMatchedBy()).isSameAs(OffenderSearchMatchType.ALL_SUPPLIED);
         assertThat(searchResponse.getProbationStatus()).isEqualTo(PROBATION_STATUS);
     }
@@ -187,8 +190,10 @@ class MatcherServiceTest {
         when(matchRequestFactory.buildFrom(COURT_CASE)).thenReturn(matchRequest);
         when(offenderSearchRestClient.search(matchRequest)).thenReturn(Mono.just(noMatches));
 
-        SearchResponse searchResponse = matcherService.getSearchResponse(COURT_CASE).block();
+        var searchResult = matcherService.getSearchResponse(COURT_CASE).block();
+        var searchResponse = searchResult.getSearchResponse();
 
+        assertThat(searchResult.getMatchRequest()).isEqualTo(matchRequest);
         assertThat(searchResponse.getMatches()).hasSize(0);
         assertThat(searchResponse.getMatchedBy()).isSameAs(OffenderSearchMatchType.NOTHING);
         assertThat(searchResponse.getProbationStatus()).isEqualTo(DEFAULT_PROBATION_STATUS);

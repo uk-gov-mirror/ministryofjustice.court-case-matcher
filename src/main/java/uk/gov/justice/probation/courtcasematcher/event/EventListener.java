@@ -13,6 +13,7 @@ import uk.gov.justice.probation.courtcasematcher.model.offendersearch.OffenderSe
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.SearchResponse;
 import uk.gov.justice.probation.courtcasematcher.service.CourtCaseService;
 import uk.gov.justice.probation.courtcasematcher.service.MatcherService;
+import uk.gov.justice.probation.courtcasematcher.service.SearchResult;
 import uk.gov.justice.probation.courtcasematcher.service.TelemetryService;
 
 import java.util.Collections;
@@ -78,13 +79,16 @@ public class EventListener {
             courtCase.getCaseNo(), courtCase.getCourtCode(), courtCase.getDefendantName());
 
         matcherService.getSearchResponse(courtCase)
-            .doOnSuccess(searchResponse -> telemetryService.trackOffenderMatchEvent(courtCase, searchResponse))
+            .doOnSuccess(searchResult -> telemetryService.trackOffenderMatchEvent(courtCase, searchResult.getSearchResponse()))
             .doOnError(throwable -> telemetryService.trackOffenderMatchFailureEvent(courtCase))
-            .onErrorResume(throwable -> Mono.just(SearchResponse.builder()
-                .matchedBy(OffenderSearchMatchType.NOTHING)
-                .matches(Collections.emptyList())
-                .build()))
-            .subscribe(searchResponse -> courtCaseService.createCase(courtCase, searchResponse))
+            .onErrorResume(throwable -> Mono.just(SearchResult.builder()
+                    .searchResponse(
+                        SearchResponse.builder()
+                        .matchedBy(OffenderSearchMatchType.NOTHING)
+                        .matches(Collections.emptyList())
+                        .build())
+                    .build()))
+            .subscribe(searchResult -> courtCaseService.createCase(courtCase, searchResult))
             ;
 
     }

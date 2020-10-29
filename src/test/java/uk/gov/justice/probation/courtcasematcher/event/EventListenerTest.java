@@ -25,6 +25,7 @@ import uk.gov.justice.probation.courtcasematcher.model.offendersearch.OffenderSe
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.SearchResponse;
 import uk.gov.justice.probation.courtcasematcher.service.CourtCaseService;
 import uk.gov.justice.probation.courtcasematcher.service.MatcherService;
+import uk.gov.justice.probation.courtcasematcher.service.SearchResult;
 import uk.gov.justice.probation.courtcasematcher.service.TelemetryService;
 
 import javax.validation.ConstraintViolation;
@@ -165,12 +166,15 @@ class EventListenerTest {
     @Test
     void givenSearch_whenCourtCaseMatched_thenSave() {
         SearchResponse searchResponse = SearchResponse.builder().build();
-        when(matcherService.getSearchResponse(courtCase)).thenReturn(Mono.just(searchResponse));
+        final var searchResult = SearchResult.builder()
+                .searchResponse(searchResponse)
+                .build();
+        when(matcherService.getSearchResponse(courtCase)).thenReturn(Mono.just(searchResult));
 
         eventBus.post(CourtCaseMatchEvent.builder().courtCase(courtCase).build());
 
         verify(matcherService).getSearchResponse(courtCase);
-        verify(courtCaseService).createCase(courtCase, searchResponse);
+        verify(courtCaseService).createCase(courtCase, searchResult);
         verify(telemetryService).trackOffenderMatchEvent(courtCase, searchResponse);
         verifyNoMoreInteractions(matcherService, courtCaseService, telemetryService);
     }
@@ -182,12 +186,14 @@ class EventListenerTest {
 
         eventListener.courtCaseMatchEvent(CourtCaseMatchEvent.builder().courtCase(courtCase).build());
 
-        SearchResponse searchResponse = SearchResponse.builder()
-            .matches(Collections.emptyList())
-            .matchedBy(OffenderSearchMatchType.NOTHING)
-            .build();
         verify(matcherService).getSearchResponse(courtCase);
-        verify(courtCaseService).createCase(courtCase, searchResponse);
+        final var searchResult = SearchResult.builder()
+                .searchResponse(SearchResponse.builder()
+                    .matches(Collections.emptyList())
+                    .matchedBy(OffenderSearchMatchType.NOTHING)
+                    .build())
+                .build();
+        verify(courtCaseService).createCase(courtCase, searchResult);
         verify(telemetryService).trackOffenderMatchFailureEvent(courtCase);
         verifyNoMoreInteractions(matcherService, courtCaseService, telemetryService);
     }

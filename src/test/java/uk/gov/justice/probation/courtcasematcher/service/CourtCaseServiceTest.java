@@ -1,11 +1,5 @@
 package uk.gov.justice.probation.courtcasematcher.service;
 
-import java.time.LocalDate;
-import java.time.Month;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,11 +12,21 @@ import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.B
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Case;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Session;
 import uk.gov.justice.probation.courtcasematcher.model.mapper.CaseMapper;
+import uk.gov.justice.probation.courtcasematcher.model.mapper.MatchDetails;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.SearchResponse;
 import uk.gov.justice.probation.courtcasematcher.restclient.CourtCaseRestClient;
 
+import java.time.LocalDate;
+import java.time.Month;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -133,12 +137,12 @@ class CourtCaseServiceTest {
 
         SearchResponse searchResponse = SearchResponse.builder().build();
         CourtCase courtCase = CourtCase.builder().caseId(Long.toString(CASE_ID)).caseNo(CASE_NO).courtCode(COURT_CODE).build();
-        when(caseMapper.newFromCourtCaseAndSearchResponse(courtCase, searchResponse)).thenReturn(courtCase);
+        when(caseMapper.newFromCourtCaseWithMatches(eq(courtCase), any(MatchDetails.class))).thenReturn(courtCase);
 
-        courtCaseService.createCase(courtCase, searchResponse);
+        courtCaseService.createCase(courtCase, SearchResult.builder().searchResponse(searchResponse).build());
 
         verify(restClient).putCourtCase(COURT_CODE, CASE_NO, courtCase);
-        verify(caseMapper).newFromCourtCaseAndSearchResponse(courtCase, searchResponse);
+        verify(caseMapper).newFromCourtCaseWithMatches(eq(courtCase), any(MatchDetails.class));
     }
 
     @DisplayName("Save a court case without a search response.")

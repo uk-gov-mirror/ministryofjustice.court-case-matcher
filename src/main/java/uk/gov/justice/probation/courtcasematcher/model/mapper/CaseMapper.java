@@ -15,7 +15,6 @@ import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.C
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Name;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.Match;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.MatchType;
-import uk.gov.justice.probation.courtcasematcher.model.offendersearch.SearchResponse;
 
 import java.util.Collections;
 import java.util.List;
@@ -144,17 +143,15 @@ public class CaseMapper {
             .build();
     }
 
-    public CourtCase newFromCourtCaseAndSearchResponse(CourtCase incomingCase, SearchResponse searchResponse) {
+    public CourtCase newFromCourtCaseWithMatches(CourtCase incomingCase, MatchDetails matchDetails) {
 
-        MatchType matchType = MatchType.of(searchResponse.getMatchedBy());
+        CourtCaseBuilder courtCaseBuilder = getCourtCaseBuilderFromCase(incomingCase, matchDetails.getProbationStatus())
+            .groupedOffenderMatches(buildGroupedOffenderMatch(matchDetails.getMatches(), matchDetails.getMatchType()));
 
-        CourtCaseBuilder courtCaseBuilder = getCourtCaseBuilderFromCase(incomingCase, searchResponse.getProbationStatus())
-            .groupedOffenderMatches(buildGroupedOffenderMatch(searchResponse.getMatches(), matchType));
-
-        if (searchResponse.isExactMatch()) {
-            Match match = searchResponse.getMatches().get(0);
+        if (matchDetails.isExactMatch()) {
+            Match match = matchDetails.getMatches().get(0);
             courtCaseBuilder
-                .probationStatus(Optional.ofNullable(searchResponse.getProbationStatus()).orElse(defaultProbationStatus))
+                .probationStatus(Optional.ofNullable(matchDetails.getProbationStatus()).orElse(defaultProbationStatus))
                 .crn(match.getOffender().getOtherIds().getCrn())
                 .cro(match.getOffender().getOtherIds().getCro())
                 .pnc(match.getOffender().getOtherIds().getPnc())

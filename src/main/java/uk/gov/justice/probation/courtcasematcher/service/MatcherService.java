@@ -37,10 +37,15 @@ public class MatcherService {
     @Value("${probation-status-reference.nonExactMatch}")
     private final String nonExactProbationStatus;
 
-    public Mono<SearchResponse> getSearchResponse(CourtCase courtCase) {
-
-        return Mono.defer(() -> Mono.just(matchRequestFactory.buildFrom(courtCase)))
-                .doOnError(throwable -> log.warn(String.format("Unable to create MatchRequest for caseNo: %s, courtCode: %s", courtCase.getCaseNo(), courtCase.getCourtCode()), throwable))
+    public Mono<SearchResult> getSearchResponse(CourtCase courtCase) {
+        final MatchRequest matchRequest;
+        try {
+            matchRequest = matchRequestFactory.buildFrom(courtCase);
+        } catch (Exception e) {
+            log.warn(String.format("Unable to create MatchRequest for caseNo: %s, courtCode: %s", courtCase.getCaseNo(), courtCase.getCourtCode()), e);
+            throw e;
+        }
+        return Mono.defer(() -> Mono.just(matchRequest))
                 .flatMap(offenderSearchRestClient::search)
                 .map(searchResponse -> {
                     log.info(String.format("Match results for caseNo: %s, courtCode: %s - matchedBy: %s, matchCount: %s",
@@ -68,7 +73,11 @@ public class MatcherService {
                         log.error(String.format("Match results for caseNo: %s, courtCode: %s - Empty response from OffenderSearchRestClient",
                                 courtCase.getCaseNo(), courtCase.getCourtCode()));
                     }
-                });
+                })
+                .map(searchResponse -> SearchResult.builder()
+                        .searchResponse(searchResponse)
+                        .matchRequest(matchRequest)
+                        .build());
     }
 
     private SearchResponse combine(Tuple2<SearchResponse, String> tuple2) {

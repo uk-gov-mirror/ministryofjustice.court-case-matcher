@@ -1,11 +1,5 @@
 package uk.gov.justice.probation.courtcasematcher.model.mapper;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.Month;
-import java.util.Arrays;
-import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -31,6 +25,14 @@ import uk.gov.justice.probation.courtcasematcher.model.offendersearch.Offender;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.OffenderSearchMatchType;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.OtherIds;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.SearchResponse;
+import uk.gov.justice.probation.courtcasematcher.service.SearchResult;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.Month;
+import java.util.Arrays;
+import java.util.List;
 
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -134,7 +136,7 @@ class CaseMapperTest {
             .matchedBy(OffenderSearchMatchType.NOTHING)
             .build();
 
-        CourtCase courtCaseNew = caseMapper.newFromCourtCaseAndSearchResponse(courtCase, searchResponse);
+        CourtCase courtCaseNew = caseMapper.newFromCourtCaseWithMatches(courtCase, buildMatchDetails(searchResponse));
 
         assertThat(courtCaseNew).isNotSameAs(courtCase);
         assertThat(courtCaseNew.getCrn()).isNull();
@@ -156,7 +158,7 @@ class CaseMapperTest {
             .probationStatus("Current")
             .build();
 
-        CourtCase courtCaseNew = caseMapper.newFromCourtCaseAndSearchResponse(courtCase, searchResponse);
+        CourtCase courtCaseNew = caseMapper.newFromCourtCaseWithMatches(courtCase, buildMatchDetails(searchResponse));
 
         assertThat(courtCaseNew).isNotSameAs(courtCase);
         assertThat(courtCaseNew.getCrn()).isEqualTo(CRN);
@@ -181,7 +183,7 @@ class CaseMapperTest {
             .probationStatus(MATCHES_PROBATION_STATUS)
             .build();
 
-        CourtCase courtCaseNew = caseMapper.newFromCourtCaseAndSearchResponse(courtCase, searchResponse);
+        CourtCase courtCaseNew = caseMapper.newFromCourtCaseWithMatches(courtCase, buildMatchDetails(searchResponse));
 
         assertThat(courtCaseNew).isNotSameAs(courtCase);
         assertThat(courtCaseNew.getCrn()).isNull();
@@ -205,7 +207,7 @@ class CaseMapperTest {
             .matches(List.of(match))
             .build();
 
-        CourtCase courtCaseNew = caseMapper.newFromCourtCaseAndSearchResponse(courtCase, searchResponse);
+        CourtCase courtCaseNew = caseMapper.newFromCourtCaseWithMatches(courtCase, buildMatchDetails(searchResponse));
 
         assertThat(courtCaseNew).isNotSameAs(courtCase);
         assertThat(courtCaseNew.getCrn()).isEqualTo(CRN);
@@ -234,7 +236,7 @@ class CaseMapperTest {
             .matches(List.of(match1, match2))
             .build();
 
-        CourtCase courtCaseNew = caseMapper.newFromCourtCaseAndSearchResponse(courtCase, searchResponse);
+        CourtCase courtCaseNew = caseMapper.newFromCourtCaseWithMatches(courtCase, buildMatchDetails(searchResponse));
 
         assertThat(courtCaseNew).isNotSameAs(courtCase);
         assertThat(courtCaseNew.getCrn()).isNull();
@@ -351,6 +353,17 @@ class CaseMapperTest {
         assertThat(courtCase.getOffences()).hasSize(1);
         assertThat(courtCase.getOffences().get(0).getOffenceTitle()).isEqualTo("NEW Theft from a person");
         assertThat(courtCase.getOffences().get(0).getSequenceNumber()).isEqualTo(1);
+    }
+
+    private MatchDetails buildMatchDetails(SearchResponse searchResponse) {
+        return MatchDetails.builder()
+                .matchType(MatchType.of(SearchResult.builder()
+                        .searchResponse(searchResponse)
+                        .build()))
+                .matches(searchResponse.getMatches())
+                .probationStatus(searchResponse.getProbationStatus())
+                .exactMatch(searchResponse.isExactMatch())
+                .build();
     }
 
     private uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Offence buildOffence(String title, Integer seq) {

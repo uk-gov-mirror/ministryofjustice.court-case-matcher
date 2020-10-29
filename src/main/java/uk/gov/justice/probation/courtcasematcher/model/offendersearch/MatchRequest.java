@@ -20,7 +20,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
 @Getter
-@Builder(access = AccessLevel.PRIVATE)
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PRIVATE, force = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
