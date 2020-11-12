@@ -94,7 +94,7 @@ dependencies {
     testImplementation 'io.projectreactor:reactor-test'
 
     testImplementation 'net.javacrumbs.json-unit:json-unit-assertj:2.21.0'
-    testImplementation 'org.assertj:assertj-core:3.18.0'
+    testImplementation 'org.assertj:assertj-core:3.18.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter:5.7.0'
 
     testCompile 'io.rest-assured:rest-assured:4.3.2'
