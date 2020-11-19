@@ -3,7 +3,7 @@ import java.time.LocalDate
 
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '2.3.5.RELEASE'
+    id 'org.springframework.boot' version '2.4.0'
     id 'io.spring.dependency-management' version '1.0.10.RELEASE'
     id 'com.github.ben-manes.versions' version '0.36.0'
 }
@@ -89,13 +89,21 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.security:spring-security-oauth2-client'
 
-	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+    testImplementation(platform("org.junit:junit-bom:5.7.0"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation("junit:junit:4.13.1")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter")
+    testRuntimeOnly("org.junit.vintage:junit-vintage-engine")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher") {
+        because 'allows tests to run from IDEs that bundle older version of launcher'
+    }
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'io.projectreactor:reactor-test'
 
     testImplementation 'net.javacrumbs.json-unit:json-unit-assertj:2.21.0'
     testImplementation 'org.assertj:assertj-core:3.18.1'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter:5.7.0'
+
 
     testCompile 'io.rest-assured:rest-assured:4.3.2'
     testImplementation 'io.rest-assured:json-path:4.3.2'
