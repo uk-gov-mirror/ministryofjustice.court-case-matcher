@@ -102,7 +102,7 @@ dependencies {
     testImplementation 'io.rest-assured:xml-path:4.3.2'
     testCompile "com.github.tomakehurst:wiremock-jre8:2.26.3"
     testCompile 'org.mockito:mockito-core:3.6.0'
-    testCompile 'org.apache.activemq:artemis-junit:2.15.0'
+    testCompile 'org.apache.activemq:artemis-junit:2.16.0'
     testAnnotationProcessor 'org.projectlombok:lombok'
 
 }
