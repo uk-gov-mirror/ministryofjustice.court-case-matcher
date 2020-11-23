@@ -37,3 +37,16 @@ case-mapper-reference:
   courtNameToCodes:
     Sheffield Magistrates Court: "SHF"
     Beverley: "BEV"
+
+# Localstack settings
+aws:
+  sqs-endpoint-url: "http://localhost:4566"
+
+messaging:
+  activemq:
+    enabled: false
+  sqs:
+    enabled: false
+    queue_name: "crime-portal-gateway-queue"
+
+aws_sqs_queue_name: "crime-portal-gateway-queue"

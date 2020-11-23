@@ -5,11 +5,10 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.Month;
-import java.util.Set;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.dataformat.xml.JacksonXmlModule;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.google.common.eventbus.EventBus;
-import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 import lombok.Builder;
 import org.junit.jupiter.api.BeforeAll;
@@ -18,15 +17,16 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentMatcher;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 import uk.gov.justice.probation.courtcasematcher.event.CourtCaseFailureEvent;
 import uk.gov.justice.probation.courtcasematcher.event.CourtCaseMatchEvent;
 import uk.gov.justice.probation.courtcasematcher.event.CourtCaseUpdateEvent;
-import uk.gov.justice.probation.courtcasematcher.model.MessageType;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCase;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Case;
+import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.ExternalDocumentRequest;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Info;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Name;
 import uk.gov.justice.probation.courtcasematcher.service.CourtCaseService;
@@ -56,6 +56,9 @@ class MessageProcessorTest {
     private static String multiDayXml;
 
     @Mock
+    private Validator validator;
+
+    @Mock
     private EventBus eventBus;
 
     @Mock
@@ -64,42 +67,41 @@ class MessageProcessorTest {
     @Mock
     private CourtCaseService courtCaseService;
 
-    @Mock
-    private Validator validator;
-
+    @InjectMocks
     private MessageProcessor messageProcessor;
+    private GatewayMessageParser<ExternalDocumentRequest> parser;
 
     @BeforeAll
     static void beforeAll() throws IOException {
 
-        String multipleSessionPath = "src/test/resources/messages/gateway-message-multi-session.xml";
+        String multipleSessionPath = "src/test/resources/messages/external-document-request-multi-session.xml";
         multiSessionXml = Files.readString(Paths.get(multipleSessionPath));
 
-        String path = "src/test/resources/messages/gateway-message-single-case.xml";
-        singleCaseXml = Files.readString(Paths.get(path));
+        singleCaseXml = Files.readString(Paths.get("src/test/resources/messages/external-document-request-single-case.xml"));
 
-        String multiDayPath = "src/test/resources/messages/gateway-message-multi-day.xml";
+        String multiDayPath = "src/test/resources/messages/external-document-request-multi-day.xml";
         multiDayXml = Files.readString(Paths.get(multiDayPath));
     }
 
+//    @SuppressWarnings("unchecked")
     @BeforeEach
     void beforeEach() {
         JacksonXmlModule xmlModule = new JacksonXmlModule();
         xmlModule.setDefaultUseWrapper(false);
-        GatewayMessageParser parser = new GatewayMessageParser(new XmlMapper(xmlModule), validator);
-        messageProcessor = new MessageProcessor(parser, eventBus, telemetryService, courtCaseService);
-        messageProcessor.setCaseFeedFutureDateOffset(3);
+        parser = new GatewayMessageParser<>(new XmlMapper(xmlModule), validator);
     }
 
     @DisplayName("Receive a valid case which exists then post to the event bus")
     @Test
-    void whenValidMessageReceived_ThenAttemptMatch() {
+    void whenValidMessageReceived_ThenAttemptMatch() throws JsonProcessingException {
 
         Name name = Name.builder().forename1("Donald").surname("TRUMP").build();
         CourtCase courtCase =  CourtCase.builder().isNew(false).name(name).build();
         when(courtCaseService.getCourtCase(any(Case.class))).thenReturn(Mono.just(courtCase));
 
-        messageProcessor.process(singleCaseXml);
+        ExternalDocumentRequest documentRequest = parser.parseMessage(singleCaseXml, ExternalDocumentRequest.class);
+
+        messageProcessor.process(documentRequest);
 
         verify(eventBus, timeout(1000)).post(any(CourtCaseUpdateEvent.class));
         verify(telemetryService).trackCourtListEvent(any(Info.class));
@@ -109,7 +111,7 @@ class MessageProcessorTest {
 
     @DisplayName("Receive multiple valid cases then attempt to match two and update two")
     @Test
-    void givenTwoExistingAndOneNew_whenValidMessageReceivedWithMultipleSessions_ThenAttemptMatchOnOneAndUpdateOnTwo() {
+    void givenTwoExistingAndOneNew_whenValidMessageReceivedWithMultipleSessions_ThenAttemptMatchOnOneAndUpdateOnTwo() throws JsonProcessingException {
 
         CaseMatcher case1 = CaseMatcher.builder().caseNo("1600032953").build();
         CourtCase courtCase1 = CourtCase.builder().isNew(false).caseNo("1600032953").defendantType(PERSON).build();
@@ -125,7 +127,8 @@ class MessageProcessorTest {
         when(courtCaseService.getCourtCase(argThat(case3))).thenReturn(Mono.just(courtCase3));
         when(courtCaseService.getCourtCase(argThat(case4))).thenReturn(Mono.just(courtCase4));
 
-        messageProcessor.process(multiSessionXml);
+        ExternalDocumentRequest documentRequest = parser.parseMessage(multiSessionXml, ExternalDocumentRequest.class);
+        messageProcessor.process(documentRequest);
 
         // 2 new cases get matcher events. The organisation does not get a matching event despite the fact it is new
         verify(eventBus, timeout(1000)).post(argThat(CourtCaseUpdateEventMatcher.builder().caseNo("1600032953").build()));
@@ -144,12 +147,13 @@ class MessageProcessorTest {
 
     @DisplayName("Receive multiple valid cases then attempt post as updates.")
     @Test
-    void whenValidMessageReceivedWithMultipleDays_ThenAttemptMatch() {
+    void whenValidMessageReceivedWithMultipleDays_ThenAttemptMatch() throws JsonProcessingException {
         CourtCase courtCase = mock(CourtCase.class);
         when(courtCase.isNew()).thenReturn(Boolean.FALSE);
         when(courtCaseService.getCourtCase(any(Case.class))).thenReturn(Mono.just(courtCase));
 
-        messageProcessor.process(multiDayXml);
+        ExternalDocumentRequest documentRequest = parser.parseMessage(multiDayXml, ExternalDocumentRequest.class);
+        messageProcessor.process(documentRequest);
 
         verify(eventBus, timeout(MATCHER_THREAD_TIMEOUT).times(6)).post(any(CourtCaseUpdateEvent.class));
 
@@ -159,33 +163,14 @@ class MessageProcessorTest {
         verifyNoMoreInteractions(eventBus, telemetryService);
     }
 
-    @DisplayName("An XML message which is invalid")
-    @Test
-    void whenInvalidXmlMessageReceived_NothingPublished() {
-
-        messageProcessor.process("<someOtherXml>Not the message you are looking for</someOtherXml>");
-
-        verify(eventBus).post(any(CourtCaseFailureEvent.class));
-    }
-
-    @DisplayName("An XML message which is grammatically valid but fails validation")
-    @Test
-    void whenInvalidMessageReceived_NothingPublished() {
-        @SuppressWarnings("unchecked") ConstraintViolation<MessageType> cv = mock(ConstraintViolation.class);
-        when(validator.validate(any(MessageType.class))).thenReturn(Set.of(cv));
-
-        messageProcessor.process(singleCaseXml);
-
-        verify(eventBus).post(any(CourtCaseFailureEvent.class));
-    }
-
     @DisplayName("A valid message but with 0 cases")
     @Test
     void whenCorrectMessageWithZeroCasesReceived_ThenNoEventsPublished() throws IOException {
 
-        String path = "src/test/resources/messages/gateway-message-empty-sessions.xml";
+        String path = "src/test/resources/messages/external-document-request-empty-sessions.xml";
+        ExternalDocumentRequest documentRequest = parser.parseMessage(Files.readString(Paths.get(path)), ExternalDocumentRequest.class);
 
-        messageProcessor.process(Files.readString(Paths.get(path)));
+        messageProcessor.process(documentRequest);
 
         verify(eventBus, never()).post(any(CourtCaseFailureEvent.class));
     }

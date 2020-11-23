@@ -1,33 +1,34 @@
 package uk.gov.justice.probation.courtcasematcher.messaging;
 
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.jms.annotation.JmsListener;
-import org.springframework.stereotype.Service;
-import uk.gov.justice.probation.courtcasematcher.service.TelemetryEventType;
-import uk.gov.justice.probation.courtcasematcher.service.TelemetryService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.common.eventbus.EventBus;
+import javax.validation.ConstraintViolationException;
+import uk.gov.justice.probation.courtcasematcher.event.CourtCaseFailureEvent;
+import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.ExternalDocumentRequest;
 
-@Slf4j
-@Service
-@AllArgsConstructor
-public class MessageReceiver {
+public interface MessageReceiver {
 
-    private static final String CP_QUEUE = "CP_OutboundQueue";
+    ExternalDocumentRequest parse(String message) throws JsonProcessingException;
 
-    private final MessageProcessor messageProcessor;
-
-    private final TelemetryService telemetryService;
-
-    @JmsListener(destination = CP_QUEUE)
-    public void receive(String message) {
-        log.info("Received message");
-        telemetryService.trackEvent(TelemetryEventType.COURT_LIST_MESSAGE_RECEIVED);
+    default void process(String message) {
         try {
-            messageProcessor.process(message);
+            getMessageProcessor().process(parse(message));
         }
-        catch (Exception exception) {
-            throw new RuntimeException(message, exception);
+        catch (Exception ex) {
+            CourtCaseFailureEvent.CourtCaseFailureEventBuilder builder = CourtCaseFailureEvent.builder()
+                .failureMessage(ex.getMessage())
+                .throwable(ex)
+                .incomingMessage(message);
+            if (ex instanceof ConstraintViolationException) {
+                builder.violations(((ConstraintViolationException)ex).getConstraintViolations());
+            }
+            getEventBus().post(builder.build());
+            throw new RuntimeException(message, ex);
         }
     }
 
+    MessageProcessor getMessageProcessor();
+
+    @SuppressWarnings("UnstableApiUsage")
+    EventBus getEventBus();
 }

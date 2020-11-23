@@ -45,14 +45,14 @@ public class GatewayMessageParserTest {
     private static final LocalDateTime SESSION_START_TIME = LocalDateTime.of(HEARING_DATE, START_TIME);
 
     @Autowired
-    private GatewayMessageParser gatewayMessageParser;
+    private GatewayMessageParser<MessageType> gatewayMessageParser;
 
     @Test
     void whenInvalidMessage() throws IOException {
         String path = "src/test/resources/messages/gateway-message-invalid.xml";
         String content = Files.readString(Paths.get(path));
 
-        Throwable thrown = catchThrowable(() -> gatewayMessageParser.parseMessage(content));
+        Throwable thrown = catchThrowable(() -> gatewayMessageParser.parseMessage(content, MessageType.class));
 
         ConstraintViolationException ex = (ConstraintViolationException) thrown;
         assertThat(ex.getConstraintViolations()).hasSize(2);
@@ -64,13 +64,22 @@ public class GatewayMessageParserTest {
             && cv.getPropertyPath().toString().equals(firstSessionPath + ".blocks[0].cases[0].caseNo"));
     }
 
+    @Test
+    void whenInvalidXmlMessage() {
+
+        Throwable thrown = catchThrowable(() -> gatewayMessageParser.parseMessage("<msg>sss</msg>", MessageType.class));
+
+        ConstraintViolationException ex = (ConstraintViolationException) thrown;
+        assertThat(ex.getConstraintViolations()).hasSize(2);
+    }
+
     @DisplayName("Parse a valid message")
     @Test
     void whenValidMessage_ThenReturnAsObject() throws IOException {
         String path = "src/test/resources/messages/gateway-message-multi-session.xml";
         String content = Files.readString(Paths.get(path));
 
-        MessageType message = gatewayMessageParser.parseMessage(content);
+        MessageType message = gatewayMessageParser.parseMessage(content, MessageType.class);
 
         MessageHeader expectedHeader = MessageHeader.builder().from("CP_NPS_ML")
             .to("CP_NPS")
@@ -164,13 +173,13 @@ public class GatewayMessageParserTest {
     public static class TestMessagingConfig {
 
         @Bean(name = "testGatewayMessageParser")
-        public GatewayMessageParser testGatewayMessageParser() {
+        public GatewayMessageParser<MessageType> testGatewayMessageParser() {
             JacksonXmlModule xmlModule = new JacksonXmlModule();
             xmlModule.setDefaultUseWrapper(false);
             XmlMapper mapper = new XmlMapper(xmlModule);
             mapper.registerModule(new JavaTimeModule());
             ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
-            return new GatewayMessageParser(mapper, factory.getValidator());
+            return new GatewayMessageParser<>(mapper, factory.getValidator());
         }
     }
 }

@@ -3,6 +3,10 @@ management:
     web:
       exposure:
         include: health,info,loggers
+  endpoint:
+    health:
+      show-details: always
+      path-mapping: "health"
 
 logging:
   level:
@@ -22,3 +26,14 @@ offender-search:
 
 nomis-oauth:
   base-url: https://sign-in-dev.hmpps.service.justice.gov.uk
+
+# Localstack settings
+aws:
+  sqs-endpoint-url: "http://localhost:4566"
+
+messaging:
+  activemq:
+    enabled: true
+  sqs:
+    enabled: true
+    queue-name: "crime-portal-gateway-queue"

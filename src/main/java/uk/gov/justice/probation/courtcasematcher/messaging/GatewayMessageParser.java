@@ -1,9 +1,10 @@
 package uk.gov.justice.probation.courtcasematcher.messaging;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import java.io.IOException;
 import java.util.Set;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import javax.validation.Validator;
@@ -11,11 +12,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import uk.gov.justice.probation.courtcasematcher.model.MessageType;
 
 @Service
 @Slf4j
-public class GatewayMessageParser {
+public class GatewayMessageParser<T> {
 
     public static final String EXT_DOC_NS = "http://www.justice.gov.uk/magistrates/external/ExternalDocumentRequest";
     public static final String CSCI_HDR_NS = "http://www.justice.gov.uk/magistrates/generic/CSCI_Header";
@@ -26,28 +26,25 @@ public class GatewayMessageParser {
     private final Validator validator;
     private final XmlMapper xmlMapper;
 
-    public GatewayMessageParser(@Qualifier("gatewayMessageXmlMapper") XmlMapper xmlMapper, @Autowired Validator validator) {
+    public GatewayMessageParser(@Qualifier("messageXmlMapper") XmlMapper xmlMapper, @Autowired Validator validator) {
         super();
         this.xmlMapper = xmlMapper;
         this.validator = validator;
         this.xmlMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
     }
 
-    public MessageType parseMessage (String xml) throws IOException {
-        MessageType messageType = xmlMapper.readValue(xml, MessageType.class);
-        validate(messageType);
-        return messageType;
+    public T parseMessage (final String xml, final Class<T> type) throws JsonProcessingException {
+        JavaType javaType = xmlMapper.getTypeFactory().constructType(type);
+        T message = xmlMapper.readValue(xml, javaType);
+        validate(message);
+        return message;
     }
 
-    private void validate(MessageType messageType) {
+    private void validate(T messageType) {
         Set<ConstraintViolation<Object>> errors = validator.validate(messageType);
         if (!errors.isEmpty()) {
             throw new ConstraintViolationException(errors);
         }
-        if (messageType.getMessageBody() == null) {
-            throw new ConstraintViolationException("null message body", null);
-        }
-
     }
 
 }

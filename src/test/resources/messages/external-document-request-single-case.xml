@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:ExternalDocumentRequest xmlns:ns2="http://www.justice.gov.uk/magistrates/external/ExternalDocumentRequest">
+    <documents>
+        <document>
+            <ns2:info>
+                <contentType>StandardCourtList</contentType>
+                <dateOfHearing>26/10/2020</dateOfHearing>
+                <courtHouse>Sheffield Magistrates Court</courtHouse>
+                <area>13</area>
+                <source_file_name>5_27022020_2992_B10JQ00_ADULT_COURT_LIST_DAILY</source_file_name>
+            </ns2:info>
+            <data>
+                <job>
+                    <printdate>14/11/2016</printdate>
+                    <username>gl.userone</username>
+                    <late>N</late>
+                    <adbox>N</adbox>
+                    <means>N</means>
+                    <sessions>
+                        <session>
+                            <s_id>556805</s_id>
+                            <doh>26/10/2020</doh>
+                            <lja>South West London Magistrates; Court</lja>
+                            <cmu>Gl Management Unit 1</cmu>
+                            <panel>Adult Panel</panel>
+                            <court>Sheffield Magistrates Court</court>
+                            <room>0</room>
+                            <sstart>09:00</sstart>
+                            <send>12:00</send>
+                            <blocks>
+                                <block>
+                                    <sb_id>758095</sb_id>
+                                    <bstart>09:00</bstart>
+                                    <bend>12:00</bend>
+                                    <desc>First Hearings Slot</desc>
+                                    <cases>
+                                        <case>
+                                            <c_id>1218461</c_id>
+                                            <h_id>1294273</h_id>
+                                            <valid>Y</valid>
+                                            <caseno>1600032981</caseno>
+                                            <type>C</type>
+                                            <def_name>MR CHRIS FAULKNER</def_name>
+                                            <def_type>P</def_type>
+                                            <def_sex>F</def_sex>
+                                            <def_dob>06/08/1968</def_dob>
+                                            <def_addr>
+                                                <line1>A1</line1>
+                                            </def_addr>
+                                            <inf>POL01</inf>
+                                            <cseq>2</cseq>
+                                            <listno>1st</listno>
+                                            <offences>
+                                                <offence>
+                                                    <oseq>1</oseq>
+                                                    <co_id>1185408</co_id><code>TH68010</code>
+                                                    <maxpen>EW: 6M ;/or Ultd Fine</maxpen>
+                                                    <title>Theft from a shop</title>
+                                                    <sum>On 01/01/2016 at Town, stole Article, to the value of £100.00, belonging to Person.</sum>
+                                                    <as>Contrary to section 1(1) and 7 of the Theft Act 1968.</as>
+                                                </offence>
+                                            </offences>
+                                        </case>
+                                    </cases>
+                                </block>
+                            </blocks>
+                        </session>
+                    </sessions>
+                </job>
+            </data>
+        </document>
+    </documents>
+</ns2:ExternalDocumentRequest>

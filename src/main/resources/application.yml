@@ -11,6 +11,7 @@ management:
   endpoint:
     health:
       show-details: always
+      path-mapping: "health"
 
 cgi:
   jms:
@@ -76,6 +77,16 @@ probation-status-reference:
 
 # Libra feed has today's case list and another case list for this many days hence. e.g. 25th and 28th July
 case-feed-future-date-offset: 3
+
+aws:
+  region-name: eu-west-2
+
+messaging:
+  activemq:
+    enabled: true
+    queueName: "CP_OutboundQueue"
+  sqs:
+    enabled: true
 
 health:
   default-ping-path: /ping
