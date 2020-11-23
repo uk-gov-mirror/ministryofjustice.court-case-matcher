@@ -11,6 +11,8 @@ RUN mkdir -p /app
 WORKDIR /app
 
 COPY build/libs/court-case-matcher-*.jar /app/court-case-matcher.jar
+COPY build/libs/applicationinsights-agent*.jar /app/agent.jar
+COPY applicationinsights.json /app
 COPY run.sh /app
 
 RUN chown -R appuser:appgroup /app

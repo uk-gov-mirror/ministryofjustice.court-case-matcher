@@ -1,0 +1,9 @@
+{
+  "role": {
+    "name": "court-case-matcher",
+    "instance": "court-case-matcher"
+  },
+  "heartbeat": {
+    "intervalSeconds": 15
+  }
+}
