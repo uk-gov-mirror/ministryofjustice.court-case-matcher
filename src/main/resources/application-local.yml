@@ -7,6 +7,9 @@ management:
     health:
       show-details: always
       path-mapping: "health"
+  health:
+    jms:
+      enabled: true
 
 logging:
   level:

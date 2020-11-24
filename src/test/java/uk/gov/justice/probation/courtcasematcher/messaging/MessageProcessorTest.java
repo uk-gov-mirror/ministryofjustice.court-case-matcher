@@ -83,7 +83,6 @@ class MessageProcessorTest {
         multiDayXml = Files.readString(Paths.get(multiDayPath));
     }
 
-//    @SuppressWarnings("unchecked")
     @BeforeEach
     void beforeEach() {
         JacksonXmlModule xmlModule = new JacksonXmlModule();

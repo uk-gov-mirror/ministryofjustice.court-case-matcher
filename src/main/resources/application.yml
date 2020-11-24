@@ -4,6 +4,8 @@ management:
   health:
     probes:
       enabled: true
+    jms:
+      enabled: true
   endpoints:
     web:
       exposure:
@@ -83,6 +85,7 @@ aws:
 
 messaging:
   activemq:
+    # Note when this is retired, also change the property for management.health.jms.enabled to stop inclusion in actuator health
     enabled: true
     queueName: "CP_OutboundQueue"
   sqs:
