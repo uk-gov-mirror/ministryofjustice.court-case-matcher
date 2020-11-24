@@ -80,7 +80,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-artemis'
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.11.3'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.11.3'
-    implementation 'com.amazonaws:amazon-sqs-java-messaging-lib:1.0.0'
+    implementation 'com.amazonaws:amazon-sqs-java-messaging-lib:1.0.8'
     implementation 'org.springframework.cloud:spring-cloud-aws-messaging:2.2.1.RELEASE'
 
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
