@@ -21,3 +21,7 @@ offender-search:
 
 nomis-oauth:
   base-url: https://sign-in-dev.hmpps.service.justice.gov.uk
+
+messaging:
+  sqs:
+    enabled: true

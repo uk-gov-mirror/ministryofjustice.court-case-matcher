@@ -86,7 +86,7 @@ messaging:
     enabled: true
     queueName: "CP_OutboundQueue"
   sqs:
-    enabled: true
+    enabled: false
 
 health:
   default-ping-path: /ping
