@@ -1,9 +1,9 @@
 
 package uk.gov.justice.probation.courtcasematcher.model;
 
-import static uk.gov.justice.probation.courtcasematcher.messaging.GatewayMessageParser.CSCI_BODY_NS;
-import static uk.gov.justice.probation.courtcasematcher.messaging.GatewayMessageParser.CSCI_HDR_NS;
-import static uk.gov.justice.probation.courtcasematcher.messaging.GatewayMessageParser.CSC_STATUS_NS;
+import static uk.gov.justice.probation.courtcasematcher.messaging.MessageParser.CSCI_BODY_NS;
+import static uk.gov.justice.probation.courtcasematcher.messaging.MessageParser.CSCI_HDR_NS;
+import static uk.gov.justice.probation.courtcasematcher.messaging.MessageParser.CSC_STATUS_NS;
 
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;

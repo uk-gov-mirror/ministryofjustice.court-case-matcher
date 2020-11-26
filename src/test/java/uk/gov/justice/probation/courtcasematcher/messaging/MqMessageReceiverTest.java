@@ -63,7 +63,7 @@ class MqMessageReceiverTest {
     void beforeEach() {
         JacksonXmlModule xmlModule = new JacksonXmlModule();
         xmlModule.setDefaultUseWrapper(false);
-        GatewayMessageParser<MessageType> parser = new GatewayMessageParser<>(new XmlMapper(xmlModule), validator);
+        MessageParser<MessageType> parser = new MessageParser<>(new XmlMapper(xmlModule), validator);
         messageReceiver = new MqMessageReceiver(messageProcessor, telemetryService, eventBus, parser);
     }
 

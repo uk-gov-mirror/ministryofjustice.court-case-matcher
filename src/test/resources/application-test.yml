@@ -38,6 +38,8 @@ case-mapper-reference:
     Sheffield Magistrates Court: "SHF"
     Beverley: "BEV"
 
+ou-code-length: 5
+
 # Localstack settings
 aws:
   sqs-endpoint-url: "http://localhost:4566"

@@ -27,7 +27,7 @@ public class MqMessageReceiver implements MessageReceiver {
     @SuppressWarnings("UnstableApiUsage")
     private final EventBus eventBus;
 
-    private final GatewayMessageParser<MessageType> parser;
+    private final MessageParser<MessageType> parser;
 
     @Value("${messaging.activemq.queueName}")
     private String queueName;

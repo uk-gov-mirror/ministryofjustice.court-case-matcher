@@ -12,7 +12,6 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode.Exclude;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import uk.gov.justice.probation.courtcasematcher.messaging.SourceFileNameDeserializer;
@@ -24,7 +23,6 @@ import uk.gov.justice.probation.courtcasematcher.messaging.SourceFileNameDeseria
 @NoArgsConstructor(access = AccessLevel.PRIVATE, force = true)
 public class Info {
 
-    @Exclude
     @NotNull
     @JsonDeserialize(using = SourceFileNameDeserializer.class)
     @JacksonXmlProperty(localName = "source_file_name")

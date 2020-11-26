@@ -7,7 +7,7 @@
                 <dateOfHearing>26/10/2020</dateOfHearing>
                 <courtHouse>Sheffield Magistrates Court</courtHouse>
                 <area>13</area>
-                <source_file_name>5_27022020_2992_B10JQ00_ADULT_COURT_LIST_DAILY</source_file_name>
+                <source_file_name>5_27022020_2992_B10JQ01_ADULT_COURT_LIST_DAILY</source_file_name>
             </ns2:info>
             <data>
                 <job>
@@ -18,6 +18,7 @@
                     <means>N</means>
                     <sessions>
                         <session>
+                            <ou_code>B10JQ01</ou_code>
                             <s_id>556805</s_id>
                             <doh>26/10/2020</doh>
                             <lja>South West London Magistrates; Court</lja>

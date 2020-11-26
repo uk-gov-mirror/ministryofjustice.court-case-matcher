@@ -9,6 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.InfoSourceDetail;
 
+import static uk.gov.justice.probation.courtcasematcher.messaging.OuCodeDeserializer.OU_CODE_LENGTH;
+
 @Slf4j
 @Component
 public class SourceFileNameDeserializer extends StdDeserializer<InfoSourceDetail> {
@@ -33,6 +35,9 @@ public class SourceFileNameDeserializer extends StdDeserializer<InfoSourceDetail
         }
 
         String ouCode = fileNameParts[3].toUpperCase();
+        if (ouCode.length() > OU_CODE_LENGTH) {
+            ouCode = ouCode.substring(0, OU_CODE_LENGTH);
+        }
         long seq = Long.parseLong(fileNameParts[0]);
         log.debug("Got OU code of {} and identifier of {} from source_file_name of {}", ouCode, seq, sourceFileName);
         return InfoSourceDetail.builder().ouCode(ouCode).sequence(seq).build();

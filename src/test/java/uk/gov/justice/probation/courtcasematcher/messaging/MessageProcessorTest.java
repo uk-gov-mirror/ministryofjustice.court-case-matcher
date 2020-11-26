@@ -26,6 +26,7 @@ import uk.gov.justice.probation.courtcasematcher.event.CourtCaseMatchEvent;
 import uk.gov.justice.probation.courtcasematcher.event.CourtCaseUpdateEvent;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCase;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Case;
+import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.DocumentWrapper;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.ExternalDocumentRequest;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Info;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Name;
@@ -49,11 +50,11 @@ import static uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.D
 class MessageProcessorTest {
 
     private static final long MATCHER_THREAD_TIMEOUT = 4000;
-    private static final String COURT_CODE_00 = "B01CX00";
-    private static final String COURT_CODE_02 = "B01CX02";
+    private static final String COURT_CODE = "B01CX";
     private static String singleCaseXml;
     private static String multiSessionXml;
     private static String multiDayXml;
+    private static String multiCourtRoomXml;
 
     @Mock
     private Validator validator;
@@ -69,25 +70,23 @@ class MessageProcessorTest {
 
     @InjectMocks
     private MessageProcessor messageProcessor;
-    private GatewayMessageParser<ExternalDocumentRequest> parser;
+    private MessageParser<ExternalDocumentRequest> parser;
 
     @BeforeAll
     static void beforeAll() throws IOException {
-
-        String multipleSessionPath = "src/test/resources/messages/external-document-request-multi-session.xml";
-        multiSessionXml = Files.readString(Paths.get(multipleSessionPath));
-
-        singleCaseXml = Files.readString(Paths.get("src/test/resources/messages/external-document-request-single-case.xml"));
-
-        String multiDayPath = "src/test/resources/messages/external-document-request-multi-day.xml";
-        multiDayXml = Files.readString(Paths.get(multiDayPath));
+        final String basePath = "src/test/resources/messages";
+        multiSessionXml = Files.readString(Paths.get(basePath +"/external-document-request-multi-session.xml"));
+        singleCaseXml = Files.readString(Paths.get(basePath +"/external-document-request-single-case.xml"));
+        multiDayXml = Files.readString(Paths.get(basePath +"/external-document-request-multi-day.xml"));
+        multiDayXml = Files.readString(Paths.get(basePath +"/external-document-request-multi-day.xml"));
+        multiCourtRoomXml = Files.readString(Paths.get(basePath +"/external-document-request-multi-court-room.xml"));
     }
 
     @BeforeEach
     void beforeEach() {
         JacksonXmlModule xmlModule = new JacksonXmlModule();
         xmlModule.setDefaultUseWrapper(false);
-        parser = new GatewayMessageParser<>(new XmlMapper(xmlModule), validator);
+        parser = new MessageParser<>(new XmlMapper(xmlModule), validator);
     }
 
     @DisplayName("Receive a valid case which exists then post to the event bus")
@@ -134,8 +133,8 @@ class MessageProcessorTest {
         verify(eventBus, timeout(1000)).post(argThat(CourtCaseUpdateEventMatcher.builder().caseNo("1600032979").build()));
         verify(eventBus, timeout(1000)).post(argThat(CourtCaseMatchEventMatcher.builder().caseNo("1600032952").build()));
         verify(eventBus, timeout(1000)).post(argThat(CourtCaseUpdateEventMatcher.builder().caseNo("1600011111").build()));
-        verify(telemetryService).trackCourtListEvent(argThat(matchesInfoWith(LocalDate.of(2020, Month.FEBRUARY, 20), COURT_CODE_00)));
-        verify(telemetryService).trackCourtListEvent(argThat(matchesInfoWith(LocalDate.of(2020, Month.FEBRUARY, 23), COURT_CODE_02)));
+        verify(telemetryService).trackCourtListEvent(argThat(matchesInfoWith(LocalDate.of(2020, Month.FEBRUARY, 20), COURT_CODE)));
+        verify(telemetryService).trackCourtListEvent(argThat(matchesInfoWith(LocalDate.of(2020, Month.FEBRUARY, 23), COURT_CODE)));
         verify(telemetryService).trackCourtCaseEvent(argThat(case1));
         verify(telemetryService).trackCourtCaseEvent(argThat(case2));
         verify(telemetryService).trackCourtCaseEvent(argThat(case3));
@@ -159,6 +158,22 @@ class MessageProcessorTest {
         verify(telemetryService).trackCourtListEvent(argThat(matchesInfoWith(LocalDate.of(2020, Month.JULY, 25))));
         verify(telemetryService).trackCourtListEvent(argThat(matchesInfoWith(LocalDate.of(2020, Month.JULY, 28))));
         verify(telemetryService, times(6)).trackCourtCaseEvent(any(Case.class));
+        verifyNoMoreInteractions(eventBus, telemetryService);
+    }
+
+    @DisplayName("Receive 2 documents with 2 court rooms but one telemetry event is fired.")
+    @Test
+    void givenMultipleCourtRooms_whenValidMessageReceived_ThenFireOneTelemetryEvent() throws JsonProcessingException {
+        CourtCase courtCase = mock(CourtCase.class);
+        when(courtCase.isNew()).thenReturn(Boolean.FALSE);
+        when(courtCaseService.getCourtCase(any(Case.class))).thenReturn(Mono.just(courtCase));
+
+        ExternalDocumentRequest documentRequest = parser.parseMessage(multiCourtRoomXml, ExternalDocumentRequest.class);
+        messageProcessor.process(documentRequest);
+
+        verify(eventBus, timeout(MATCHER_THREAD_TIMEOUT).times(2)).post(any(CourtCaseUpdateEvent.class));
+        verify(telemetryService).trackCourtListEvent(argThat(matchesInfoWith(LocalDate.of(2020, Month.JULY, 25))));
+        verify(telemetryService, times(2)).trackCourtCaseEvent(any(Case.class));
         verifyNoMoreInteractions(eventBus, telemetryService);
     }
 
@@ -208,6 +223,24 @@ class MessageProcessorTest {
 
         verify(eventBus).post(argThat(CourtCaseUpdateEventMatcher.builder().caseNo("1").build()));
         verifyNoMoreInteractions(eventBus);
+    }
+
+    @DisplayName("Do nothing and no NPE with null DocumentWrapper")
+    @Test
+    void givenNullDocumentWrapper_thenNoNullPointer() {
+
+        messageProcessor.process(ExternalDocumentRequest.builder().build());
+
+        verifyNoMoreInteractions(eventBus, telemetryService);
+    }
+
+    @DisplayName("Do nothing and no NPE with null Document list in DocumentWrapper")
+    @Test
+    void givenNullDocumentList_thenNoNullPointer() {
+
+        messageProcessor.process(ExternalDocumentRequest.builder().documentWrapper(DocumentWrapper.builder().build()).build());
+
+        verifyNoMoreInteractions(eventBus, telemetryService);
     }
 
     @Builder
@@ -265,6 +298,6 @@ class MessageProcessorTest {
     }
 
     private InfoMatcher matchesInfoWith(LocalDate dateOfHearing) {
-        return matchesInfoWith(dateOfHearing, COURT_CODE_00);
+        return matchesInfoWith(dateOfHearing, COURT_CODE);
     }
 }

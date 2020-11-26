@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
-public class GatewayMessageParser<T> {
+public class MessageParser<T> {
 
     public static final String EXT_DOC_NS = "http://www.justice.gov.uk/magistrates/external/ExternalDocumentRequest";
     public static final String CSCI_HDR_NS = "http://www.justice.gov.uk/magistrates/generic/CSCI_Header";
@@ -26,7 +26,7 @@ public class GatewayMessageParser<T> {
     private final Validator validator;
     private final XmlMapper xmlMapper;
 
-    public GatewayMessageParser(@Qualifier("messageXmlMapper") XmlMapper xmlMapper, @Autowired Validator validator) {
+    public MessageParser(@Qualifier("messageXmlMapper") XmlMapper xmlMapper, @Autowired Validator validator) {
         super();
         this.xmlMapper = xmlMapper;
         this.validator = validator;

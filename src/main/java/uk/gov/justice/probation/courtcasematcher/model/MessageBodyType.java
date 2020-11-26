@@ -1,7 +1,7 @@
 
 package uk.gov.justice.probation.courtcasematcher.model;
 
-import static uk.gov.justice.probation.courtcasematcher.messaging.GatewayMessageParser.GW_MSG_SCHEMA;
+import static uk.gov.justice.probation.courtcasematcher.messaging.MessageParser.GW_MSG_SCHEMA;
 
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import javax.validation.Valid;

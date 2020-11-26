@@ -23,6 +23,7 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import uk.gov.justice.probation.courtcasematcher.messaging.OuCodeDeserializer;
 
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PRIVATE, force = true)
@@ -43,6 +44,7 @@ public class Session {
     private final String courtName;
     @JacksonXmlProperty(localName = "room")
     private final String courtRoom;
+    @JsonDeserialize(using = OuCodeDeserializer.class)
     @JacksonXmlProperty(localName = "ou_code")
     private final String courtCode;
 

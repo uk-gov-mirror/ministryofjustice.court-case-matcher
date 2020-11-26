@@ -8,9 +8,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class InfoTest {
 
-    @DisplayName("Ensures that Lombok generated equality ignores the source detail and protects against inadvertent change.")
+    @DisplayName("Ensures that Lombok generated equality ignores the source detail sequence and protects against inadvertent change.")
     @Test
-    void equalityIgnoresInfo() {
+    void equalityIgnoresInfoSequence() {
         LocalDate now = LocalDate.now();
         InfoSourceDetail identifier1 = InfoSourceDetail.builder().ouCode("B16BG00").sequence(1).build();
         InfoSourceDetail identifier2 = InfoSourceDetail.builder().ouCode("B16BG00").sequence(2).build();

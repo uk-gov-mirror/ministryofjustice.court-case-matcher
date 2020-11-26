@@ -1,7 +1,7 @@
 
 package uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest;
 
-import static uk.gov.justice.probation.courtcasematcher.messaging.GatewayMessageParser.EXT_DOC_NS;
+import static uk.gov.justice.probation.courtcasematcher.messaging.MessageParser.EXT_DOC_NS;
 
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import javax.validation.Valid;

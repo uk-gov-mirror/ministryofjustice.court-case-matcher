@@ -79,6 +79,7 @@ probation-status-reference:
 
 # Libra feed has today's case list and another case list for this many days hence. e.g. 25th and 28th July
 case-feed-future-date-offset: 3
+ou-code-length: 5
 
 aws:
   region-name: eu-west-2

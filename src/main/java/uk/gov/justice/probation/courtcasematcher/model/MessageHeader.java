@@ -1,7 +1,7 @@
 
 package uk.gov.justice.probation.courtcasematcher.model;
 
-import static uk.gov.justice.probation.courtcasematcher.messaging.GatewayMessageParser.CSCI_HDR_NS;
+import static uk.gov.justice.probation.courtcasematcher.messaging.MessageParser.CSCI_HDR_NS;
 
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import javax.validation.constraints.NotBlank;

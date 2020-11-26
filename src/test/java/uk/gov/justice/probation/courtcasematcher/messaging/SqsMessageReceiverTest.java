@@ -31,7 +31,7 @@ class SqsMessageReceiverTest {
     private EventBus eventBus;
 
     @Mock
-    private GatewayMessageParser<ExternalDocumentRequest> parser;
+    private MessageParser<ExternalDocumentRequest> parser;
 
     @InjectMocks
     private SqsMessageReceiver messageReceiver;

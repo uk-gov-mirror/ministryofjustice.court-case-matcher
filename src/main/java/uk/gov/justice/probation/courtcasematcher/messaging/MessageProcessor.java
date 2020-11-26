@@ -1,6 +1,8 @@
 package uk.gov.justice.probation.courtcasematcher.messaging;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import com.google.common.eventbus.EventBus;
 import lombok.Setter;
@@ -13,6 +15,7 @@ import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCas
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.DefendantType;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Case;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Document;
+import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.DocumentWrapper;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.ExternalDocumentRequest;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Info;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Session;
@@ -42,11 +45,16 @@ public class MessageProcessor {
     }
 
     void process(ExternalDocumentRequest externalDocumentRequest) {
-        List<Session> sessions = externalDocumentRequest
-            .getDocumentWrapper()
-            .getDocument()
+
+        List<Document> documents = extractDocuments(externalDocumentRequest);
+
+        documents.stream()
+            .map(Document::getInfo)
+            .distinct()
+            .forEach(this::trackCourtListReceipt);
+
+        List<Session> sessions = documents
             .stream()
-            .map(this::trackCourtListReceipt)
             .flatMap(document -> document.getData().getJob().getSessions().stream())
             .collect(Collectors.toList());
 
@@ -82,11 +90,15 @@ public class MessageProcessor {
         }
     }
 
-    private Document trackCourtListReceipt(Document document) {
-        Info info = document.getInfo();
+    private void trackCourtListReceipt(Info info) {
         log.debug("Received court list for court {} on {}", info.getInfoSourceDetail().getOuCode(), info.getDateOfHearing().toString());
-        telemetryService.trackCourtListEvent(document.getInfo());
-        return document;
+        telemetryService.trackCourtListEvent(info);
     }
 
+    private List<Document> extractDocuments(ExternalDocumentRequest externalDocumentRequest) {
+        return Optional.ofNullable(externalDocumentRequest.getDocumentWrapper())
+            .map(DocumentWrapper::getDocument)
+            .or(() -> Optional.of(Collections.emptyList()))
+            .orElse(Collections.emptyList());
+    }
 }

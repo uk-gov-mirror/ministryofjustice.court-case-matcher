@@ -31,7 +31,7 @@ public class SqsMessageReceiver implements MessageReceiver {
     private EventBus eventBus;
 
     @Autowired
-    private GatewayMessageParser<ExternalDocumentRequest> parser;
+    private MessageParser<ExternalDocumentRequest> parser;
 
     @Value("${aws_sqs_queue_name}")
     private String queueName;
