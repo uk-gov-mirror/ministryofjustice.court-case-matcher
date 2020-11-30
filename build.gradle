@@ -104,7 +104,7 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'io.projectreactor:reactor-test'
 
-    testImplementation 'net.javacrumbs.json-unit:json-unit-assertj:2.21.0'
+    testImplementation 'net.javacrumbs.json-unit:json-unit-assertj:2.22.0'
     testImplementation 'org.assertj:assertj-core:3.18.1'
 
 
