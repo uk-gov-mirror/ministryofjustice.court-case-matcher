@@ -91,7 +91,7 @@ public class MessageProcessor {
     }
 
     private void trackCourtListReceipt(Info info) {
-        log.debug("Received court list for court {} on {}", info.getInfoSourceDetail().getOuCode(), info.getDateOfHearing().toString());
+        log.debug("Received court list for court {} on {}", info.getOuCode(), info.getDateOfHearing().toString());
         telemetryService.trackCourtListEvent(info);
     }
 

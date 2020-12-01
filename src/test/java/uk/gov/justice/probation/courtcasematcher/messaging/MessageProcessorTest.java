@@ -50,7 +50,8 @@ import static uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.D
 class MessageProcessorTest {
 
     private static final long MATCHER_THREAD_TIMEOUT = 4000;
-    private static final String COURT_CODE = "B01CX";
+    private static final String COURT_CODE_CX = "B01CX";
+    private static final String COURT_CODE_CY = "B01CY";
     private static String singleCaseXml;
     private static String multiSessionXml;
     private static String multiDayXml;
@@ -101,7 +102,7 @@ class MessageProcessorTest {
 
         messageProcessor.process(documentRequest);
 
-        verify(eventBus, timeout(1000)).post(any(CourtCaseUpdateEvent.class));
+        verify(eventBus, timeout(MATCHER_THREAD_TIMEOUT)).post(any(CourtCaseUpdateEvent.class));
         verify(telemetryService).trackCourtListEvent(any(Info.class));
         verify(telemetryService).trackCourtCaseEvent(any(Case.class));
         verifyNoMoreInteractions(eventBus, telemetryService);
@@ -133,8 +134,8 @@ class MessageProcessorTest {
         verify(eventBus, timeout(1000)).post(argThat(CourtCaseUpdateEventMatcher.builder().caseNo("1600032979").build()));
         verify(eventBus, timeout(1000)).post(argThat(CourtCaseMatchEventMatcher.builder().caseNo("1600032952").build()));
         verify(eventBus, timeout(1000)).post(argThat(CourtCaseUpdateEventMatcher.builder().caseNo("1600011111").build()));
-        verify(telemetryService).trackCourtListEvent(argThat(matchesInfoWith(LocalDate.of(2020, Month.FEBRUARY, 20), COURT_CODE)));
-        verify(telemetryService).trackCourtListEvent(argThat(matchesInfoWith(LocalDate.of(2020, Month.FEBRUARY, 23), COURT_CODE)));
+        verify(telemetryService).trackCourtListEvent(argThat(matchesInfoWith(LocalDate.of(2020, Month.FEBRUARY, 20), COURT_CODE_CX)));
+        verify(telemetryService).trackCourtListEvent(argThat(matchesInfoWith(LocalDate.of(2020, Month.FEBRUARY, 23), COURT_CODE_CY)));
         verify(telemetryService).trackCourtCaseEvent(argThat(case1));
         verify(telemetryService).trackCourtCaseEvent(argThat(case2));
         verify(telemetryService).trackCourtCaseEvent(argThat(case3));
@@ -286,7 +287,7 @@ class MessageProcessorTest {
         public boolean matches(Info otherInfo) {
             return otherInfo != null
                 && dateOfHearing.equals(otherInfo.getDateOfHearing())
-                && courtCode.equalsIgnoreCase(otherInfo.getInfoSourceDetail().getOuCode());
+                && courtCode.equalsIgnoreCase(otherInfo.getOuCode());
         }
     }
 
@@ -298,6 +299,6 @@ class MessageProcessorTest {
     }
 
     private InfoMatcher matchesInfoWith(LocalDate dateOfHearing) {
-        return matchesInfoWith(dateOfHearing, COURT_CODE);
+        return matchesInfoWith(dateOfHearing, COURT_CODE_CX);
     }
 }

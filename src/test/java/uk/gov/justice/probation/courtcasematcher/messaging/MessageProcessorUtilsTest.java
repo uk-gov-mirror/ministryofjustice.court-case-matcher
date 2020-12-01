@@ -12,7 +12,6 @@ import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.C
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.DataJob;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Document;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Info;
-import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.InfoSourceDetail;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Job;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Session;
 
@@ -134,7 +133,9 @@ class MessageProcessorUtilsTest {
     }
 
     private Job buildJob(String ouCode) {
-        Info info = Info.builder().infoSourceDetail(InfoSourceDetail.builder().ouCode(ouCode).build()).build();
+        Info info = Info.builder()
+            .ouCode(ouCode)
+            .build();
         Document document = Document.builder().info(info).build();
         DataJob dataJob = DataJob.builder().document(document).build();
         return Job.builder().dataJob(dataJob).build();

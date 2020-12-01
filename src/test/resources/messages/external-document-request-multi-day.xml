@@ -3,11 +3,7 @@
   <documents>
     <document>
       <ns38:info>
-        <contentType>StandardCourtList</contentType>
-        <dateOfHearing>25/07/2020</dateOfHearing>
-        <courtHouse>Camberwell Green</courtHouse>
-        <area>01</area>
-        <source_file_name>61_25072020_2578_B01CX00_ADULT_COURT_LIST_FUTURE</source_file_name>
+        <source_file_name>61_25072020_2578_B01CX99_ADULT_COURT_LIST_FUTURE</source_file_name>
       </ns38:info>
       <data>
         <job>
@@ -244,11 +240,7 @@
     </document>
     <document>
       <ns38:info>
-        <contentType>StandardCourtList</contentType>
-        <dateOfHearing>28/07/2020</dateOfHearing>
-        <courtHouse>Camberwell Green</courtHouse>
-        <area>01</area>
-        <source_file_name>62_25072020_2578_B01CX00_ADULT_COURT_LIST_FUTURE</source_file_name>
+        <source_file_name>62_28072020_2578_B01CX99_ADULT_COURT_LIST_FUTURE</source_file_name>
       </ns38:info>
       <data>
         <job>

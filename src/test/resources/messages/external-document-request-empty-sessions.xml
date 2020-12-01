@@ -2,22 +2,11 @@
   xmlns:ns38="http://www.justice.gov.uk/magistrates/external/ExternalDocumentRequest">
   <documents>
     <document>
-      <ns38:info>
-        <contentType>StandardCourtList</contentType>
-        <dateOfHearing>27/02/2020</dateOfHearing>
-        <courtHouse>Sheffield Magistrates Court</courtHouse>
-        <area>13</area>
+      <info>
         <source_file_name>5_27022020_2992_B13HT00_ADULT_COURT_LIST_DAILY</source_file_name>
-      </ns38:info>
-      <ns38:data>
-        <job xmlns:ns42="http://www.justice.gov.uk/magistrates/generic/CSCI_Status"
-          xmlns:ns41="http://www.justice.gov.uk/magistrates/cp/CSCI_Body"
-          xmlns:ns40="http://www.justice.gov.uk/magistrates/cp/GatewayMessageSchema">
-          <printdate>14/11/2016</printdate>
-          <username>gl.userone</username>
-          <late>N</late>
-          <adbox>N</adbox>
-          <means>N</means>
+      </info>
+      <data>
+        <job>
           <sessions>
             <session>
               <s_id>556805</s_id>
@@ -33,7 +22,7 @@
             </session>
           </sessions>
         </job>
-      </ns38:data>
+      </data>
       <jsonData></jsonData>
     </document>
   </documents>

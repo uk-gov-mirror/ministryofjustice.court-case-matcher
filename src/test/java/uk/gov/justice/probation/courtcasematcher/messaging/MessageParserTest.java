@@ -1,11 +1,5 @@
 package uk.gov.justice.probation.courtcasematcher.messaging;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.catchThrowable;
-
-import com.fasterxml.jackson.dataformat.xml.JacksonXmlModule;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -15,6 +9,9 @@ import java.time.LocalTime;
 import java.time.Month;
 import java.util.ArrayList;
 import java.util.List;
+import com.fasterxml.jackson.dataformat.xml.JacksonXmlModule;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import javax.validation.ConstraintViolationException;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
@@ -40,6 +37,9 @@ import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.N
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Offence;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Session;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
+
 @ExtendWith(SpringExtension.class)
 @DisplayName("Message Parser Test")
 @Profile("test")
@@ -57,6 +57,7 @@ public class MessageParserTest {
         @Autowired
         public MessageParser<MessageType> gatewayMessageParser;
 
+        @DisplayName("Invalid source info name for date of hearing / ou code and missing case no")
         @Test
         void whenInvalidMessage() throws IOException {
             String path = "src/test/resources/messages/gateway-message-invalid.xml";
@@ -65,15 +66,18 @@ public class MessageParserTest {
             Throwable thrown = catchThrowable(() -> gatewayMessageParser.parseMessage(content, MessageType.class));
 
             ConstraintViolationException ex = (ConstraintViolationException) thrown;
-            assertThat(ex.getConstraintViolations()).hasSize(2);
+            assertThat(ex.getConstraintViolations()).hasSize(3);
             final String docInfoPath = "messageBody.gatewayOperationType.externalDocumentRequest.documentWrapper.document[0].info";
             final String firstSessionPath = "messageBody.gatewayOperationType.externalDocumentRequest.documentWrapper.document[0].data.job.sessions[0]";
             assertThat(ex.getConstraintViolations()).anyMatch(cv -> cv.getMessage().equals("must not be null")
                 && cv.getPropertyPath().toString().equals(docInfoPath + ".dateOfHearing"));
+            assertThat(ex.getConstraintViolations()).anyMatch(cv -> cv.getMessage().equals("must not be null")
+                && cv.getPropertyPath().toString().equals(docInfoPath + ".ouCode"));
             assertThat(ex.getConstraintViolations()).anyMatch(cv -> cv.getMessage().equals("must not be blank")
                 && cv.getPropertyPath().toString().equals(firstSessionPath + ".blocks[0].cases[0].caseNo"));
         }
 
+        @DisplayName("XML which is not a gateway message")
         @Test
         void whenInvalidXmlMessage() {
 
@@ -113,16 +117,15 @@ public class MessageParserTest {
 
             assertThat(documents).hasSize(2);
             Document document = documents.stream()
-                .filter(doc -> doc.getInfo().getInfoSourceDetail().getOuCode().equals("B01CX"))
+                .filter(doc -> doc.getInfo().getOuCode().equals("B01CX"))
                 .findFirst().orElseThrow();
 
-            assertThat(document.getInfo().getInfoSourceDetail().getOuCode()).isEqualTo("B01CX");
             assertThat(document.getData().getJob().getSessions()).hasSize(1);
             checkSession(document.getData().getJob().getSessions().get(0));
 
             // Check fallback for ou_code when it is not in the session
             Document document2 = documents.stream()
-                .filter(doc -> doc.getInfo().getInfoSourceDetail().getOuCode().equals("B01CX"))
+                .filter(doc -> doc.getInfo().getOuCode().equals("B01CX"))
                 .findFirst().orElseThrow();
             Session session = document2.getData().getJob().getSessions().get(0);
             assertThat(session.getCourtCode()).isEqualTo("B01CX");
@@ -150,21 +153,39 @@ public class MessageParserTest {
 
             assertThat(documents).hasSize(2);
             Document document = documents.stream()
-                .filter(doc -> doc.getInfo().getInfoSourceDetail().getOuCode().equals("B01CX"))
+                .filter(doc -> doc.getInfo().getOuCode().equals("B01CX"))
                 .findFirst().orElseThrow();
 
-            assertThat(document.getInfo().getInfoSourceDetail().getOuCode()).isEqualTo("B01CX");
             assertThat(document.getData().getJob().getSessions()).hasSize(1);
             checkSession(document.getData().getJob().getSessions().get(0));
 
             // Check fallback for ou_code when it is not in the session
             Document document2 = documents.stream()
-                .filter(doc -> doc.getInfo().getInfoSourceDetail().getOuCode().equals("B01CX"))
+                .filter(doc -> doc.getInfo().getOuCode().equals("B01CY"))
                 .findFirst().orElseThrow();
             Session session = document2.getData().getJob().getSessions().get(0);
-            assertThat(session.getCourtCode()).isEqualTo("B01CX");
+            assertThat(session.getCourtCode()).isEqualTo("B01CY");
         }
 
+        @DisplayName("Invalid source info name for date of hearing / ou code and missing case no")
+        @Test
+        void whenInvalidMessage() throws IOException {
+            String path = "src/test/resources/messages/external-document-request-invalid.xml";
+            String content = Files.readString(Paths.get(path));
+
+            Throwable thrown = catchThrowable(() -> messageParser.parseMessage(content, ExternalDocumentRequest.class));
+
+            ConstraintViolationException ex = (ConstraintViolationException) thrown;
+            assertThat(ex.getConstraintViolations()).hasSize(3);
+            final String docInfoPath = "documentWrapper.document[0].info";
+            final String firstSessionPath = "documentWrapper.document[0].data.job.sessions[0]";
+            assertThat(ex.getConstraintViolations()).anyMatch(cv -> cv.getMessage().equals("must not be null")
+                && cv.getPropertyPath().toString().equals(docInfoPath + ".dateOfHearing"));
+            assertThat(ex.getConstraintViolations()).anyMatch(cv -> cv.getMessage().equals("must not be null")
+                && cv.getPropertyPath().toString().equals(docInfoPath + ".ouCode"));
+            assertThat(ex.getConstraintViolations()).anyMatch(cv -> cv.getMessage().equals("must not be blank")
+                && cv.getPropertyPath().toString().equals(firstSessionPath + ".blocks[0].cases[0].caseNo"));
+        }
     }
 
     @TestConfiguration
@@ -193,7 +214,7 @@ public class MessageParserTest {
     }
 
     private static void checkSession(Session session) {
-        assertThat(session.getId()).isEqualTo(556805);
+        assertThat(session.getId()).isEqualTo(556805L);
         assertThat(session.getDateOfHearing()).isEqualTo(HEARING_DATE);
         assertThat(session.getCourtCode()).isEqualTo("B01CX");
         assertThat(session.getCourtName()).isEqualTo("Camberwell Green");

@@ -15,7 +15,6 @@ import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.C
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.DataJob;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Document;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Info;
-import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.InfoSourceDetail;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Job;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Name;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Session;
@@ -67,7 +66,7 @@ class CaseMapperTest {
     @BeforeEach
     void beforeEach() {
 
-        Info info = Info.builder().infoSourceDetail(InfoSourceDetail.builder().ouCode(COURT_CODE).build()).build();
+        Info info = Info.builder().ouCode(COURT_CODE).dateOfHearing(DATE_OF_HEARING).build();
         Document document = Document.builder().info(info).build();
         DataJob dataJob = DataJob.builder().document(document).build();
         Job job = Job.builder().dataJob(dataJob).build();

@@ -15,11 +15,23 @@
                 <documents>
                     <document>
                         <ns38:info>
-                            <contentType>StandardCourtList</contentType>
-                            <dateOfHearing>25/07/2020</dateOfHearing>
-                            <courtHouse>Camberwell Green</courtHouse>
-                            <area>01</area>
+                            <general>
+                                <doc_type>EDT_Adult_Daily_Courtlist</doc_type>
+                                <outputtype>R</outputtype>
+                                <version>1_0</version>
+                                <docref>575</docref>
+                                <system>L</system>
+                            </general>
                             <source_file_name>61_25072020_2578_B01CX00_ADULT_COURT_LIST_FUTURE</source_file_name>
+                            <printers />
+                            <parameters>
+                                <pi_mcc_id>7</pi_mcc_id>
+                                <pi_psa_code>2360</pi_psa_code>
+                                <pi_job_type>ADULT_COURT_LIST_DAILY</pi_job_type>
+                                <pi_run_date>26/11/2020</pi_run_date>
+                                <pi_edt_user_id>2368</pi_edt_user_id>
+                            </parameters>
+                            <start_time>09:05:04</start_time>
                         </ns38:info>
                         <data>
                             <job>

@@ -12,11 +12,9 @@ class InfoTest {
     @Test
     void equalityIgnoresInfoSequence() {
         LocalDate now = LocalDate.now();
-        InfoSourceDetail identifier1 = InfoSourceDetail.builder().ouCode("B16BG00").sequence(1).build();
-        InfoSourceDetail identifier2 = InfoSourceDetail.builder().ouCode("B16BG00").sequence(2).build();
+        Info info1 = Info.builder().ouCode("B16BG00").sequence(1L).dateOfHearing(now).build();
+        Info info2 = Info.builder().ouCode("B16BG00").sequence(2L).dateOfHearing(now).build();
 
-        Info info1 = Info.builder().courtHouse("Beverley").dateOfHearing(now).infoSourceDetail(identifier1).build();
-        Info info2 = Info.builder().courtHouse("Beverley").dateOfHearing(now).infoSourceDetail(identifier2).build();
         assertThat(info1).isEqualTo(info2);
     }
 

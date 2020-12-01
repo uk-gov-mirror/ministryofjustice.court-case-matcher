@@ -3,10 +3,13 @@
     <documents>
         <document>
             <ns2:info>
-                <contentType>StandardCourtList</contentType>
-                <dateOfHearing>26/10/2020</dateOfHearing>
-                <courtHouse>Sheffield Magistrates Court</courtHouse>
-                <area>13</area>
+                <general>
+                    <doc_type>EDT_Adult_Daily_Courtlist</doc_type>
+                    <outputtype>R</outputtype>
+                    <version>1_0</version>
+                    <docref>575</docref>
+                    <system>L</system>
+                </general>
                 <source_file_name>5_27022020_2992_B10JQ01_ADULT_COURT_LIST_DAILY</source_file_name>
             </ns2:info>
             <data>
