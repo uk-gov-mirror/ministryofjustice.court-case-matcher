@@ -115,7 +115,6 @@ class TelemetryServiceTest {
         SearchResponse response = SearchResponse.builder()
             .matchedBy(OffenderSearchMatchType.ALL_SUPPLIED)
             .matches(List.of(match))
-            .probationStatus("Current")
             .build();
 
         telemetryService.trackOffenderMatchEvent(courtCase, response);
@@ -142,7 +141,6 @@ class TelemetryServiceTest {
         SearchResponse response = SearchResponse.builder()
             .matchedBy(OffenderSearchMatchType.PARTIAL_NAME)
             .matches(matches)
-            .probationStatus("Possible nDelius records")
             .build();
 
         telemetryService.trackOffenderMatchEvent(courtCase, response);
@@ -168,7 +166,6 @@ class TelemetryServiceTest {
         SearchResponse response = SearchResponse.builder()
             .matchedBy(OffenderSearchMatchType.PARTIAL_NAME)
             .matches(List.of(buildMatch(CRN)))
-            .probationStatus("Possible nDelius records")
             .build();
 
         telemetryService.trackOffenderMatchEvent(courtCase, response);
@@ -193,7 +190,6 @@ class TelemetryServiceTest {
     void whenNoMatchEvent_thenRecord() {
         SearchResponse response = SearchResponse.builder()
             .matchedBy(OffenderSearchMatchType.NOTHING)
-            .probationStatus("No record")
             .build();
 
         telemetryService.trackOffenderMatchEvent(courtCase, response);

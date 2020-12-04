@@ -64,6 +64,8 @@ public class CourtCase implements Serializable {
 
     private final Boolean breach;
 
+    private final LocalDate previouslyKnownTerminationDate;
+
     private final Boolean suspendedSentenceOrder;
 
     @JsonIgnore

@@ -9,6 +9,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.ProbationStatusDetail;
 
 @Builder
 @Data
@@ -18,7 +19,7 @@ import lombok.ToString;
 public class SearchResponse {
     private final List<Match> matches;
     private final OffenderSearchMatchType matchedBy;
-    private final String probationStatus;
+    private final ProbationStatusDetail probationStatusDetail;
 
     @JsonIgnore
     public boolean isExactMatch() {

@@ -11,6 +11,7 @@ import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.GroupedO
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.MatchIdentifiers;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.Offence;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.OffenderMatch;
+import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.ProbationStatusDetail;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Case;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Name;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.Match;
@@ -135,6 +136,7 @@ public class CaseMapper {
             .nationality2(incomingCase.getNationality2())
             // Fields to be retained from existing court case
             .breach(existingCourtCase.getBreach())
+            .previouslyKnownTerminationDate(existingCourtCase.getPreviouslyKnownTerminationDate())
             .crn(existingCourtCase.getCrn())
             .probationStatus(existingCourtCase.getProbationStatus())
             .suspendedSentenceOrder(existingCourtCase.getSuspendedSentenceOrder())
@@ -145,13 +147,19 @@ public class CaseMapper {
 
     public CourtCase newFromCourtCaseWithMatches(CourtCase incomingCase, MatchDetails matchDetails) {
 
-        CourtCaseBuilder courtCaseBuilder = getCourtCaseBuilderFromCase(incomingCase, matchDetails.getProbationStatus())
-            .groupedOffenderMatches(buildGroupedOffenderMatch(matchDetails.getMatches(), matchDetails.getMatchType()));
+        ProbationStatusDetail statusDetail = matchDetails.getProbationStatusDetail();
+
+        CourtCaseBuilder courtCaseBuilder = getCourtCaseBuilderFromCase(incomingCase, Optional.ofNullable(statusDetail)
+                                                                                        .map(ProbationStatusDetail::getProbationStatus)
+                                                                                        .orElse(defaultProbationStatus))
+                                            .groupedOffenderMatches(buildGroupedOffenderMatch(matchDetails.getMatches(), matchDetails.getMatchType()));
 
         if (matchDetails.isExactMatch()) {
             Match match = matchDetails.getMatches().get(0);
+
             courtCaseBuilder
-                .probationStatus(Optional.ofNullable(matchDetails.getProbationStatus()).orElse(defaultProbationStatus))
+                .breach(Optional.ofNullable(statusDetail).map(ProbationStatusDetail::getInBreach).orElse(null))
+                .previouslyKnownTerminationDate(Optional.ofNullable(statusDetail).map(ProbationStatusDetail::getPreviouslyKnownTerminationDate).orElse(null))
                 .crn(match.getOffender().getOtherIds().getCrn())
                 .cro(match.getOffender().getOtherIds().getCro())
                 .pnc(match.getOffender().getOtherIds().getPnc())

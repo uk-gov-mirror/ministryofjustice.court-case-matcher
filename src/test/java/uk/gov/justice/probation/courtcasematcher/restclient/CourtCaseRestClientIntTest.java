@@ -41,6 +41,7 @@ import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.GroupedO
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.MatchIdentifiers;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.Offence;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.OffenderMatch;
+import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.ProbationStatusDetail;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Name;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.MatchType;
 
@@ -301,19 +302,21 @@ public class CourtCaseRestClientIntTest {
     @Test
     public void whenGetOffenderProbationStatus_thenMakeRestCallToCourtCaseService() {
 
-        Optional<String> optional = restClient.getProbationStatus("X320741").blockOptional();
+        Optional<ProbationStatusDetail> optional = restClient.getProbationStatusDetail("X320741").blockOptional();
 
-        assertThat(optional.get()).isEqualTo("Current");
+        assertThat(optional).isPresent();
+        ProbationStatusDetail detail = optional.get();
+        assertThat(detail.getProbationStatus()).isEqualTo("Current");
+        assertThat(detail.getInBreach()).isTrue();
     }
 
     @Test
     public void givenUnknownCrn_whenGetOffenderProbationStatus_thenMakeReturnEmpty() {
 
-        String optional = restClient.getProbationStatus("X500").block();
+        Optional<ProbationStatusDetail> optional = restClient.getProbationStatusDetail("X500").blockOptional();
 
         assertThat(optional).isEmpty();
     }
-
 
     @Builder
     public static class FailureEventMatcher implements ArgumentMatcher<CourtCaseFailureEvent> {

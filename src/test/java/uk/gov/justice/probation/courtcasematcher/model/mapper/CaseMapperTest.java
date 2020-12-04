@@ -9,6 +9,7 @@ import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.Defendan
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.MatchIdentifiers;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.Offence;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.OffenderMatch;
+import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.ProbationStatusDetail;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Address;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Block;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Case;
@@ -154,7 +155,7 @@ class CaseMapperTest {
         SearchResponse searchResponse = SearchResponse.builder()
             .matchedBy(OffenderSearchMatchType.ALL_SUPPLIED)
             .matches(List.of(match))
-            .probationStatus("Current")
+            .probationStatusDetail(ProbationStatusDetail.builder().probationStatus("Current").inBreach(Boolean.TRUE).build())
             .build();
 
         CourtCase courtCaseNew = caseMapper.newFromCourtCaseWithMatches(courtCase, buildMatchDetails(searchResponse));
@@ -162,6 +163,8 @@ class CaseMapperTest {
         assertThat(courtCaseNew).isNotSameAs(courtCase);
         assertThat(courtCaseNew.getCrn()).isEqualTo(CRN);
         assertThat(courtCaseNew.getProbationStatus()).isEqualTo("Current");
+        assertThat(courtCaseNew.getPreviouslyKnownTerminationDate()).isNull();
+        assertThat(courtCaseNew.getBreach()).isTrue();
         assertThat(courtCaseNew.getGroupedOffenderMatches().getMatches()).hasSize(1);
         OffenderMatch offenderMatch1 = buildOffenderMatch(MatchType.NAME_DOB, CRN, CRO, PNC);
         assertThat(courtCaseNew.getGroupedOffenderMatches().getMatches()).containsExactly(offenderMatch1);
@@ -179,7 +182,7 @@ class CaseMapperTest {
         SearchResponse searchResponse = SearchResponse.builder()
             .matchedBy(OffenderSearchMatchType.NAME)
             .matches(List.of(match))
-            .probationStatus(MATCHES_PROBATION_STATUS)
+            .probationStatusDetail(ProbationStatusDetail.builder().probationStatus(MATCHES_PROBATION_STATUS).build())
             .build();
 
         CourtCase courtCaseNew = caseMapper.newFromCourtCaseWithMatches(courtCase, buildMatchDetails(searchResponse));
@@ -187,6 +190,8 @@ class CaseMapperTest {
         assertThat(courtCaseNew).isNotSameAs(courtCase);
         assertThat(courtCaseNew.getCrn()).isNull();
         assertThat(courtCaseNew.getProbationStatus()).isEqualTo(MATCHES_PROBATION_STATUS);
+        assertThat(courtCaseNew.getBreach()).isNull();
+        assertThat(courtCaseNew.getPreviouslyKnownTerminationDate()).isNull();
         assertThat(courtCaseNew.getGroupedOffenderMatches().getMatches()).hasSize(1);
         OffenderMatch expectedOffenderMatch = buildOffenderMatch(MatchType.NAME, CRN, CRO, PNC);
         assertThat(courtCaseNew.getGroupedOffenderMatches().getMatches()).containsExactly(expectedOffenderMatch);
@@ -211,6 +216,8 @@ class CaseMapperTest {
         assertThat(courtCaseNew).isNotSameAs(courtCase);
         assertThat(courtCaseNew.getCrn()).isEqualTo(CRN);
         assertThat(courtCaseNew.getProbationStatus()).isEqualTo(DEFAULT_PROBATION_STATUS);
+        assertThat(courtCaseNew.getBreach()).isNull();
+        assertThat(courtCaseNew.getPreviouslyKnownTerminationDate()).isNull();
         assertThat(courtCaseNew.getGroupedOffenderMatches().getMatches()).hasSize(1);
         OffenderMatch offenderMatch1 = buildOffenderMatch(MatchType.NAME_DOB, CRN, CRO, PNC);
         assertThat(courtCaseNew.getGroupedOffenderMatches().getMatches()).containsExactly(offenderMatch1);
@@ -231,7 +238,7 @@ class CaseMapperTest {
         CourtCase courtCase = caseMapper.newFromCase(aCase);
         SearchResponse searchResponse = SearchResponse.builder()
             .matchedBy(OffenderSearchMatchType.PARTIAL_NAME)
-            .probationStatus(MATCHES_PROBATION_STATUS)
+            .probationStatusDetail(ProbationStatusDetail.builder().probationStatus(MATCHES_PROBATION_STATUS).build())
             .matches(List.of(match1, match2))
             .build();
 
@@ -240,6 +247,8 @@ class CaseMapperTest {
         assertThat(courtCaseNew).isNotSameAs(courtCase);
         assertThat(courtCaseNew.getCrn()).isNull();
         assertThat(courtCaseNew.getProbationStatus()).isEqualTo(MATCHES_PROBATION_STATUS);
+        assertThat(courtCaseNew.getBreach()).isNull();
+        assertThat(courtCaseNew.getPreviouslyKnownTerminationDate()).isNull();
         assertThat(courtCaseNew.getGroupedOffenderMatches().getMatches()).hasSize(2);
         OffenderMatch offenderMatch1 = buildOffenderMatch(MatchType.PARTIAL_NAME, CRN, CRO, PNC);
         OffenderMatch offenderMatch2 = buildOffenderMatch(MatchType.PARTIAL_NAME, "CRN1", null, null);
@@ -313,6 +322,7 @@ class CaseMapperTest {
             .defendantSex("N")
             .listNo("999st")
             .courtRoom("4")
+            .previouslyKnownTerminationDate(LocalDate.of(2001, Month.AUGUST, 26))
             .sessionStartTime(LocalDateTime.of(2020, Month.JANUARY, 3, 9, 10, 0))
             .offences(singletonList(Offence.builder()
                                                         .act("act")
@@ -349,6 +359,7 @@ class CaseMapperTest {
         assertThat(courtCase.getSessionStartTime()).isEqualTo(SESSION_START_TIME);
         assertThat(courtCase.getNationality1()).isNull();
         assertThat(courtCase.getNationality2()).isNull();
+        assertThat(courtCase.getPreviouslyKnownTerminationDate()).isEqualTo(LocalDate.of(2001, Month.AUGUST, 26));
         assertThat(courtCase.getOffences()).hasSize(1);
         assertThat(courtCase.getOffences().get(0).getOffenceTitle()).isEqualTo("NEW Theft from a person");
         assertThat(courtCase.getOffences().get(0).getSequenceNumber()).isEqualTo(1);
@@ -360,7 +371,7 @@ class CaseMapperTest {
                         .searchResponse(searchResponse)
                         .build()))
                 .matches(searchResponse.getMatches())
-                .probationStatus(searchResponse.getProbationStatus())
+                .probationStatusDetail(searchResponse.getProbationStatusDetail())
                 .exactMatch(searchResponse.isExactMatch())
                 .build();
     }
