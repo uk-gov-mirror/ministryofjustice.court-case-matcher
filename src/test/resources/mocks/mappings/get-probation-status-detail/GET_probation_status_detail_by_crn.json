@@ -1,13 +1,13 @@
 {
   "request": {
     "method": "GET",
-    "url": "/offender/X320741/detail"
+    "url": "/offender/X320741/probation-status-detail"
   },
   "response": {
     "status": 200,
     "headers": {
       "Content-Type": "application/json"
     },
-    "bodyFileName": "get-offender-detail/GET_offender_detail_X320741.json"
+    "body": "{\n    \"probationStatus\": \"Current\",\n    \"inBreach\": true\n}"
   }
 }

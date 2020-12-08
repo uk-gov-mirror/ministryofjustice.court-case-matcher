@@ -87,7 +87,7 @@ public class TelemetryService {
     public void trackCourtListEvent(Info info) {
 
         Map<String, String> properties = new HashMap<>(2);
-        ofNullable(info.getInfoSourceDetail().getOuCode())
+        ofNullable(info.getOuCode())
             .ifPresent((courtCode) -> properties.put(COURT_CODE_KEY, courtCode));
         ofNullable(info.getDateOfHearing())
             .ifPresent((dateOfHearing) -> properties.put(HEARING_DATE_KEY, dateOfHearing.toString()));

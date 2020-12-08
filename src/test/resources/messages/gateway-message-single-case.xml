@@ -20,16 +20,10 @@
                 <documents>
                     <document>
                         <ns38:info>
-                            <contentType>StandardCourtList</contentType>
-                            <dateOfHearing>27/02/2020</dateOfHearing>
-                            <courtHouse>Sheffield Magistrates Court</courtHouse>
-                            <area>13</area>
                             <source_file_name>5_27022020_2992_B01CX02_ADULT_COURT_LIST_DAILY</source_file_name>
                         </ns38:info>
                         <ns38:data>
-                            <job xmlns:ns42="http://www.justice.gov.uk/magistrates/generic/CSCI_Status"
-                              xmlns:ns41="http://www.justice.gov.uk/magistrates/cp/CSCI_Body"
-                              xmlns:ns40="http://www.justice.gov.uk/magistrates/cp/GatewayMessageSchema">
+                            <job>
                                 <printdate>14/11/2016</printdate>
                                 <username>gl.userone</username>
                                 <late>N</late>

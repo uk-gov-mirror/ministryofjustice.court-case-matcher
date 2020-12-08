@@ -1,0 +1,695 @@
+<ns38:ExternalDocumentRequest xmlns:ns38="http://www.justice.gov.uk/magistrates/external/ExternalDocumentRequest">
+  <documents>
+    <document>
+      <ns38:info>
+        <general>
+          <doc_type>EDT_Adult_Daily_Courtlist</doc_type>
+          <outputtype>R</outputtype>
+          <version>1_0</version>
+          <docref>575</docref>
+          <system>L</system>
+        </general>
+        <source_file_name>10962_261120_2360_B10JQ05_ADULT_COURT_LIST_DAILY</source_file_name>
+        <printers/>
+        <parameters>
+          <pi_mcc_id>7</pi_mcc_id>
+          <pi_psa_code>2360</pi_psa_code>
+          <pi_job_type>ADULT_COURT_LIST_DAILY</pi_job_type>
+          <pi_run_date>26/11/2020</pi_run_date>
+          <pi_edt_user_id>2368</pi_edt_user_id>
+        </parameters>
+        <start_time>09:05:04</start_time>
+      </ns38:info>
+      <ns38:data>
+        <job>
+          <printdate>14/11/2016</printdate>
+          <username>gl.userone</username>
+          <late>N</late>
+          <adbox>N</adbox>
+          <means>N</means>
+          <sessions>
+            <session>
+              <area_code>area code</area_code>
+              <doh>19/02/2020</doh>
+              <lja>South West London Magistrates; Court</lja>
+              <cmu>Gl Management Unit 1</cmu>
+              <panel>Adult Panel</panel>
+              <court>Sheffield Magistrates Court</court>
+              <!-- invalid room -->
+              <room/>
+              <sstart>09:01</sstart>
+              <send>13:05</send>
+              <blocks>
+                <block>
+                  <sb_id>758095</sb_id>
+                  <bstart>08:45</bstart>
+                  <bend>11:45</bend>
+                  <desc>First Hearings Slot</desc>
+                  <cases>
+                    <case>
+                      <c_id>1217464</c_id>
+                      <h_id>1293277</h_id>
+                      <valid>Y</valid>
+                      <type>C</type>
+                      <def_name>DLONE</def_name>
+                      <def_name_elements>
+                        <title>Mr.</title>
+                        <forename1>David</forename1>
+                        <surname>DLONE</surname>
+                      </def_name_elements>
+                      <def_type>P</def_type>
+                      <def_sex>N</def_sex>
+                      <pnc_id>PNC-ID1</pnc_id>
+                      <cro_number>11111/79J</cro_number>
+                      <def_addr>
+                        <line1>A1</line1>
+                      </def_addr>
+                      <inf>POL01</inf>
+                      <cseq>1</cseq>
+                      <listno>1st</listno>
+                      <offences>
+                        <offence>
+                          <oseq>1</oseq>
+                          <co_id>1184411</co_id>
+                          <code>TH68010</code>
+                          <maxpen>EW: 6M ;/or Ultd Fine</maxpen>
+                          <sum>On 01/01/2016 at Town, stole Article, to the value of £100.00, belonging to Person.</sum>
+                          <as>Contrary to section 1(1) and 7 of the Theft Act 1968.</as>
+                        </offence>
+                      </offences>
+                    </case>
+                    <case>
+                      <c_id>1218461</c_id>
+                      <h_id>1294273</h_id>
+                      <valid>Y</valid>
+                      <caseno>1600032979</caseno>
+                      <type>C</type>
+                      <def_name>DLUNSCHEDULEDLISTONE</def_name>
+                      <def_type>P</def_type>
+                      <def_sex>N</def_sex>
+                      <pnc_id>PNC-ID2</pnc_id>
+                      <cro_number>22222/79J</cro_number>
+                      <def_addr>
+                        <line1>A1</line1>
+                      </def_addr>
+                      <inf>POL01</inf>
+                      <cseq>2</cseq>
+                      <listno>1st</listno>
+                      <offences>
+                        <offence>
+                          <oseq>1</oseq>
+                          <co_id>1185408</co_id>
+                          <code>TH68010</code>
+                          <maxpen>EW: 6M ;/or Ultd Fine</maxpen>
+                          <title>Theft from a shop</title>
+                          <sum>On 01/01/2016 at Town, stole Article, to the value of £100.00, belonging to Person.</sum>
+                          <as>Contrary to section 1(1) and 7 of the Theft Act 1968.</as>
+                        </offence>
+                      </offences>
+                    </case>
+                    <case>
+                      <c_id>1218462</c_id>
+                      <h_id>1294274</h_id>
+                      <valid>Y</valid>
+                      <caseno>1600032987</caseno>
+                      <type>C</type>
+                      <def_name>DLUNSCHEDULEDLISTTWO</def_name>
+                      <def_type>P</def_type>
+                      <def_sex>N</def_sex>
+                      <pnc_id>PNC-ID3</pnc_id>
+                      <cro_number>33333/79J</cro_number>
+                      <def_addr>
+                        <line1>A1</line1>
+                      </def_addr>
+                      <inf>POL01</inf>
+                      <cseq>3</cseq>
+                      <listno>1st</listno>
+                      <offences>
+                        <offence>
+                          <oseq>1</oseq>
+                          <co_id>1185409</co_id>
+                          <code>TH68010</code>
+                          <maxpen>EW: 6M ;/or Ultd Fine</maxpen>
+                          <title>Theft from a shop</title>
+                          <sum>On 01/01/2016 at Town, stole Article, to the value of £100.00, belonging to Person.</sum>
+                          <as>Contrary to section 1(1) and 7 of the Theft Act 1968.</as>
+                        </offence>
+                      </offences>
+                    </case>
+                    <case>
+                      <c_id>1218463</c_id>
+                      <h_id>1294275</h_id>
+                      <valid>Y</valid>
+                      <caseno>1600032995</caseno>
+                      <type>C</type>
+                      <def_name>DLUNSCHEDULEDTHREE</def_name>
+                      <def_type>P</def_type>
+                      <def_sex>N</def_sex>
+                      <def_addr>
+                        <line1>A1</line1>
+                      </def_addr>
+                      <inf>POL01</inf>
+                      <cseq>4</cseq>
+                      <listno>1st</listno>
+                      <offences>
+                        <offence>
+                          <oseq>1</oseq>
+                          <co_id>1185410</co_id>
+                          <code>TH68010</code>
+                          <maxpen>EW: 6M ;/or Ultd Fine</maxpen>
+                          <title>Theft from a shop</title>
+                          <sum>On 01/01/2016 at Town, stole Article, to the value of £100.00, belonging to Person.</sum>
+                          <as>Contrary to section 1(1) and 7 of the Theft Act 1968.</as>
+                        </offence>
+                      </offences>
+                    </case>
+                    <case>
+                      <c_id>1216463</c_id>
+                      <h_id>1292279</h_id>
+                      <valid>Y</valid>
+                      <caseno>1600032855</caseno>
+                      <type>C</type>
+                      <def_name>Tod TEBAILCONDPENDING</def_name>
+                      <def_type>P</def_type>
+                      <def_sex>M</def_sex>
+                      <def_dob>05/07/1991</def_dob>
+                      <def_age>25</def_age>
+                      <def_addr>
+                        <line1>83 The Street</line1>
+                        <line2>Newtown</line2>
+                        <pcode>NT56 7UJ</pcode>
+                      </def_addr>
+                      <inf>POL01</inf>
+                      <cseq>5</cseq>
+                      <listno>2nd</listno>
+                      <offences>
+                        <offence>
+                          <oseq>1</oseq>
+                          <co_id>1183410</co_id>
+                          <code>TA02002</code>
+                          <title>Caused to be published a tobacco advertisement</title>
+                          <sum>Blah</sum>
+                          <adjdate>28/09/2016</adjdate>
+                          <adjreason>for a bail application to be made</adjreason>
+                          <plea>NG</plea>
+                          <pleadate>28/09/2016</pleadate>
+                          <convdate>28/09/2016</convdate>
+                        </offence>
+                      </offences>
+                    </case>
+                    <case>
+                      <c_id>1216461</c_id>
+                      <h_id>1292275</h_id>
+                      <valid>Y</valid>
+                      <caseno>1600032839</caseno>
+                      <type>C</type>
+                      <def_name>Tam TEBAILCONDTWO</def_name>
+                      <def_type>P</def_type>
+                      <def_sex>F</def_sex>
+                      <def_dob>15/05/1995</def_dob>
+                      <def_age>21</def_age>
+                      <def_addr>
+                        <line1>5 The Street</line1>
+                        <line2>Newtown</line2>
+                        <pcode>NT56 7UJ</pcode>
+                      </def_addr>
+                      <inf>POL01</inf>
+                      <cseq>6</cseq>
+                      <listno>2nd</listno>
+                      <offences>
+                        <offence>
+                          <oseq>1</oseq>
+                          <co_id>1183408</co_id>
+                          <code>TA02002</code>
+                          <title>Caused to be published a tobacco advertisement</title>
+                          <sum>blah</sum>
+                          <adjdate>28/09/2016</adjdate>
+                          <adjreason>to produce evidence of means</adjreason>
+                          <plea>NG</plea>
+                          <pleadate>28/09/2016</pleadate>
+                          <convdate>28/09/2016</convdate>
+                        </offence>
+                      </offences>
+                    </case>
+                    <case>
+                      <c_id>1216460</c_id>
+                      <h_id>1292273</h_id>
+                      <valid>Y</valid>
+                      <caseno>1600032820</caseno>
+                      <type>C</type>
+                      <prov>Y</prov>
+                      <def_name>Tig TEPOLBAILVARCONDITIONS</def_name>
+                      <def_type>P</def_type>
+                      <def_sex>M</def_sex>
+                      <def_dob>04/11/1991</def_dob>
+                      <def_age>24</def_age>
+                      <def_addr>
+                        <line1>92 The Street</line1>
+                        <line2>Newtown</line2>
+                        <pcode>NT67 7YH</pcode>
+                      </def_addr>
+                      <inf>POL01</inf>
+                      <cseq>7</cseq>
+                      <listno>2nd</listno>
+                      <offences>
+                        <offence>
+                          <oseq>1</oseq>
+                          <co_id>1183407</co_id>
+                          <code>CJ94012</code>
+                          <maxpen>S: 3M ;/or L4</maxpen>
+                          <title>Raves - failure to leave land</title>
+                          <sum>On 14/04/2014 at the playground knowing that a direction applicable to you had been given under Section 63(2) of the Criminal Justice and Public Order Act 1994, failed
+                            to leave the land, namely the swings as soon as reasonably practicable.</sum>
+                          <as>Contrary to Section 63(6)(a) of the Criminal Justice and Public Order Act 1994.</as>
+                          <adjdate>28/09/2016</adjdate>
+                          <plea>NG</plea>
+                          <pleadate>28/09/2016</pleadate>
+                          <convdate>28/09/2016</convdate>
+                        </offence>
+                      </offences>
+                    </case>
+                    <case>
+                      <c_id>1216466</c_id>
+                      <h_id>1292284</h_id>
+                      <valid>Y</valid>
+                      <caseno>1600032898</caseno>
+                      <type>C</type>
+                      <def_name>Alf TERESBREACHBAILONE</def_name>
+                      <def_type>P</def_type>
+                      <def_sex>M</def_sex>
+                      <def_dob>28/08/1981</def_dob>
+                      <def_age>35</def_age>
+                      <def_addr>
+                        <line1>48 The Street</line1>
+                        <line2>Newtown</line2>
+                        <pcode>NT56 7YH</pcode>
+                      </def_addr>
+                      <inf>POL01</inf>
+                      <cseq>8</cseq>
+                      <listno>2nd</listno>
+                      <offences>
+                        <offence>
+                          <oseq>1</oseq>
+                          <co_id>1183413</co_id>
+                          <code>TA02002</code>
+                          <title>Caused to be published a tobacco advertisement</title>
+                          <sum>Blah</sum>
+                          <adjdate>28/09/2016</adjdate>
+                          <adjreason>to appear or the case may proceed</adjreason>
+                          <plea>NG</plea>
+                          <pleadate>28/09/2016</pleadate>
+                          <convdate>28/09/2016</convdate>
+                        </offence>
+                      </offences>
+                    </case>
+                    <case>
+                      <c_id>1215460</c_id>
+                      <h_id>1291275</h_id>
+                      <valid>Y</valid>
+                      <caseno>1600032804</caseno>
+                      <type>C</type>
+                      <prov>Y</prov>
+                      <def_name>Tess TEYOUTHBAILTWO</def_name>
+                      <def_name_elements>
+                        <title>Ms</title>
+                        <forename1>Tess</forename1>
+                        <forename2>name2</forename2>
+                        <forename3>name3</forename3>
+                        <surname>TEYOUTHBAILTWO</surname>
+                      </def_name_elements>
+                      <def_type>P</def_type>
+                      <def_sex>F</def_sex>
+                      <def_dob>02/02/2002</def_dob>
+                      <def_age>14</def_age>
+                      <pnc_id>PNC-ID</pnc_id>
+                      <cro_number>12345/678E</cro_number>
+                      <def_addr>
+                        <line1>39 The Stree</line1>
+                        <line2>Newtown</line2>
+                        <pcode>NT4 6YH</pcode>
+                      </def_addr>
+                      <inf>POL01</inf>
+                      <cseq>9</cseq>
+                      <listno>2nd</listno>
+                      <pg_type>P</pg_type>
+                      <pg_name>Tog TEYOUTHBAILTWOGUARDIAN</pg_name>
+                      <pg_addr>
+                        <line1>39 The Street</line1>
+                        <line2>Newtown</line2>
+                        <pcode>NT45 5YJ</pcode>
+                      </pg_addr>
+                      <offences>
+                        <offence>
+                          <oseq>1</oseq>
+                          <co_id>1182407</co_id>
+                          <code>TA02003</code>
+                          <title>Printed in the U.K. a tobacco advertisement</title>
+                          <sum>Blah</sum>
+                          <adjdate>28/09/2016</adjdate>
+                          <plea>NG</plea>
+                          <pleadate>28/09/2016</pleadate>
+                          <convdate>28/09/2016</convdate>
+                        </offence>
+                      </offences>
+                    </case>
+                  </cases>
+                </block>
+              </blocks>
+            </session>
+          </sessions>
+        </job>
+      </ns38:data>
+      <jsonData></jsonData>
+    </document>
+    <document>
+      <ns38:info>
+        <contentType>StandardCourtList</contentType>
+        <dateOfHearing>27/02/2020</dateOfHearing>
+        <courtHouse>SHF</courtHouse>
+        <area>13</area>
+        <source_file_name>7_27022020_2992_B13HT00_ADULT_COURT_LIST_DAILY</source_file_name>
+      </ns38:info>
+      <ns38:data>
+        <job>
+          <printdate>14/11/2016</printdate>
+          <username>gl.userone</username>
+          <late>N</late>
+          <adbox>N</adbox>
+          <means>N</means>
+          <sessions>
+            <session>
+              <s_id>556805</s_id>
+              <doh>19/02/2020</doh>
+              <lja>South West London Magistrates; Court</lja>
+              <cmu>Gl Management Unit 1</cmu>
+              <panel>Adult Panel</panel>
+              <court>Sheffield Magistrates Court</court>
+              <room>00</room>
+              <sstart>09:00</sstart>
+              <send>12:00</send>
+              <blocks>
+                <block>
+                  <sb_id>758095</sb_id>
+                  <bstart>09:00</bstart>
+                  <bend>12:00</bend>
+                  <desc>First Hearings Slot</desc>
+                  <cases>
+                    <case>
+                      <c_id>1217464</c_id>
+                      <h_id>1293277</h_id>
+                      <valid>Y</valid>
+                      <caseno>1600032952</caseno>
+                      <type>C</type>
+                      <def_name>DLONE</def_name>
+                      <def_type>P</def_type>
+                      <def_sex>N</def_sex>
+                      <def_addr>
+                        <line1>A1</line1>
+                      </def_addr>
+                      <inf>POL01</inf>
+                      <cseq>1</cseq>
+                      <listno>1st</listno>
+                      <offences>
+                        <offence>
+                          <oseq>1</oseq>
+                          <co_id>1184411</co_id>
+                          <code>TH68010</code>
+                          <maxpen>EW: 6M ;/or Ultd Fine</maxpen>
+                          <title>Theft from a shop</title>
+                          <sum>On 01/01/2016 at Town, stole Article, to the value of £100.00, belonging to Person.</sum>
+                          <as>Contrary to section 1(1) and 7 of the Theft Act 1968.</as>
+                        </offence>
+                      </offences>
+                    </case>
+                    <case>
+                      <c_id>1218461</c_id>
+                      <h_id>1294273</h_id>
+                      <valid>Y</valid>
+                      <caseno>1600032979</caseno>
+                      <type>C</type>
+                      <def_name>DLUNSCHEDULEDLISTONE</def_name>
+                      <def_type>P</def_type>
+                      <def_sex>N</def_sex>
+                      <def_addr>
+                        <line1>A1</line1>
+                      </def_addr>
+                      <inf>POL01</inf>
+                      <cseq>2</cseq>
+                      <listno>1st</listno>
+                      <offences>
+                        <offence>
+                          <oseq>1</oseq>
+                          <co_id>1185408</co_id>
+                          <code>TH68010</code>
+                          <maxpen>EW: 6M ;/or Ultd Fine</maxpen>
+                          <title>Theft from a shop</title>
+                          <sum>On 01/01/2016 at Town, stole Article, to the value of £100.00, belonging to Person.</sum>
+                          <as>Contrary to section 1(1) and 7 of the Theft Act 1968.</as>
+                        </offence>
+                      </offences>
+                    </case>
+                    <case>
+                      <c_id>1218462</c_id>
+                      <h_id>1294274</h_id>
+                      <valid>Y</valid>
+                      <caseno>1600032987</caseno>
+                      <type>C</type>
+                      <def_name>DLUNSCHEDULEDLISTTWO</def_name>
+                      <def_type>P</def_type>
+                      <def_sex>N</def_sex>
+                      <def_addr>
+                        <line1>A1</line1>
+                      </def_addr>
+                      <inf>POL01</inf>
+                      <cseq>3</cseq>
+                      <listno>1st</listno>
+                      <offences>
+                        <offence>
+                          <oseq>1</oseq>
+                          <co_id>1185409</co_id>
+                          <code>TH68010</code>
+                          <maxpen>EW: 6M ;/or Ultd Fine</maxpen>
+                          <title>Theft from a shop</title>
+                          <sum>On 01/01/2016 at Town, stole Article, to the value of £100.00, belonging to Person.</sum>
+                          <as>Contrary to section 1(1) and 7 of the Theft Act 1968.</as>
+                        </offence>
+                      </offences>
+                    </case>
+                    <case>
+                      <c_id>1218463</c_id>
+                      <h_id>1294275</h_id>
+                      <valid>Y</valid>
+                      <caseno>1600032995</caseno>
+                      <type>C</type>
+                      <def_name>DLUNSCHEDULEDTHREE</def_name>
+                      <def_type>P</def_type>
+                      <def_sex>N</def_sex>
+                      <def_addr>
+                        <line1>A1</line1>
+                      </def_addr>
+                      <inf>POL01</inf>
+                      <cseq>4</cseq>
+                      <listno>1st</listno>
+                      <offences>
+                        <offence>
+                          <oseq>1</oseq>
+                          <co_id>1185410</co_id>
+                          <code>TH68010</code>
+                          <maxpen>EW: 6M ;/or Ultd Fine</maxpen>
+                          <title>Theft from a shop</title>
+                          <sum>On 01/01/2016 at Town, stole Article, to the value of £100.00, belonging to Person.</sum>
+                          <as>Contrary to section 1(1) and 7 of the Theft Act 1968.</as>
+                        </offence>
+                      </offences>
+                    </case>
+                    <case>
+                      <c_id>1216463</c_id>
+                      <h_id>1292279</h_id>
+                      <valid>Y</valid>
+                      <caseno>1600032855</caseno>
+                      <type>C</type>
+                      <def_name>Tod TEBAILCONDPENDING</def_name>
+                      <def_type>P</def_type>
+                      <def_sex>M</def_sex>
+                      <def_dob>05/07/1991</def_dob>
+                      <def_age>25</def_age>
+                      <def_addr>
+                        <line1>83 The Street</line1>
+                        <line2>Newtown</line2>
+                        <pcode>NT56 7UJ</pcode>
+                      </def_addr>
+                      <inf>POL01</inf>
+                      <cseq>5</cseq>
+                      <listno>2nd</listno>
+                      <offences>
+                        <offence>
+                          <oseq>1</oseq>
+                          <co_id>1183410</co_id>
+                          <code>TA02002</code>
+                          <title>Caused to be published a tobacco advertisement</title>
+                          <sum>Blah</sum>
+                          <adjdate>28/09/2016</adjdate>
+                          <adjreason>for a bail application to be made</adjreason>
+                          <plea>NG</plea>
+                          <pleadate>28/09/2016</pleadate>
+                          <convdate>28/09/2016</convdate>
+                        </offence>
+                      </offences>
+                    </case>
+                    <case>
+                      <c_id>1216461</c_id>
+                      <h_id>1292275</h_id>
+                      <valid>Y</valid>
+                      <caseno>1600032839</caseno>
+                      <type>C</type>
+                      <def_name>Tam TEBAILCONDTWO</def_name>
+                      <def_type>P</def_type>
+                      <def_sex>F</def_sex>
+                      <def_dob>15/05/1995</def_dob>
+                      <def_age>21</def_age>
+                      <def_addr>
+                        <line1>5 The Street</line1>
+                        <line2>Newtown</line2>
+                        <pcode>NT56 7UJ</pcode>
+                      </def_addr>
+                      <inf>POL01</inf>
+                      <cseq>6</cseq>
+                      <listno>2nd</listno>
+                      <offences>
+                        <offence>
+                          <oseq>1</oseq>
+                          <co_id>1183408</co_id>
+                          <code>TA02002</code>
+                          <title>Caused to be published a tobacco advertisement</title>
+                          <sum>blah</sum>
+                          <adjdate>28/09/2016</adjdate>
+                          <adjreason>to produce evidence of means</adjreason>
+                          <plea>NG</plea>
+                          <pleadate>28/09/2016</pleadate>
+                          <convdate>28/09/2016</convdate>
+                        </offence>
+                      </offences>
+                    </case>
+                    <case>
+                      <c_id>1216460</c_id>
+                      <h_id>1292273</h_id>
+                      <valid>Y</valid>
+                      <caseno>1600032820</caseno>
+                      <type>C</type>
+                      <prov>Y</prov>
+                      <def_name>Tig TEPOLBAILVARCONDITIONS</def_name>
+                      <def_type>P</def_type>
+                      <def_sex>M</def_sex>
+                      <def_dob>04/11/1991</def_dob>
+                      <def_age>24</def_age>
+                      <def_addr>
+                        <line1>92 The Street</line1>
+                        <line2>Newtown</line2>
+                        <pcode>NT67 7YH</pcode>
+                      </def_addr>
+                      <inf>POL01</inf>
+                      <cseq>7</cseq>
+                      <listno>2nd</listno>
+                      <offences>
+                        <offence>
+                          <oseq>1</oseq>
+                          <co_id>1183407</co_id>
+                          <code>CJ94012</code>
+                          <maxpen>S: 3M ;/or L4</maxpen>
+                          <title>Raves - failure to leave land</title>
+                          <sum>On 14/04/2014 at the playground knowing that a direction applicable to you had been given under Section 63(2) of the Criminal Justice and Public Order Act 1994, failed
+                            to leave the land, namely the swings as soon as reasonably practicable.</sum>
+                          <as>Contrary to Section 63(6)(a) of the Criminal Justice and Public Order Act 1994.</as>
+                          <adjdate>28/09/2016</adjdate>
+                          <plea>NG</plea>
+                          <pleadate>28/09/2016</pleadate>
+                          <convdate>28/09/2016</convdate>
+                        </offence>
+                      </offences>
+                    </case>
+                    <case>
+                      <c_id>1216466</c_id>
+                      <h_id>1292284</h_id>
+                      <valid>Y</valid>
+                      <caseno>1600032898</caseno>
+                      <type>C</type>
+                      <def_name>Alf TERESBREACHBAILONE</def_name>
+                      <def_type>P</def_type>
+                      <def_sex>M</def_sex>
+                      <def_dob>28/08/1981</def_dob>
+                      <def_age>35</def_age>
+                      <def_addr>
+                        <line1>48 The Street</line1>
+                        <line2>Newtown</line2>
+                        <pcode>NT56 7YH</pcode>
+                      </def_addr>
+                      <inf>POL01</inf>
+                      <cseq>8</cseq>
+                      <listno>2nd</listno>
+                      <offences>
+                        <offence>
+                          <oseq>1</oseq>
+                          <co_id>1183413</co_id>
+                          <code>TA02002</code>
+                          <title>Caused to be published a tobacco advertisement</title>
+                          <sum>Blah</sum>
+                          <adjdate>28/09/2016</adjdate>
+                          <adjreason>to appear or the case may proceed</adjreason>
+                          <plea>NG</plea>
+                          <pleadate>28/09/2016</pleadate>
+                          <convdate>28/09/2016</convdate>
+                        </offence>
+                      </offences>
+                    </case>
+                    <case>
+                      <c_id>1215460</c_id>
+                      <h_id>1291275</h_id>
+                      <valid>Y</valid>
+                      <caseno>1600032804</caseno>
+                      <type>C</type>
+                      <prov>Y</prov>
+                      <def_name>Tess TEYOUTHBAILTWO</def_name>
+                      <def_type>P</def_type>
+                      <def_sex>F</def_sex>
+                      <def_dob>02/02/2002</def_dob>
+                      <def_age>14</def_age>
+                      <def_addr>
+                        <line1>39 The Stree</line1>
+                        <line2>Newtown</line2>
+                        <pcode>NT4 6YH</pcode>
+                      </def_addr>
+                      <inf>POL01</inf>
+                      <cseq>9</cseq>
+                      <listno>2nd</listno>
+                      <pg_type>P</pg_type>
+                      <pg_name>Tog TEYOUTHBAILTWOGUARDIAN</pg_name>
+                      <pg_addr>
+                        <line1>39 The Street</line1>
+                        <line2>Newtown</line2>
+                        <pcode>NT45 5YJ</pcode>
+                      </pg_addr>
+                      <offences>
+                        <offence>
+                          <oseq>1</oseq>
+                          <co_id>1182407</co_id>
+                          <code>TA02003</code>
+                          <title>Printed in the U.K. a tobacco advertisement</title>
+                          <sum>Blah</sum>
+                          <adjdate>28/09/2016</adjdate>
+                          <plea>NG</plea>
+                          <pleadate>28/09/2016</pleadate>
+                          <convdate>28/09/2016</convdate>
+                        </offence>
+                      </offences>
+                    </case>
+                  </cases>
+                </block>
+              </blocks>
+            </session>
+          </sessions>
+        </job>
+      </ns38:data>
+      <jsonData></jsonData>
+    </document>
+  </documents>
+</ns38:ExternalDocumentRequest>

@@ -22,7 +22,6 @@ import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.C
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.DataJob;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Document;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Info;
-import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.InfoSourceDetail;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Job;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Session;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.Match;
@@ -48,7 +47,7 @@ import static uk.gov.justice.probation.courtcasematcher.service.TelemetryService
 @ExtendWith(MockitoExtension.class)
 class TelemetryServiceTest {
 
-    private static final String COURT_CODE = "B10JQ00";
+    private static final String COURT_CODE = "B10JQ01";
     private static final String CASE_NO = "1234567890";
     private static final String CRN = "D12345";
     private static final String PNC = "PNC/123";
@@ -67,12 +66,11 @@ class TelemetryServiceTest {
     @InjectMocks
     private TelemetryService telemetryService;
 
-
     @BeforeAll
     static void beforeEach() {
 
         info = Info.builder()
-            .infoSourceDetail(InfoSourceDetail.builder().ouCode(COURT_CODE).build())
+            .ouCode(COURT_CODE)
             .dateOfHearing(DATE_OF_HEARING)
             .build();
         Document document = Document.builder().info(info).build();
@@ -117,7 +115,6 @@ class TelemetryServiceTest {
         SearchResponse response = SearchResponse.builder()
             .matchedBy(OffenderSearchMatchType.ALL_SUPPLIED)
             .matches(List.of(match))
-            .probationStatus("Current")
             .build();
 
         telemetryService.trackOffenderMatchEvent(courtCase, response);
@@ -144,7 +141,6 @@ class TelemetryServiceTest {
         SearchResponse response = SearchResponse.builder()
             .matchedBy(OffenderSearchMatchType.PARTIAL_NAME)
             .matches(matches)
-            .probationStatus("Possible nDelius records")
             .build();
 
         telemetryService.trackOffenderMatchEvent(courtCase, response);
@@ -170,7 +166,6 @@ class TelemetryServiceTest {
         SearchResponse response = SearchResponse.builder()
             .matchedBy(OffenderSearchMatchType.PARTIAL_NAME)
             .matches(List.of(buildMatch(CRN)))
-            .probationStatus("Possible nDelius records")
             .build();
 
         telemetryService.trackOffenderMatchEvent(courtCase, response);
@@ -195,7 +190,6 @@ class TelemetryServiceTest {
     void whenNoMatchEvent_thenRecord() {
         SearchResponse response = SearchResponse.builder()
             .matchedBy(OffenderSearchMatchType.NOTHING)
-            .probationStatus("No record")
             .build();
 
         telemetryService.trackOffenderMatchEvent(courtCase, response);

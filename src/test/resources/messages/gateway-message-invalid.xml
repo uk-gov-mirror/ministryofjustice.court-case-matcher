@@ -20,10 +20,23 @@
                 <documents>
                     <document>
                         <ns38:info>
-                            <contentType>StandardCourtList</contentType>
-                            <courtHouse>Sheffield Magistrates Court</courtHouse>
-                            <area>13</area>
-                            <source_file_name>5_27022020_2992_B13HT00_ADULT_COURT_LIST_DAILY</source_file_name>
+                            <general>
+                                <doc_type>EDT_Adult_Daily_Courtlist</doc_type>
+                                <outputtype>R</outputtype>
+                                <version>1_0</version>
+                                <docref>575</docref>
+                                <system>L</system>
+                            </general>
+                            <source_file_name>10962_261120_2360_B10JQ05_ADULT_COURT_LIST_DAILY</source_file_name>
+                            <printers />
+                            <parameters>
+                                <pi_mcc_id>7</pi_mcc_id>
+                                <pi_psa_code>2360</pi_psa_code>
+                                <pi_job_type>ADULT_COURT_LIST_DAILY</pi_job_type>
+                                <pi_run_date>26/11/2020</pi_run_date>
+                                <pi_edt_user_id>2368</pi_edt_user_id>
+                            </parameters>
+                            <start_time>09:05:04</start_time>
                         </ns38:info>
                         <ns38:data>
                             <job xmlns:ns39="http://www.justice.gov.uk/magistrates/cp/CSCI" xmlns:ns38="http://www.justice.gov.uk/magistrates/generic/CSCI_Status" xmlns:ns37="http://www.justice.gov.uk/magistrates/cp/CSCI_Body" xmlns:ns42="http://www.justice.gov.uk/magistrates/generic/CSCI_Status" xmlns:ns41="http://www.justice.gov.uk/magistrates/cp/CSCI_Body" xmlns:ns40="http://www.justice.gov.uk/magistrates/cp/GatewayMessageSchema" >

@@ -1,20 +1,15 @@
 
 package uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.OptBoolean;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
 import java.time.LocalDate;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import uk.gov.justice.probation.courtcasematcher.messaging.SourceFileNameDeserializer;
 
 @Builder
 @Data
@@ -23,18 +18,15 @@ import uk.gov.justice.probation.courtcasematcher.messaging.SourceFileNameDeseria
 @NoArgsConstructor(access = AccessLevel.PRIVATE, force = true)
 public class Info {
 
-    @NotNull
-    @JsonDeserialize(using = SourceFileNameDeserializer.class)
-    @JacksonXmlProperty(localName = "source_file_name")
-    private final InfoSourceDetail infoSourceDetail;
+    public static final String SOURCE_FILE_NAME_ELEMENT = "source_file_name";
+
+    @EqualsAndHashCode.Exclude
+    private final Long sequence;
 
     @NotNull
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy", lenient = OptBoolean.TRUE)
-    @JsonDeserialize(using = LocalDateDeserializer.class)
+    private final String ouCode;
+
+    @NotNull
     private final LocalDate dateOfHearing;
-
-    private final String area;
-
-    private final String courtHouse;
 
 }

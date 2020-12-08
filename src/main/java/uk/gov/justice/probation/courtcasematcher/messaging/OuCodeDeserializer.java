@@ -1,6 +1,7 @@
 package uk.gov.justice.probation.courtcasematcher.messaging;
 
 import java.io.IOException;
+import java.util.Optional;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -29,8 +30,10 @@ public class OuCodeDeserializer extends StdDeserializer<String> {
 
     @Override
     public String deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
-        final JsonNode node = jp.getCodec().readTree(jp);
-        final String ouCodeWithRoom = node != null ? node.asText() : "";
+
+        final String ouCodeWithRoom =  Optional.ofNullable(jp.getCodec().readTree(jp))
+            .map((treeNode) -> ((JsonNode) treeNode).asText())
+            .orElse("");
         if (ouCodeWithRoom.length() <= OU_CODE_LENGTH) {
             return ouCodeWithRoom;
         }

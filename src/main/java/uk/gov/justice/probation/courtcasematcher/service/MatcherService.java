@@ -7,10 +7,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCase;
+import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.ProbationStatusDetail;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.MatchRequest;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.SearchResponse;
 import uk.gov.justice.probation.courtcasematcher.restclient.CourtCaseRestClient;
@@ -54,7 +54,7 @@ public class MatcherService {
                 })
                 .flatMap(searchResponse -> {
                     if (searchResponse.isExactMatch()) {
-                        return Mono.zip(Mono.just(searchResponse), restClient.getProbationStatus(searchResponse.getMatches()
+                        return Mono.zip(Mono.just(searchResponse), restClient.getProbationStatusDetail(searchResponse.getMatches()
                                                                                                     .get(0)
                                                                                                     .getOffender()
                                                                                                     .getOtherIds()
@@ -64,7 +64,7 @@ public class MatcherService {
                         log.debug("Got {} matches for defendant name {}, dob {}, match type {}",
                                 searchResponse.getMatchCount(), courtCase.getDefendantName(), courtCase.getDefendantDob(), searchResponse.getMatchedBy());
                         String probationStatus = searchResponse.getMatchCount() >= 1 ? nonExactProbationStatus : defaultProbationStatus;
-                        return Mono.zip(Mono.just(searchResponse), Mono.just(probationStatus));
+                        return Mono.zip(Mono.just(searchResponse), Mono.just(ProbationStatusDetail.builder().probationStatus(probationStatus).build()));
                     }
                 })
                 .map(this::combine)
@@ -80,11 +80,10 @@ public class MatcherService {
                         .build());
     }
 
-    private SearchResponse combine(Tuple2<SearchResponse, String> tuple2) {
+    private SearchResponse combine(Tuple2<SearchResponse, ProbationStatusDetail> tuple2) {
         SearchResponse searchResponse = tuple2.getT1();
-        String probationStatus = tuple2.getT2();
         return SearchResponse.builder().matchedBy(tuple2.getT1().getMatchedBy())
-            .probationStatus(StringUtils.isEmpty(probationStatus) ? null : probationStatus)
+            .probationStatusDetail(tuple2.getT2())
             .matches(searchResponse.getMatches())
             .build();
     }

@@ -12,20 +12,20 @@ class SessionTest {
 
     @Test
     void whenOuCodeNotSession_thenReturnFromParentInfo() {
-        Info info = Info.builder().infoSourceDetail(InfoSourceDetail.builder().ouCode("B10JQ00").build()).build();
+        Info info = Info.builder().ouCode("B10JQ").build();
         Document document = Document.builder().info(info).build();
         DataJob dataJob = DataJob.builder().document(document).build();
         Job job = Job.builder().dataJob(dataJob).build();
         Session session = Session.builder().job(job).build();
 
-        assertThat(session.getCourtCode()).isEqualTo("B10JQ00");
+        assertThat(session.getCourtCode()).isEqualTo("B10JQ");
     }
 
     @Test
     void whenOuCodeIsInSession_thenReturn() {
-        Session session = Session.builder().courtCode("B10JQ00").build();
+        Session session = Session.builder().courtCode("B10JQ").build();
 
-        assertThat(session.getCourtCode()).isEqualTo("B10JQ00");
+        assertThat(session.getCourtCode()).isEqualTo("B10JQ");
     }
 
     @Test

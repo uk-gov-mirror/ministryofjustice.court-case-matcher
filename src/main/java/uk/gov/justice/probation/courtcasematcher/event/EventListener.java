@@ -75,8 +75,8 @@ public class EventListener {
     public void courtCaseMatchEvent(CourtCaseMatchEvent courtCaseEvent) {
 
         CourtCase courtCase = courtCaseEvent.getCourtCase();
-        log.info("Matching offender and saving case no {} for court {}, defendant name {}",
-            courtCase.getCaseNo(), courtCase.getCourtCode(), courtCase.getDefendantName());
+        log.info("Matching offender and saving case no {} for court {}, defendant name {}, pnc {}",
+            courtCase.getCaseNo(), courtCase.getCourtCode(), courtCase.getDefendantName(), courtCase.getPnc());
 
         matcherService.getSearchResponse(courtCase)
             .doOnSuccess(searchResult -> telemetryService.trackOffenderMatchEvent(courtCase, searchResult.getSearchResponse()))

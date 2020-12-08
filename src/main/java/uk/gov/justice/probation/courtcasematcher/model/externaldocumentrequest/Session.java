@@ -66,9 +66,8 @@ public class Session {
     @JsonBackReference
     private final Job job;
 
-    // This is a temporary measure for tactical solution. ouCode will be available in this object in the longer term.
     public String getCourtCode() {
-        return courtCode != null ? courtCode : job.getDataJob().getDocument().getInfo().getInfoSourceDetail().getOuCode();
+        return courtCode != null ? courtCode : job.getDataJob().getDocument().getInfo().getOuCode();
     }
 
     public LocalDateTime getSessionStartTime() {

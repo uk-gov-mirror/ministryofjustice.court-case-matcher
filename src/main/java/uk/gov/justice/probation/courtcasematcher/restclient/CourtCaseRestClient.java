@@ -30,7 +30,7 @@ import uk.gov.justice.probation.courtcasematcher.event.CourtCaseFailureEvent;
 import uk.gov.justice.probation.courtcasematcher.event.CourtCaseSuccessEvent;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCase;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.GroupedOffenderMatches;
-import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.OffenderDetail;
+import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.ProbationStatusDetail;
 import uk.gov.justice.probation.courtcasematcher.restclient.exception.CourtCaseNotFoundException;
 import uk.gov.justice.probation.courtcasematcher.restclient.exception.CourtNotFoundException;
 
@@ -56,8 +56,8 @@ public class CourtCaseRestClient {
     private String matchesPostTemplate;
     @Value("${court-case-service.purge-absent-put-url-template}")
     private String purgeAbsentPutTemplate;
-    @Value("${court-case-service.offender-detail-get-url-template}")
-    private String offenderDetailGetTemplate;
+    @Value("${court-case-service.probation-status-detail-get-url-template}")
+    private String probationStatusDetailGetTemplate;
 
     @Value("${court-case-service.disable-authentication:false}")
     private Boolean disableAuthentication;
@@ -158,20 +158,15 @@ public class CourtCaseRestClient {
             });
     }
 
-    public Mono<String> getProbationStatus(String crn) {
-        final String path = String.format(offenderDetailGetTemplate, crn);
+    public Mono<ProbationStatusDetail> getProbationStatusDetail(String crn) {
+        final String path = String.format(probationStatusDetailGetTemplate, crn);
 
-        // Get the existing case. Not a problem if it's not there. So return a Mono.empty() if it's not
         return get(path)
             .retrieve()
-            .bodyToMono(OffenderDetail.class)
-            .map(offenderDetail -> {
-                log.info("GET succeeded for retrieving the offender probation status for path {}", path);
-                return offenderDetail.getProbationStatus();
-            })
+            .bodyToMono(ProbationStatusDetail.class)
             .onErrorResume((e) -> {
-                log.info("GET failed for retrieving the offender probation status for path {}. Will return empty status", path, e);
-                return Mono.just("");
+                log.info("GET failed for retrieving the offender probation status detail for path {}. Will return empty status", path, e);
+                return Mono.empty();
             });
     }
 
