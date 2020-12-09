@@ -1,6 +1,7 @@
 package uk.gov.justice.probation.courtcasematcher.restclient;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
@@ -61,8 +62,25 @@ public class OffenderSearchRestClientIntTest {
     }
 
     @Test
-    public void givenSingleMatchReturned_whenSearchWithPnc_thenReturnIt() {
+    public void givenSingleMatchReturned_whenSearchWithPncNoDob_thenReturnIt() {
         Name name = Name.builder().forename1("Arthur").surname("MORGAN").build();
+        Optional<SearchResponse> match = restClient.search(matchRequestFactory.buildFrom("2004/0012345U", name, LocalDate.of(1975, 1, 1))).blockOptional();
+
+        assertThat(match).isPresent();
+        assertThat(match.get().getMatchedBy()).isEqualTo(OffenderSearchMatchType.ALL_SUPPLIED);
+        assertThat(match.get().getMatches().size()).isEqualTo(1);
+        assertThat(match.get().isExactMatch()).isTrue();
+
+        Offender offender = match.get().getMatches().get(0).getOffender();
+        assertThat(offender.getOtherIds().getCrn()).isEqualTo("X346204");
+        assertThat(offender.getOtherIds().getCro()).isEqualTo("1234ABC");
+        assertThat(offender.getOtherIds().getPnc()).isEqualTo("2004/0012345U");
+    }
+
+    @Test
+    public void givenSingleMatchReturned_whenSearchWithPncWithDob_thenReturnIt() {
+        Name name = Name.builder().forename1("Arthur").surname("MORGAN").build();
+        matchRequestFactory.setUseDobWithPnc(true);
         Optional<SearchResponse> match = restClient.search(matchRequestFactory.buildFrom("2004/0012345U", name, LocalDate.of(1975, 1, 1))).blockOptional();
 
         assertThat(match).isPresent();
@@ -82,12 +100,10 @@ public class OffenderSearchRestClientIntTest {
         Mono<SearchResponse> matchMono = restClient.search(matchRequestFactory.buildFrom(null, name, LocalDate.of(1975, 1, 1)));
 
         StepVerifier.create(matchMono)
-            .consumeNextWith(match -> {
-                Assertions.assertAll(
-                    () -> assertThat(match.getMatchedBy()).isEqualTo(OffenderSearchMatchType.ALL_SUPPLIED),
-                    () -> assertThat(match.getMatches().size()).isEqualTo(1)
-                );
-            })
+            .consumeNextWith(match -> Assertions.assertAll(
+                () -> assertThat(match.getMatchedBy()).isEqualTo(OffenderSearchMatchType.ALL_SUPPLIED),
+                () -> assertThat(match.getMatches().size()).isEqualTo(1)
+            ))
             .verifyComplete();
     }
 
