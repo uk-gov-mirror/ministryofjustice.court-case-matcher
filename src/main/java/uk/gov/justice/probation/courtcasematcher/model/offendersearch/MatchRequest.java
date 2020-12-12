@@ -1,7 +1,10 @@
 package uk.gov.justice.probation.courtcasematcher.model.offendersearch;
 
 
-import com.amazonaws.util.StringUtils;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Objects;
+import java.util.Optional;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -11,16 +14,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import net.logstash.logback.encoder.org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCase;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Name;
-
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.Objects;
-import java.util.Optional;
 
 @Getter
 @Builder
@@ -50,7 +49,7 @@ public class MatchRequest {
         private boolean useDobWithPnc;
 
         public MatchRequest buildFrom(String pnc, Name fullName, LocalDate dateOfBirth) throws IllegalArgumentException {
-            if (fullName == null || StringUtils.isNullOrEmpty(fullName.getSurname())) {
+            if (fullName == null || StringUtils.isBlank(fullName.getSurname())) {
                 log.error(ERROR_NO_NAME);
                 throw new IllegalArgumentException(ERROR_NO_NAME);
             }
@@ -59,13 +58,13 @@ public class MatchRequest {
                                                 .pncNumber(pnc)
                                                 .surname(fullName.getSurname());
             if (!Objects.isNull(dateOfBirth)) {
-                if (useDobWithPnc || StringUtils.isNullOrEmpty(pnc)) {
+                if (useDobWithPnc || StringUtils.isBlank(pnc)) {
                     builder.dateOfBirth(dateOfBirth.format(DateTimeFormatter.ISO_DATE));
                 }
             }
 
             String forenames = fullName.getForenames();
-            if (!StringUtils.isNullOrEmpty(forenames)) {
+            if (!StringUtils.isBlank(forenames)) {
                 builder.firstName(forenames);
             }
             return builder.build();
