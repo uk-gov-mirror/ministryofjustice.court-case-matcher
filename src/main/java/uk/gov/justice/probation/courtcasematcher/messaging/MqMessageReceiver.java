@@ -4,8 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.eventbus.EventBus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.stereotype.Component;
 import uk.gov.justice.probation.courtcasematcher.model.MessageHeader;
@@ -16,9 +14,10 @@ import uk.gov.justice.probation.courtcasematcher.service.TelemetryService;
 
 @Slf4j
 @Component
-@ConditionalOnBean(name = "mqJmsListenerContainerFactory")
 @RequiredArgsConstructor
 public class MqMessageReceiver implements MessageReceiver {
+
+    private static final String CP_QUEUE = "CP_OutboundQueue";
 
     private final MessageProcessor messageProcessor;
 
@@ -29,12 +28,9 @@ public class MqMessageReceiver implements MessageReceiver {
 
     private final MessageParser<MessageType> parser;
 
-    @Value("${messaging.activemq.queueName}")
-    private String queueName;
-
-    @JmsListener(destination = "${messaging.activemq.queueName}")
+    @JmsListener(destination = CP_QUEUE)
     public void receive(String message) {
-        log.info("Received message from JMS, queue name {}", queueName);
+        log.info("Received message from JMS, queue name {}", CP_QUEUE);
         telemetryService.trackEvent(TelemetryEventType.COURT_LIST_MESSAGE_RECEIVED);
         process(message);
     }
