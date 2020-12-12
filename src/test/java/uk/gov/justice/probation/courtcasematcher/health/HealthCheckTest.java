@@ -16,10 +16,8 @@ import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
-import reactor.core.publisher.Mono;
 import uk.gov.justice.probation.courtcasematcher.TestConfig;
 import uk.gov.justice.probation.courtcasematcher.application.TestMessagingConfig;
-import uk.gov.justice.probation.courtcasematcher.application.healthchecks.SqsCheck;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static io.restassured.RestAssured.given;
@@ -38,9 +36,6 @@ public class HealthCheckTest {
     @Autowired
     public JmsHealthIndicator jmsHealthIndicator;
 
-    @Autowired
-    private SqsCheck sqsCheck;
-
     @LocalServerPort
     int port;
 
@@ -58,7 +53,6 @@ public class HealthCheckTest {
     @Test
     public void testUp() {
         Mockito.when(jmsHealthIndicator.getHealth(any(Boolean.class))).thenReturn(Health.up().build());
-        Mockito.when(sqsCheck.getHealth(any(Boolean.class))).thenReturn(Mono.just(Health.up().build()));
 
         String response = given()
             .when()
@@ -77,7 +71,6 @@ public class HealthCheckTest {
     @Test
     public void whenJmsDown_thenDownWithStatus503() {
         Mockito.when(jmsHealthIndicator.getHealth(any(Boolean.class))).thenReturn(Health.down().build());
-        Mockito.when(sqsCheck.getHealth(any(Boolean.class))).thenReturn(Mono.just(Health.down().build()));
         String response = given()
             .when()
             .get("/health")
