@@ -36,7 +36,7 @@ aws:
 
 messaging:
   activemq:
-    enabled: true
+    enabled: false
   sqs:
     enabled: true
     queue-name: "crime-portal-gateway-queue"

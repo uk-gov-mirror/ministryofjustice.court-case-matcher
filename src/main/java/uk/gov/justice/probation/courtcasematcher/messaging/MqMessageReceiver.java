@@ -4,8 +4,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.eventbus.EventBus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.jms.annotation.JmsListener;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import uk.gov.justice.probation.courtcasematcher.model.MessageHeader;
 import uk.gov.justice.probation.courtcasematcher.model.MessageType;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.ExternalDocumentRequest;
@@ -13,7 +14,8 @@ import uk.gov.justice.probation.courtcasematcher.service.TelemetryEventType;
 import uk.gov.justice.probation.courtcasematcher.service.TelemetryService;
 
 @Slf4j
-@Component
+@Service
+@ConditionalOnProperty(value="messaging.activemq.enabled", havingValue = "true")
 @RequiredArgsConstructor
 public class MqMessageReceiver implements MessageReceiver {
 
