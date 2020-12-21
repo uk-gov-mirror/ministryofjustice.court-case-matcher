@@ -1,7 +1,6 @@
 package uk.gov.justice.probation.courtcasematcher.restclient;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
@@ -57,8 +56,8 @@ public class OffenderSearchRestClientIntTest {
 
         Offender offender = match.get().getMatches().get(0).getOffender();
         assertThat(offender.getOtherIds().getCrn()).isEqualTo("X346204");
-        assertThat(offender.getOtherIds().getCro()).isEqualTo("1234ABC");
-        assertThat(offender.getOtherIds().getPnc()).isEqualTo("ABCD1234");
+        assertThat(offender.getOtherIds().getCroNumber()).isEqualTo("1234ABC");
+        assertThat(offender.getOtherIds().getPncNumber()).isEqualTo("ABCD1234");
     }
 
     @Test
@@ -73,8 +72,8 @@ public class OffenderSearchRestClientIntTest {
 
         Offender offender = match.get().getMatches().get(0).getOffender();
         assertThat(offender.getOtherIds().getCrn()).isEqualTo("X346204");
-        assertThat(offender.getOtherIds().getCro()).isEqualTo("1234ABC");
-        assertThat(offender.getOtherIds().getPnc()).isEqualTo("2004/0012345U");
+        assertThat(offender.getOtherIds().getCroNumber()).isEqualTo("1234ABC");
+        assertThat(offender.getOtherIds().getPncNumber()).isEqualTo("2004/0012345U");
     }
 
     @Test
@@ -90,8 +89,8 @@ public class OffenderSearchRestClientIntTest {
 
         Offender offender = match.get().getMatches().get(0).getOffender();
         assertThat(offender.getOtherIds().getCrn()).isEqualTo("X346204");
-        assertThat(offender.getOtherIds().getCro()).isEqualTo("1234ABC");
-        assertThat(offender.getOtherIds().getPnc()).isEqualTo("2004/0012345U");
+        assertThat(offender.getOtherIds().getCroNumber()).isEqualTo("1234ABC");
+        assertThat(offender.getOtherIds().getPncNumber()).isEqualTo("2004/0012345U");
     }
 
     @Test
@@ -131,13 +130,13 @@ public class OffenderSearchRestClientIntTest {
 
         Offender offender1 = match.get().getMatches().get(0).getOffender();
         assertThat(offender1.getOtherIds().getCrn()).isEqualTo("Y346123");
-        assertThat(offender1.getOtherIds().getCro()).isEqualTo("2234DEF");
-        assertThat(offender1.getOtherIds().getPnc()).isEqualTo("BBCD1567");
+        assertThat(offender1.getOtherIds().getCroNumber()).isEqualTo("2234DEF");
+        assertThat(offender1.getOtherIds().getPncNumber()).isEqualTo("BBCD1567");
 
         Offender offender2 = match.get().getMatches().get(1).getOffender();
         assertThat(offender2.getOtherIds().getCrn()).isEqualTo("Z346124");
-        assertThat(offender2.getOtherIds().getCro()).isEqualTo("3234DEG");
-        assertThat(offender2.getOtherIds().getPnc()).isEqualTo("CBCD1568");
+        assertThat(offender2.getOtherIds().getCroNumber()).isEqualTo("3234DEG");
+        assertThat(offender2.getOtherIds().getPncNumber()).isEqualTo("CBCD1568");
     }
 
     @Test

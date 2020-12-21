@@ -161,8 +161,8 @@ public class CaseMapper {
                 .breach(Optional.ofNullable(statusDetail).map(ProbationStatusDetail::getInBreach).orElse(null))
                 .previouslyKnownTerminationDate(Optional.ofNullable(statusDetail).map(ProbationStatusDetail::getPreviouslyKnownTerminationDate).orElse(null))
                 .crn(match.getOffender().getOtherIds().getCrn())
-                .cro(match.getOffender().getOtherIds().getCro())
-                .pnc(match.getOffender().getOtherIds().getPnc())
+                .cro(match.getOffender().getOtherIds().getCroNumber())
+                .pnc(match.getOffender().getOtherIds().getPncNumber())
                 .build();
         }
 
@@ -187,8 +187,8 @@ public class CaseMapper {
             .confirmed(false)
             .matchType(matchType)
             .matchIdentifiers(MatchIdentifiers.builder()
-                .pnc(match.getOffender().getOtherIds().getPnc())
-                .cro(match.getOffender().getOtherIds().getCro())
+                .pnc(match.getOffender().getOtherIds().getPncNumber())
+                .cro(match.getOffender().getOtherIds().getCroNumber())
                 .crn(match.getOffender().getOtherIds().getCrn())
                 .build())
             .build();
