@@ -10,8 +10,8 @@
         "gender": "Male",
         "otherIds": {
           "crn": "X346204",
-          "cro": "1234ABC",
-          "pnc": "2004/0012345U"
+          "croNumber": "1234ABC",
+          "pncNumber": "2004/0012345U"
         },
         "contactDetails": {},
         "offenderProfile": {

@@ -67,8 +67,8 @@ class MatcherServiceTest {
 
     private final OtherIds otherIds = OtherIds.builder()
         .crn(CRN)
-        .cro("CRO")
-        .pnc(PNC)
+        .croNumber("CRO")
+        .pncNumber(PNC)
         .build();
     private final Offender offender = Offender.builder()
             .otherIds(otherIds)

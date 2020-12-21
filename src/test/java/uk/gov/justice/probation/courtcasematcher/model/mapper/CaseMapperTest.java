@@ -147,7 +147,7 @@ class CaseMapperTest {
     @Test
     void givenSingleMatch_whenMapNewFromCaseAndSearchResponse_thenCreateNewCaseWithSingleMatch() {
         Match match = Match.builder().offender(Offender.builder()
-            .otherIds(OtherIds.builder().crn(CRN).cro(CRO).pnc(PNC).build())
+            .otherIds(OtherIds.builder().crn(CRN).croNumber(CRO).pncNumber(PNC).build())
             .build())
             .build();
 
@@ -162,6 +162,7 @@ class CaseMapperTest {
 
         assertThat(courtCaseNew).isNotSameAs(courtCase);
         assertThat(courtCaseNew.getCrn()).isEqualTo(CRN);
+        assertThat(courtCaseNew.getPnc()).isEqualTo(PNC);
         assertThat(courtCaseNew.getProbationStatus()).isEqualTo("Current");
         assertThat(courtCaseNew.getPreviouslyKnownTerminationDate()).isNull();
         assertThat(courtCaseNew.getBreach()).isTrue();
@@ -174,7 +175,7 @@ class CaseMapperTest {
     @Test
     void givenSingleMatchOnName_whenMapNewFromCaseAndSearchResponse_thenCreateNewCaseWithSingleMatchButNoCrn() {
         Match match = Match.builder().offender(Offender.builder()
-            .otherIds(OtherIds.builder().crn(CRN).cro(CRO).pnc(PNC).build())
+            .otherIds(OtherIds.builder().crn(CRN).croNumber(CRO).pncNumber(PNC).build())
             .build())
             .build();
 
@@ -201,7 +202,7 @@ class CaseMapperTest {
     @Test
     void givenSingleMatchWithNoProbationStatus_whenMapNewFromCaseAndSearchResponse_thenCreateNewCaseWithSingleMatch() {
         Match match = Match.builder().offender(Offender.builder()
-            .otherIds(OtherIds.builder().crn(CRN).cro(CRO).pnc(PNC).build())
+            .otherIds(OtherIds.builder().crn(CRN).croNumber(CRO).pncNumber(PNC).build())
             .build())
             .build();
 
@@ -227,7 +228,7 @@ class CaseMapperTest {
     @Test
     void givenMultipleMatches_whenMapNewFromCaseAndSearchResponse_thenCreateNewCaseWithListOfMatches() {
         Match match1 = Match.builder().offender(Offender.builder()
-            .otherIds(OtherIds.builder().crn(CRN).cro(CRO).pnc(PNC).build())
+            .otherIds(OtherIds.builder().crn(CRN).croNumber(CRO).pncNumber(PNC).build())
             .build())
             .build();
         Match match2 = Match.builder().offender(Offender.builder()
