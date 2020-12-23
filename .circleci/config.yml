@@ -6,7 +6,7 @@ commands:
       - aws-cli/install
       - kubernetes/install
       - helm/install-helm-client:
-          version: v2.13.1
+          version: v3.2.4
       - run:
           name: Setup kubectl
           command: |
@@ -38,8 +38,7 @@ commands:
           command: |
             APP_VERSION=$(cat ~/app/app_version.txt)
             helm upgrade court-case-matcher ~/git/helm_deploy/court-case-matcher/. \
-              --install --wait --force --reset-values --timeout 360 \
-              --tiller-namespace=${KUBE_ENV_NAMESPACE} \
+              --install --wait --reset-values --timeout 360 \
               --namespace=${KUBE_ENV_NAMESPACE} \
               --description="${APP_VERSION} - ${CIRCLE_BUILD_URL}" \
               --values ~/git/helm_deploy/values-<< parameters.env >>.yaml \
@@ -58,7 +57,7 @@ executors:
 orbs:
   aws-cli: circleci/aws-cli@0.1.13
   kubernetes: circleci/kubernetes@0.3.0
-  helm: circleci/helm@0.1.2
+  helm: circleci/helm@1.1.2
   snyk: snyk/snyk@0.0.10
   dps: ministryofjustice/dps@1.2.1
 
