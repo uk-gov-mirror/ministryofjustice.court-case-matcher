@@ -114,7 +114,7 @@ dependencies {
     testCompile 'org.apache.activemq:artemis-junit:2.16.0'
     testAnnotationProcessor 'org.projectlombok:lombok'
 
-    agentDeps 'com.microsoft.azure:applicationinsights-agent:3.0.0'
+    agentDeps 'com.microsoft.azure:applicationinsights-agent:3.0.2'
 }
 
 test {
