@@ -1,10 +1,5 @@
 package uk.gov.justice.probation.courtcasematcher.service;
 
-import java.time.format.DateTimeFormatter;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.stream.Collectors;
 import com.microsoft.applicationinsights.TelemetryClient;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -12,6 +7,12 @@ import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCas
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Case;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Info;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.SearchResponse;
+
+import java.time.format.DateTimeFormatter;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static java.util.Optional.ofNullable;
 
@@ -28,6 +29,7 @@ public class TelemetryService {
     static final String PNC_KEY = "pnc";
     static final String CRNS_KEY = "crns";
     static final String HEARING_DATE_KEY = "hearingDate";
+    private static final String SQS_MESSAGE_ID_KEY = "sqsMessageId";
 
     private final TelemetryClient telemetryClient;
 
@@ -107,5 +109,12 @@ public class TelemetryService {
         ofNullable(courtCase.getPnc())
             .ifPresent((pnc) -> properties.put(PNC_KEY, pnc));
         return properties;
+    }
+
+    public void trackSQSMessageEvent(String messageID) {
+        Map<String, String> properties = new HashMap<>(MAX_PROPERTY_COUNT);
+        ofNullable(messageID)
+            .ifPresent((code) -> properties.put(SQS_MESSAGE_ID_KEY, messageID));
+        telemetryClient.trackEvent(TelemetryEventType.COURT_LIST_MESSAGE_RECEIVED.eventName, properties, Collections.emptyMap());
     }
 }

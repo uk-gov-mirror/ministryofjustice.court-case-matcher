@@ -10,10 +10,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.justice.probation.courtcasematcher.event.CourtCaseFailureEvent;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.ExternalDocumentRequest;
-import uk.gov.justice.probation.courtcasematcher.service.TelemetryEventType;
 import uk.gov.justice.probation.courtcasematcher.service.TelemetryService;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -45,7 +44,7 @@ class SqsMessageReceiverTest {
         messageReceiver.receive("message", "MessageID");
 
         verify(messageProcessor).process(externalDocumentRequest);
-        verify(telemetryService).trackEvent(TelemetryEventType.COURT_LIST_MESSAGE_RECEIVED);
+        verify(telemetryService).trackSQSMessageEvent("MessageID");
     }
 
     @DisplayName("Given a valid message then track and process")
@@ -58,7 +57,7 @@ class SqsMessageReceiverTest {
             fail("Expected a RuntimeException");
         }
         catch (RuntimeException ex) {
-            verify(telemetryService).trackEvent(TelemetryEventType.COURT_LIST_MESSAGE_RECEIVED);
+            verify(telemetryService).trackSQSMessageEvent("MessageID");
             verify(eventBus).post(any(CourtCaseFailureEvent.class));
         }
     }
