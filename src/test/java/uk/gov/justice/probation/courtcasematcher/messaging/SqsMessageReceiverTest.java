@@ -43,7 +43,7 @@ class SqsMessageReceiverTest {
 
         messageReceiver.receive("message", "MessageID");
 
-        verify(messageProcessor).process(externalDocumentRequest);
+        verify(messageProcessor).process(externalDocumentRequest, "MessageID");
         verify(telemetryService).trackSQSMessageEvent("MessageID");
     }
 

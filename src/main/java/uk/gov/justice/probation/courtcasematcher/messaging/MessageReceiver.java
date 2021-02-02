@@ -2,17 +2,18 @@ package uk.gov.justice.probation.courtcasematcher.messaging;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.eventbus.EventBus;
-import javax.validation.ConstraintViolationException;
 import uk.gov.justice.probation.courtcasematcher.event.CourtCaseFailureEvent;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.ExternalDocumentRequest;
+
+import javax.validation.ConstraintViolationException;
 
 public interface MessageReceiver {
 
     ExternalDocumentRequest parse(String message) throws JsonProcessingException;
 
-    default void process(String message) {
+    default void process(String message, String messageId) {
         try {
-            getMessageProcessor().process(parse(message));
+            getMessageProcessor().process(parse(message), messageId);
         }
         catch (Exception ex) {
             CourtCaseFailureEvent.CourtCaseFailureEventBuilder builder = CourtCaseFailureEvent.builder()

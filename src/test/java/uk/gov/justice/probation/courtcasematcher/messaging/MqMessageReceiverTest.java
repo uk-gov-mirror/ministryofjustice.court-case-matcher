@@ -1,14 +1,8 @@
 package uk.gov.justice.probation.courtcasematcher.messaging;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.Set;
 import com.fasterxml.jackson.dataformat.xml.JacksonXmlModule;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.google.common.eventbus.EventBus;
-import javax.validation.ConstraintViolation;
-import javax.validation.Validator;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -22,8 +16,16 @@ import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.E
 import uk.gov.justice.probation.courtcasematcher.service.TelemetryEventType;
 import uk.gov.justice.probation.courtcasematcher.service.TelemetryService;
 
+import javax.validation.ConstraintViolation;
+import javax.validation.Validator;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Set;
+
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -74,7 +76,7 @@ class MqMessageReceiverTest {
         messageReceiver.receive(multiSessionXml);
 
         verify(telemetryService).trackEvent(TelemetryEventType.COURT_LIST_MESSAGE_RECEIVED);
-        verify(messageProcessor).process(any(ExternalDocumentRequest.class));
+        verify(messageProcessor).process(any(ExternalDocumentRequest.class), isNull());
     }
 
     @DisplayName("An XML message which is invalid")

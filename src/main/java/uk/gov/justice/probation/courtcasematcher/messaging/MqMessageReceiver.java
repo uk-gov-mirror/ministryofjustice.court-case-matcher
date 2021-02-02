@@ -34,7 +34,7 @@ public class MqMessageReceiver implements MessageReceiver {
     public void receive(String message) {
         log.info("Received message from JMS, queue name {}", CP_QUEUE);
         telemetryService.trackEvent(TelemetryEventType.COURT_LIST_MESSAGE_RECEIVED);
-        process(message);
+        process(message, null);
     }
 
     @Override

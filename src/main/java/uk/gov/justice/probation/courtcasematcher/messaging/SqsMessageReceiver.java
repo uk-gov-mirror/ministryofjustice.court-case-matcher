@@ -39,7 +39,7 @@ public class SqsMessageReceiver implements MessageReceiver {
     public void receive(@NotEmpty String message, @Header("MessageId") String messageId) {
         log.info("Received message from SQS queue {} with messageId: {}", queueName, messageId);
         telemetryService.trackSQSMessageEvent(messageId);
-        process(message);
+        process(message, messageId);
     }
 
     public ExternalDocumentRequest parse(String message) throws JsonProcessingException {
