@@ -111,7 +111,7 @@ dependencies {
     testImplementation 'io.rest-assured:xml-path:4.3.3'
     testCompile "com.github.tomakehurst:wiremock-jre8:2.26.3"
     testCompile 'org.mockito:mockito-core:3.7.7'
-    testCompile 'org.apache.activemq:artemis-junit:2.16.0'
+    testCompile 'org.apache.activemq:artemis-junit:2.17.0'
     testAnnotationProcessor 'org.projectlombok:lombok'
 
     agentDeps 'com.microsoft.azure:applicationinsights-agent:3.0.2'
