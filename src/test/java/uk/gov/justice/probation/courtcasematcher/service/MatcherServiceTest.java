@@ -134,7 +134,7 @@ class MatcherServiceTest {
 
         assertThat(searchResult).isNull();
         LoggingEvent loggingEvent = captureFirstLogEvent();
-        assertThat(loggingEvent.getLevel()).isEqualTo(Level.ERROR);
+        assertThat(loggingEvent.getLevel()).isEqualTo(Level.INFO);
         assertThat(loggingEvent.getFormattedMessage().trim())
             .contains("Match results for caseNo: 1600032952, courtCode: SHF - Empty response from OffenderSearchRestClient");
         verifyNoMoreInteractions(courtCaseRestClient);

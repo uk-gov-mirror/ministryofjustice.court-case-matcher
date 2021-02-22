@@ -70,7 +70,7 @@ public class MatcherService {
                 .map(this::combine)
                 .doOnSuccess((data) -> {
                     if (data == null) {
-                        log.error(String.format("Match results for caseNo: %s, courtCode: %s - Empty response from OffenderSearchRestClient",
+                        log.info(String.format("Match results for caseNo: %s, courtCode: %s - Empty response from OffenderSearchRestClient",
                                 courtCase.getCaseNo(), courtCase.getCourtCode()));
                     }
                 })
