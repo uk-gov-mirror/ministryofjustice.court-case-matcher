@@ -1,5 +1,8 @@
 package uk.gov.justice.probation.courtcasematcher.model.mapper;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -11,11 +14,12 @@ import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.GroupedO
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.MatchIdentifiers;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.Offence;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.OffenderMatch;
-import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.ProbationStatusDetail;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Case;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Name;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.Match;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.MatchType;
+import uk.gov.justice.probation.courtcasematcher.model.offendersearch.Offender;
+import uk.gov.justice.probation.courtcasematcher.model.offendersearch.ProbationStatus;
 
 import java.util.Collections;
 import java.util.List;
@@ -24,16 +28,17 @@ import java.util.stream.Collectors;
 
 import static java.util.Comparator.comparing;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE, force = true)
+@AllArgsConstructor
 @Component
 @Slf4j
 public class CaseMapper {
 
+    @Value("${probation-status-reference.default}")
     private final String defaultProbationStatus;
 
-    public CaseMapper(@Value("${probation-status-reference.default}") String defaultProbationStatus) {
-        super();
-        this.defaultProbationStatus = defaultProbationStatus;
-    }
+    @Value("${probation-status-reference.nonExactMatch}")
+    private final String nonExactProbationStatus;
 
     public CourtCase newFromCase(Case aCase) {
         return getCourtCaseBuilderFromCase(aCase)
@@ -60,6 +65,7 @@ public class CaseMapper {
             .probationStatus(Optional.ofNullable(probationStatus).orElse(defaultProbationStatus))
             .nationality1(courtCase.getNationality1())
             .nationality2(courtCase.getNationality2())
+            .preSentenceActivity(courtCase.isPreSentenceActivity())
             .offences(courtCase.getOffences());
     }
 
@@ -89,11 +95,11 @@ public class CaseMapper {
         return offences.stream()
             .sorted(comparing(uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Offence::getSeq))
             .map(offence -> Offence.builder()
-                                .offenceTitle(offence.getTitle())
-                                .offenceSummary(offence.getSum())
-                                .sequenceNumber(offence.getSeq())
-                                .act(offence.getAs())
-                                .build())
+                .offenceTitle(offence.getTitle())
+                .offenceSummary(offence.getSum())
+                .sequenceNumber(offence.getSeq())
+                .act(offence.getAs())
+                .build())
             .collect(Collectors.toList());
     }
 
@@ -110,9 +116,9 @@ public class CaseMapper {
 
     public static String nameFrom(String defendantName, Name name) {
         return Optional.ofNullable(defendantName)
-                        .orElse(Optional.ofNullable(name)
-                                .map(Name::getFullName)
-                                .orElse(null));
+            .orElse(Optional.ofNullable(name)
+                .map(Name::getFullName)
+                .orElse(null));
     }
 
     public CourtCase merge(Case incomingCase, CourtCase existingCourtCase) {
@@ -147,29 +153,29 @@ public class CaseMapper {
 
     public CourtCase newFromCourtCaseWithMatches(CourtCase incomingCase, MatchDetails matchDetails) {
 
-        ProbationStatusDetail statusDetail = matchDetails.getProbationStatusDetail();
-
-        CourtCaseBuilder courtCaseBuilder = getCourtCaseBuilderFromCase(incomingCase, Optional.ofNullable(statusDetail)
-                                                                                        .map(ProbationStatusDetail::getProbationStatus)
-                                                                                        .orElse(defaultProbationStatus))
-                                            .groupedOffenderMatches(buildGroupedOffenderMatch(matchDetails.getMatches(), matchDetails.getMatchType()));
+        String nonExactProbationStatus = matchDetails.getMatches().size() >= 1 ? this.nonExactProbationStatus : defaultProbationStatus;
+        CourtCaseBuilder courtCaseBuilder = getCourtCaseBuilderFromCase(incomingCase, nonExactProbationStatus)
+            .groupedOffenderMatches(buildGroupedOffenderMatch(matchDetails.getMatches(), matchDetails.getMatchType()));
 
         if (matchDetails.isExactMatch()) {
-            Match match = matchDetails.getMatches().get(0);
-
+            Offender offender = matchDetails.getMatches().get(0).getOffender();
+            ProbationStatus probationStatus = offender.getProbationStatus();
             courtCaseBuilder
-                .breach(Optional.ofNullable(statusDetail).map(ProbationStatusDetail::getInBreach).orElse(null))
-                .previouslyKnownTerminationDate(Optional.ofNullable(statusDetail).map(ProbationStatusDetail::getPreviouslyKnownTerminationDate).orElse(null))
-                .crn(match.getOffender().getOtherIds().getCrn())
-                .cro(match.getOffender().getOtherIds().getCroNumber())
-                .pnc(match.getOffender().getOtherIds().getPncNumber())
+                .breach(Optional.ofNullable(probationStatus).map(ProbationStatus::getInBreach).orElse(null))
+                .previouslyKnownTerminationDate(
+                    Optional.ofNullable(probationStatus).map(ProbationStatus::getPreviouslyKnownTerminationDate).orElse(null))
+                .probationStatus(Optional.ofNullable(probationStatus).map(ProbationStatus::getStatus).orElse(defaultProbationStatus))
+                .preSentenceActivity(Optional.ofNullable(probationStatus).map(ProbationStatus::isPreSentenceActivity).orElse(false))
+                .crn(offender.getOtherIds().getCrn())
+                .cro(offender.getOtherIds().getCroNumber())
+                .pnc(offender.getOtherIds().getPncNumber())
                 .build();
         }
 
         return courtCaseBuilder.build();
     }
 
-    private GroupedOffenderMatches buildGroupedOffenderMatch (List<Match> matches, MatchType matchType) {
+    private GroupedOffenderMatches buildGroupedOffenderMatch(List<Match> matches, MatchType matchType) {
 
         if (matches == null || matches.isEmpty()) {
             return GroupedOffenderMatches.builder().matches(Collections.emptyList()).build();

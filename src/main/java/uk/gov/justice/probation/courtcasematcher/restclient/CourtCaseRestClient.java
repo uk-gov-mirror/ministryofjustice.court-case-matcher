@@ -158,7 +158,8 @@ public class CourtCaseRestClient {
             });
     }
 
-    public Mono<ProbationStatusDetail> getProbationStatusDetail(String crn) {
+    @Deprecated(forRemoval = true)
+    public Mono<ProbationStatusDetail> getProbationStatus(String crn) {
         final String path = String.format(probationStatusDetailGetTemplate, crn);
 
         return get(path)

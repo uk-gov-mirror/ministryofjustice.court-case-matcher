@@ -15,6 +15,7 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
+import uk.gov.justice.probation.courtcasematcher.application.FeatureFlags;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCase;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.ProbationStatusDetail;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Name;
@@ -23,6 +24,7 @@ import uk.gov.justice.probation.courtcasematcher.model.offendersearch.MatchReque
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.Offender;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.OffenderSearchMatchType;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.OtherIds;
+import uk.gov.justice.probation.courtcasematcher.model.offendersearch.ProbationStatus;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.SearchResponse;
 import uk.gov.justice.probation.courtcasematcher.restclient.CourtCaseRestClient;
 import uk.gov.justice.probation.courtcasematcher.restclient.OffenderSearchRestClient;
@@ -36,18 +38,16 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.slf4j.LoggerFactory.getLogger;
+import static uk.gov.justice.probation.courtcasematcher.application.FeatureFlags.USE_OFFENDER_SEARCH_FOR_PROBATION_STATUS;
 
 @ExtendWith(MockitoExtension.class)
 class MatcherServiceTest {
     private static final String COURT_CODE = "SHF";
     private static final String CASE_NO = "1600032952";
     private static final String CRN = "X123456";
-    private static final String PROBATION_STATUS = "Current";
-    private static final String DEFAULT_PROBATION_STATUS = "No record";
-    private static final String MATCHES_PROBATION_STATUS = "Possible nDelius record";
+    private static final String PROBATION_STATUS = "CURRENT";
     private static final String PNC = "PNC";
 
     private static final LocalDate DEF_DOB = LocalDate.of(2000, 6, 17);
@@ -64,7 +64,6 @@ class MatcherServiceTest {
         .pnc(PNC)
         .build();
 
-
     private final OtherIds otherIds = OtherIds.builder()
         .crn(CRN)
         .croNumber("CRO")
@@ -72,6 +71,9 @@ class MatcherServiceTest {
         .build();
     private final Offender offender = Offender.builder()
             .otherIds(otherIds)
+            .probationStatus(ProbationStatus.builder()
+                .status(PROBATION_STATUS)
+                .build())
             .build();
     private final SearchResponse singleExactMatch = SearchResponse.builder()
             .matches(singletonList(Match.builder()
@@ -93,6 +95,8 @@ class MatcherServiceTest {
             .matchedBy(OffenderSearchMatchType.NOTHING)
             .matches(Collections.emptyList())
             .build();
+
+    private FeatureFlags featureFlags;
 
     @Mock
     private CourtCaseRestClient courtCaseRestClient;
@@ -116,13 +120,14 @@ class MatcherServiceTest {
 
     @BeforeEach
     public void setUp() {
+        featureFlags = new FeatureFlags();
+        featureFlags.setFlagValue(USE_OFFENDER_SEARCH_FOR_PROBATION_STATUS, true);
+
         MockitoAnnotations.openMocks(this);
         Logger logger = (Logger) getLogger(LoggerFactory.getLogger(MatcherService.class).getName());
         logger.addAppender(mockAppender);
 
-        matcherService =
-            new MatcherService(courtCaseRestClient, offenderSearchRestClient, matchRequestFactory, DEFAULT_PROBATION_STATUS, MATCHES_PROBATION_STATUS);
-
+        matcherService = new MatcherService(featureFlags, courtCaseRestClient, offenderSearchRestClient, matchRequestFactory);
     }
 
     @Test
@@ -137,7 +142,6 @@ class MatcherServiceTest {
         assertThat(loggingEvent.getLevel()).isEqualTo(Level.INFO);
         assertThat(loggingEvent.getFormattedMessage().trim())
             .contains("Match results for caseNo: 1600032952, courtCode: SHF - Empty response from OffenderSearchRestClient");
-        verifyNoMoreInteractions(courtCaseRestClient);
     }
 
     @Test
@@ -153,7 +157,6 @@ class MatcherServiceTest {
             .contains("Unable to create MatchRequest for caseNo: 1600032952, courtCode: SHF");
         assertThat(loggingEvent.getThrowableProxy().getClassName()).isEqualTo("java.lang.IllegalArgumentException");
         assertThat(loggingEvent.getThrowableProxy().getMessage()).isEqualTo("This is the reason");
-        verifyNoMoreInteractions(courtCaseRestClient);
     }
 
     @Test
@@ -167,23 +170,20 @@ class MatcherServiceTest {
         assertThat(searchResult.getMatchRequest()).isEqualTo(matchRequest);
         assertThat(searchResponse.getMatches()).hasSize(2);
         assertThat(searchResponse.getMatchedBy()).isSameAs(OffenderSearchMatchType.ALL_SUPPLIED);
-        assertThat(searchResponse.getProbationStatusDetail().getProbationStatus()).isEqualTo(MATCHES_PROBATION_STATUS);
     }
 
     @Test
     void givenMatchesToSingleOffender_whenSearchResponse_thenReturnWithProbationStatus(){
-        ProbationStatusDetail detail = ProbationStatusDetail.builder().probationStatus(PROBATION_STATUS).build();
-
         when(matchRequestFactory.buildFrom(COURT_CASE)).thenReturn(matchRequest);
         when(offenderSearchRestClient.search(matchRequest)).thenReturn(Mono.just(singleExactMatch));
-        when(courtCaseRestClient.getProbationStatusDetail(CRN)).thenReturn(Mono.just(detail));
 
         var searchResult = matcherService.getSearchResponse(COURT_CASE).block();
         var searchResponse = searchResult.getSearchResponse();
 
         assertThat(searchResult.getMatchRequest()).isEqualTo(matchRequest);
         assertThat(searchResponse.getMatchedBy()).isSameAs(OffenderSearchMatchType.ALL_SUPPLIED);
-        assertThat(searchResponse.getProbationStatusDetail()).isSameAs(detail);
+        assertThat(searchResponse.getMatches().size()).isEqualTo(1);
+        assertThat(searchResponse.getMatches().get(0).getOffender()).isEqualTo(offender);
     }
 
     @Test
@@ -197,7 +197,36 @@ class MatcherServiceTest {
         assertThat(searchResult.getMatchRequest()).isEqualTo(matchRequest);
         assertThat(searchResponse.getMatches()).hasSize(0);
         assertThat(searchResponse.getMatchedBy()).isSameAs(OffenderSearchMatchType.NOTHING);
-        assertThat(searchResponse.getProbationStatusDetail().getProbationStatus()).isEqualTo(DEFAULT_PROBATION_STATUS);
+    }
+
+    @Deprecated(forRemoval = true)
+    @Test
+    void givenUseCourtCaseServiceForProbationStatus_whenMatchCalledUseService_thenUpdateSingleMatch(){
+        featureFlags.setFlagValue(USE_OFFENDER_SEARCH_FOR_PROBATION_STATUS, false);
+
+        Offender offender = Offender.builder()
+            .otherIds(otherIds)
+            .build();
+        SearchResponse singleExactMatch = SearchResponse.builder()
+            .matches(singletonList(Match.builder()
+                .offender(offender)
+                .build()))
+            .matchedBy(OffenderSearchMatchType.ALL_SUPPLIED)
+            .build();
+
+        when(matchRequestFactory.buildFrom(COURT_CASE)).thenReturn(matchRequest);
+        when(offenderSearchRestClient.search(matchRequest)).thenReturn(Mono.just(singleExactMatch));
+        when(courtCaseRestClient.getProbationStatus(CRN)).thenReturn(Mono.just(ProbationStatusDetail.builder().probationStatus("PREVIOUSLY_KNOWN").build()));
+
+        var searchResult = matcherService.getSearchResponse(COURT_CASE).block();
+
+        SearchResponse searchResponse = searchResult.getSearchResponse();
+        assertThat(searchResponse.isExactMatch()).isTrue();
+        ProbationStatus probationStatus = searchResponse.getMatches().get(0).getOffender().getProbationStatus();
+        assertThat(probationStatus.getStatus()).isEqualTo("PREVIOUSLY_KNOWN");
+        assertThat(probationStatus.getInBreach()).isNull();
+        assertThat(probationStatus.getPreviouslyKnownTerminationDate()).isNull();
+        assertThat(probationStatus.isPreSentenceActivity()).isFalse();
     }
 
     private LoggingEvent captureFirstLogEvent() {

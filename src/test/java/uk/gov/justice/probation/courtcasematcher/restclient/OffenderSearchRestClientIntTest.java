@@ -46,31 +46,35 @@ public class OffenderSearchRestClientIntTest {
 
     @Test
     public void givenSingleMatchReturned_whenSearch_thenReturnIt() {
-        Name name = Name.builder().forename1("Arthur").surname("MORGAN").build();
-        Optional<SearchResponse> match = restClient.search(matchRequestFactory.buildFrom(null, name, LocalDate.of(1975, 1, 1))).blockOptional();
+        var name = Name.builder().forename1("Arthur").surname("MORGAN").build();
+        var match = restClient.search(matchRequestFactory.buildFrom(null, name, LocalDate.of(1975, 1, 1))).blockOptional();
 
         assertThat(match).isPresent();
         assertThat(match.get().getMatchedBy()).isEqualTo(OffenderSearchMatchType.ALL_SUPPLIED);
         assertThat(match.get().getMatches().size()).isEqualTo(1);
         assertThat(match.get().isExactMatch()).isTrue();
 
-        Offender offender = match.get().getMatches().get(0).getOffender();
+        var offender = match.get().getMatches().get(0).getOffender();
         assertThat(offender.getOtherIds().getCrn()).isEqualTo("X346204");
         assertThat(offender.getOtherIds().getCroNumber()).isEqualTo("1234ABC");
         assertThat(offender.getOtherIds().getPncNumber()).isEqualTo("ABCD1234");
+        assertThat(offender.getProbationStatus().getStatus()).isEqualTo("CURRENT");
+        assertThat(offender.getProbationStatus().getInBreach()).isTrue();
+        assertThat(offender.getProbationStatus().isPreSentenceActivity()).isFalse();
+        assertThat(offender.getProbationStatus().getPreviouslyKnownTerminationDate()).isEqualTo(LocalDate.of(2020, Month.FEBRUARY, 2));
     }
 
     @Test
     public void givenSingleMatchReturned_whenSearchWithPncNoDob_thenReturnIt() {
-        Name name = Name.builder().forename1("Arthur").surname("MORGAN").build();
-        Optional<SearchResponse> match = restClient.search(matchRequestFactory.buildFrom("2004/0012345U", name, LocalDate.of(1975, 1, 1))).blockOptional();
+        var name = Name.builder().forename1("Arthur").surname("MORGAN").build();
+        var match = restClient.search(matchRequestFactory.buildFrom("2004/0012345U", name, LocalDate.of(1975, 1, 1))).blockOptional();
 
         assertThat(match).isPresent();
         assertThat(match.get().getMatchedBy()).isEqualTo(OffenderSearchMatchType.ALL_SUPPLIED);
         assertThat(match.get().getMatches().size()).isEqualTo(1);
         assertThat(match.get().isExactMatch()).isTrue();
 
-        Offender offender = match.get().getMatches().get(0).getOffender();
+        var offender = match.get().getMatches().get(0).getOffender();
         assertThat(offender.getOtherIds().getCrn()).isEqualTo("X346204");
         assertThat(offender.getOtherIds().getCroNumber()).isEqualTo("1234ABC");
         assertThat(offender.getOtherIds().getPncNumber()).isEqualTo("2004/0012345U");
@@ -78,16 +82,16 @@ public class OffenderSearchRestClientIntTest {
 
     @Test
     public void givenSingleMatchReturned_whenSearchWithPncWithDob_thenReturnIt() {
-        Name name = Name.builder().forename1("Arthur").surname("MORGAN").build();
+        var name = Name.builder().forename1("Arthur").surname("MORGAN").build();
         matchRequestFactory.setUseDobWithPnc(true);
-        Optional<SearchResponse> match = restClient.search(matchRequestFactory.buildFrom("2004/0012345U", name, LocalDate.of(1975, 1, 1))).blockOptional();
+        var match = restClient.search(matchRequestFactory.buildFrom("2004/0012345U", name, LocalDate.of(1975, 1, 1))).blockOptional();
 
         assertThat(match).isPresent();
         assertThat(match.get().getMatchedBy()).isEqualTo(OffenderSearchMatchType.ALL_SUPPLIED);
         assertThat(match.get().getMatches().size()).isEqualTo(1);
         assertThat(match.get().isExactMatch()).isTrue();
 
-        Offender offender = match.get().getMatches().get(0).getOffender();
+        var offender = match.get().getMatches().get(0).getOffender();
         assertThat(offender.getOtherIds().getCrn()).isEqualTo("X346204");
         assertThat(offender.getOtherIds().getCroNumber()).isEqualTo("1234ABC");
         assertThat(offender.getOtherIds().getPncNumber()).isEqualTo("2004/0012345U");

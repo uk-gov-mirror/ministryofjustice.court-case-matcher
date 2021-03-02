@@ -52,3 +52,7 @@ messaging:
     queue_name: "crime-portal-gateway-queue"
 
 aws_sqs_queue_name: "crime-portal-gateway-queue"
+
+feature:
+  flags:
+    use-offender-search-for-probation-status: true

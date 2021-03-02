@@ -92,3 +92,13 @@ curl -i -X POST -H 'Content-Type: application/json' -d '{"configuredLevel": "TRA
 ```
 curl -X GET http://localhost:8080/ping
 ```
+
+
+### Feature Flags
+
+The following feature flags are in operation.
+
+| Name      | Description |
+| ----------- | ----------- |
+| use-offender-search-for-probation-status      | Makes the service go to offender search, rather than court-case-service and community API for the probation status and associated fields.       |
+
