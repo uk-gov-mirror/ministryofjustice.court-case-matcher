@@ -1,27 +1,27 @@
 package uk.gov.justice.probation.courtcasematcher.application.healthchecks;
 
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.actuate.health.Health;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.web.reactive.function.client.WebClient;
+import uk.gov.justice.probation.courtcasematcher.wiremock.WiremockExtension;
+import uk.gov.justice.probation.courtcasematcher.wiremock.WiremockMockServer;
 
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.actuate.health.Status.DOWN;
 import static org.springframework.boot.actuate.health.Status.UP;
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 public class PingerTest {
 
     private static final String BASE_URL = "http://localhost:8090";
 
-    @Rule
-    public WireMockRule wireMockRule = new WireMockRule(wireMockConfig()
-            .port(8090)
-            .usingFilesUnderClasspath("mocks"));
+    private static final WiremockMockServer MOCK_SERVER = new WiremockMockServer(8090);
+
+    @RegisterExtension
+    static WiremockExtension wiremockExtension = new WiremockExtension(MOCK_SERVER);
 
     @Test
     public void when200_thenUp() {
