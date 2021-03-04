@@ -12,13 +12,11 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.LoggingEvent;
 import ch.qos.logback.core.Appender;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.common.eventbus.EventBus;
 import lombok.Builder;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Captor;
@@ -30,7 +28,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 import reactor.core.Exceptions;
 import uk.gov.justice.probation.courtcasematcher.event.CourtCaseFailureEvent;
 import uk.gov.justice.probation.courtcasematcher.event.CourtCaseSuccessEvent;
@@ -44,8 +41,9 @@ import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.Offender
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.ProbationStatusDetail;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Name;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.MatchType;
+import uk.gov.justice.probation.courtcasematcher.wiremock.WiremockExtension;
+import uk.gov.justice.probation.courtcasematcher.wiremock.WiremockMockServer;
 
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
@@ -55,7 +53,6 @@ import static org.mockito.Mockito.verify;
 import static org.slf4j.LoggerFactory.getLogger;
 import static uk.gov.justice.probation.courtcasematcher.restclient.OffenderSearchRestClientTest.createException;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest
 @ActiveProfiles("test")
 public class CourtCaseRestClientIntTest {
@@ -95,13 +92,13 @@ public class CourtCaseRestClientIntTest {
     @Autowired
     private CourtCaseRestClient restClient;
 
-    @Rule
-    public WireMockRule wireMockRule = new WireMockRule(wireMockConfig()
-            .port(8090)
-            .usingFilesUnderClasspath("mocks"));
+    private static final WiremockMockServer MOCK_SERVER = new WiremockMockServer(8090);
 
-    @Before
-    public void before() {
+    @RegisterExtension
+    static WiremockExtension wiremockExtension = new WiremockExtension(MOCK_SERVER);
+
+    @BeforeEach
+    public void beforeEach() {
         MockitoAnnotations.openMocks(this);
         Logger logger = (Logger) getLogger(LoggerFactory.getLogger(CourtCaseRestClient.class).getName());
         logger.addAppender(mockAppender);

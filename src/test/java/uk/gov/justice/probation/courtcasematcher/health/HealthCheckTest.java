@@ -1,12 +1,10 @@
 package uk.gov.justice.probation.courtcasematcher.health;
 
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.restassured.RestAssured;
 import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.health.Health;
@@ -15,19 +13,18 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 import reactor.core.publisher.Mono;
 import uk.gov.justice.probation.courtcasematcher.TestConfig;
 import uk.gov.justice.probation.courtcasematcher.application.TestMessagingConfig;
 import uk.gov.justice.probation.courtcasematcher.application.healthchecks.SqsCheck;
+import uk.gov.justice.probation.courtcasematcher.wiremock.WiremockExtension;
+import uk.gov.justice.probation.courtcasematcher.wiremock.WiremockMockServer;
 
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static io.restassured.RestAssured.given;
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.mockito.ArgumentMatchers.any;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@RunWith(SpringRunner.class)
 @ActiveProfiles("test")
 @Import(TestMessagingConfig.class)
 public class HealthCheckTest {
@@ -42,14 +39,14 @@ public class HealthCheckTest {
     private SqsCheck sqsCheck;
 
     @LocalServerPort
-    int port;
+    private int port;
 
-    @Rule
-    public WireMockRule wireMockRule = new WireMockRule(wireMockConfig()
-        .port(8090)
-        .usingFilesUnderClasspath("mocks"));
+    private static final WiremockMockServer MOCK_SERVER = new WiremockMockServer(8090);
 
-    @Before
+    @RegisterExtension
+    static WiremockExtension wiremockExtension = new WiremockExtension(MOCK_SERVER);
+
+    @BeforeEach
     public void before() {
         TestConfig.configureRestAssuredForIntTest(port);
         RestAssured.basePath = "/actuator";

@@ -1,15 +1,15 @@
 package uk.gov.justice.probation.courtcasematcher.restclient;
 
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import org.junit.Rule;
-import org.junit.Test;
+import java.time.LocalDate;
+import java.time.Month;
+import java.util.Optional;
 import org.junit.jupiter.api.Assertions;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -19,15 +19,11 @@ import uk.gov.justice.probation.courtcasematcher.model.offendersearch.MatchReque
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.Offender;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.OffenderSearchMatchType;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.SearchResponse;
+import uk.gov.justice.probation.courtcasematcher.wiremock.WiremockExtension;
+import uk.gov.justice.probation.courtcasematcher.wiremock.WiremockMockServer;
 
-import java.time.LocalDate;
-import java.time.Month;
-import java.util.Optional;
-
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest
 @ActiveProfiles("test")
 @Import(TestMessagingConfig.class)
@@ -36,13 +32,12 @@ public class OffenderSearchRestClientIntTest {
     @Autowired
     private OffenderSearchRestClient restClient;
 
-    private MatchRequest.Factory matchRequestFactory = new MatchRequest.Factory();
+    private final MatchRequest.Factory matchRequestFactory = new MatchRequest.Factory();
 
-    @Rule
-    public WireMockRule wireMockRule = new WireMockRule(wireMockConfig()
-            .port(8090)
-            .stubRequestLoggingDisabled(false)
-            .usingFilesUnderClasspath("mocks"));
+    private static final WiremockMockServer MOCK_SERVER = new WiremockMockServer(8090);
+
+    @RegisterExtension
+    static WiremockExtension wiremockExtension = new WiremockExtension(MOCK_SERVER);
 
     @Test
     public void givenSingleMatchReturned_whenSearch_thenReturnIt() {
