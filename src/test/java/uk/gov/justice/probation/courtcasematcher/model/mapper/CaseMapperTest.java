@@ -39,8 +39,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class CaseMapperTest {
 
-    private static final String DEFAULT_PROBATION_STATUS = "No record";
-    private static final String MATCHES_PROBATION_STATUS = "Possible nDelius record";
     private static final LocalDate DATE_OF_BIRTH = LocalDate.of(1969, Month.AUGUST, 26);
     private static final LocalDate DATE_OF_HEARING = LocalDate.of(2020, Month.FEBRUARY, 29);
     private static final LocalTime START_TIME = LocalTime.of(9, 10);
@@ -99,7 +97,7 @@ class CaseMapperTest {
             .offences(singletonList(buildOffence("NEW Theft from a person", 1)))
             .build();
 
-        caseMapper = new CaseMapper(DEFAULT_PROBATION_STATUS, MATCHES_PROBATION_STATUS);
+        caseMapper = new CaseMapper();
     }
 
     @DisplayName("Map a new case from gateway case but with no offences")
@@ -113,7 +111,7 @@ class CaseMapperTest {
         assertThat(courtCase.getCaseId()).isEqualTo("321321");
         assertThat(courtCase.getCourtCode()).isEqualTo(COURT_CODE);
         assertThat(courtCase.getCourtRoom()).isEqualTo("00");
-        assertThat(courtCase.getProbationStatus()).isEqualTo(DEFAULT_PROBATION_STATUS);
+        assertThat(courtCase.getProbationStatus()).isNull();
         assertThat(courtCase.getDefendantAddress().getLine1()).isEqualTo("line 1");
         assertThat(courtCase.getDefendantAddress().getLine2()).isEqualTo("line 2");
         assertThat(courtCase.getDefendantAddress().getLine3()).isEqualTo("line 3");
@@ -191,7 +189,7 @@ class CaseMapperTest {
 
         assertThat(courtCaseNew).isNotSameAs(courtCase);
         assertThat(courtCaseNew.getCrn()).isNull();
-        assertThat(courtCaseNew.getProbationStatus()).isEqualTo(MATCHES_PROBATION_STATUS);
+        assertThat(courtCaseNew.getProbationStatus()).isNull();
         assertThat(courtCaseNew.getBreach()).isNull();
         assertThat(courtCaseNew.getPreviouslyKnownTerminationDate()).isNull();
         assertThat(courtCaseNew.getGroupedOffenderMatches().getMatches()).hasSize(1);
@@ -217,7 +215,7 @@ class CaseMapperTest {
 
         assertThat(courtCaseNew).isNotSameAs(courtCase);
         assertThat(courtCaseNew.getCrn()).isEqualTo(CRN);
-        assertThat(courtCaseNew.getProbationStatus()).isEqualTo(DEFAULT_PROBATION_STATUS);
+        assertThat(courtCaseNew.getProbationStatus()).isNull();
         assertThat(courtCaseNew.getBreach()).isNull();
         assertThat(courtCaseNew.getPreviouslyKnownTerminationDate()).isNull();
         assertThat(courtCaseNew.getGroupedOffenderMatches().getMatches()).hasSize(1);
@@ -247,7 +245,7 @@ class CaseMapperTest {
 
         assertThat(courtCaseNew).isNotSameAs(courtCase);
         assertThat(courtCaseNew.getCrn()).isNull();
-        assertThat(courtCaseNew.getProbationStatus()).isEqualTo(MATCHES_PROBATION_STATUS);
+        assertThat(courtCaseNew.getProbationStatus()).isNull();
         assertThat(courtCaseNew.getBreach()).isNull();
         assertThat(courtCaseNew.getPreviouslyKnownTerminationDate()).isNull();
         assertThat(courtCaseNew.getGroupedOffenderMatches().getMatches()).hasSize(2);

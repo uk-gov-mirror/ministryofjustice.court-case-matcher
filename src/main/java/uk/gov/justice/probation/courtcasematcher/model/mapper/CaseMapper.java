@@ -1,10 +1,7 @@
 package uk.gov.justice.probation.courtcasematcher.model.mapper;
 
-import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.Address;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCase;
@@ -28,17 +25,10 @@ import java.util.stream.Collectors;
 
 import static java.util.Comparator.comparing;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE, force = true)
 @AllArgsConstructor
 @Component
 @Slf4j
 public class CaseMapper {
-
-    @Value("${probation-status-reference.default}")
-    private final String defaultProbationStatus;
-
-    @Value("${probation-status-reference.nonExactMatch}")
-    private final String nonExactProbationStatus;
 
     public CourtCase newFromCase(Case aCase) {
         return getCourtCaseBuilderFromCase(aCase)
@@ -46,7 +36,7 @@ public class CaseMapper {
             .build();
     }
 
-    private CourtCase.CourtCaseBuilder getCourtCaseBuilderFromCase(CourtCase courtCase, String probationStatus) {
+    private CourtCase.CourtCaseBuilder getCourtCaseBuilderFromCase(CourtCase courtCase) {
         return CourtCase.builder()
             .caseNo(courtCase.getCaseNo())
             .courtCode(courtCase.getCourtCode())
@@ -62,7 +52,6 @@ public class CaseMapper {
             .pnc(courtCase.getPnc())
             .listNo(courtCase.getListNo())
             .sessionStartTime(courtCase.getSessionStartTime())
-            .probationStatus(Optional.ofNullable(probationStatus).orElse(defaultProbationStatus))
             .nationality1(courtCase.getNationality1())
             .nationality2(courtCase.getNationality2())
             .preSentenceActivity(courtCase.isPreSentenceActivity())
@@ -85,7 +74,6 @@ public class CaseMapper {
             .pnc(aCase.getPnc())
             .listNo(aCase.getListNo())
             .sessionStartTime(aCase.getBlock().getSession().getSessionStartTime())
-            .probationStatus(defaultProbationStatus)
             .nationality1(aCase.getNationality1())
             .nationality2(aCase.getNationality2())
             .offences(Optional.ofNullable(aCase.getOffences()).map(CaseMapper::fromOffences).orElse(Collections.emptyList()));
@@ -153,8 +141,7 @@ public class CaseMapper {
 
     public CourtCase newFromCourtCaseWithMatches(CourtCase incomingCase, MatchDetails matchDetails) {
 
-        String nonExactProbationStatus = matchDetails.getMatches().size() >= 1 ? this.nonExactProbationStatus : defaultProbationStatus;
-        CourtCaseBuilder courtCaseBuilder = getCourtCaseBuilderFromCase(incomingCase, nonExactProbationStatus)
+        CourtCaseBuilder courtCaseBuilder = getCourtCaseBuilderFromCase(incomingCase)
             .groupedOffenderMatches(buildGroupedOffenderMatch(matchDetails.getMatches(), matchDetails.getMatchType()));
 
         if (matchDetails.isExactMatch()) {
@@ -164,7 +151,7 @@ public class CaseMapper {
                 .breach(Optional.ofNullable(probationStatus).map(ProbationStatus::getInBreach).orElse(null))
                 .previouslyKnownTerminationDate(
                     Optional.ofNullable(probationStatus).map(ProbationStatus::getPreviouslyKnownTerminationDate).orElse(null))
-                .probationStatus(Optional.ofNullable(probationStatus).map(ProbationStatus::getStatus).orElse(defaultProbationStatus))
+                .probationStatus(Optional.ofNullable(probationStatus).map(ProbationStatus::getStatus).orElse(null))
                 .preSentenceActivity(Optional.ofNullable(probationStatus).map(ProbationStatus::isPreSentenceActivity).orElse(false))
                 .crn(offender.getOtherIds().getCrn())
                 .cro(offender.getOtherIds().getCroNumber())
