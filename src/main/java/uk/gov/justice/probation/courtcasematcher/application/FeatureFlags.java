@@ -25,7 +25,7 @@ public class FeatureFlags {
     }
 
     public boolean offenderSearchForProbationStatus() {
-        return flags.getOrDefault(USE_OFFENDER_SEARCH_FOR_PROBATION_STATUS, false);
+        return flags.getOrDefault(USE_OFFENDER_SEARCH_FOR_PROBATION_STATUS, true);
     }
 
     public void setFlagValue(final String flagName, final boolean value) {
