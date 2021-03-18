@@ -10,8 +10,8 @@
         "gender": "Male",
         "otherIds": {
           "crn": "Y346123",
-          "cro": "2234DEF",
-          "pnc": "BBCD1567"
+          "croNumber": "2234DEF",
+          "pncNumber": "BBCD1567"
         },
         "contactDetails": {},
         "offenderProfile": {
@@ -73,8 +73,8 @@
         "gender": "Male",
         "otherIds": {
           "crn": "Z346124",
-          "cro": "3234DEG",
-          "pnc": "CBCD1568"
+          "croNumber": "3234DEG",
+          "pncNumber": "CBCD1568"
         },
         "contactDetails": {},
         "offenderProfile": {

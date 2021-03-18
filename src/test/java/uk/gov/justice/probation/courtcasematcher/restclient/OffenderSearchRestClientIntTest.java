@@ -1,15 +1,15 @@
 package uk.gov.justice.probation.courtcasematcher.restclient;
 
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import org.junit.Rule;
-import org.junit.Test;
+import java.time.LocalDate;
+import java.time.Month;
+import java.util.Optional;
 import org.junit.jupiter.api.Assertions;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -19,15 +19,11 @@ import uk.gov.justice.probation.courtcasematcher.model.offendersearch.MatchReque
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.Offender;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.OffenderSearchMatchType;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.SearchResponse;
+import uk.gov.justice.probation.courtcasematcher.wiremock.WiremockExtension;
+import uk.gov.justice.probation.courtcasematcher.wiremock.WiremockMockServer;
 
-import java.time.LocalDate;
-import java.time.Month;
-import java.util.Optional;
-
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest
 @ActiveProfiles("test")
 @Import(TestMessagingConfig.class)
@@ -36,44 +32,64 @@ public class OffenderSearchRestClientIntTest {
     @Autowired
     private OffenderSearchRestClient restClient;
 
-    private MatchRequest.Factory matchRequestFactory = new MatchRequest.Factory();
+    private final MatchRequest.Factory matchRequestFactory = new MatchRequest.Factory();
 
-    @Rule
-    public WireMockRule wireMockRule = new WireMockRule(wireMockConfig()
-            .port(8090)
-            .stubRequestLoggingDisabled(false)
-            .usingFilesUnderClasspath("mocks"));
+    private static final WiremockMockServer MOCK_SERVER = new WiremockMockServer(8090);
+
+    @RegisterExtension
+    static WiremockExtension wiremockExtension = new WiremockExtension(MOCK_SERVER);
 
     @Test
     public void givenSingleMatchReturned_whenSearch_thenReturnIt() {
-        Name name = Name.builder().forename1("Arthur").surname("MORGAN").build();
-        Optional<SearchResponse> match = restClient.search(matchRequestFactory.buildFrom(null, name, LocalDate.of(1975, 1, 1))).blockOptional();
+        var name = Name.builder().forename1("Arthur").surname("MORGAN").build();
+        var match = restClient.search(matchRequestFactory.buildFrom(null, name, LocalDate.of(1975, 1, 1))).blockOptional();
 
         assertThat(match).isPresent();
         assertThat(match.get().getMatchedBy()).isEqualTo(OffenderSearchMatchType.ALL_SUPPLIED);
         assertThat(match.get().getMatches().size()).isEqualTo(1);
         assertThat(match.get().isExactMatch()).isTrue();
 
-        Offender offender = match.get().getMatches().get(0).getOffender();
+        var offender = match.get().getMatches().get(0).getOffender();
         assertThat(offender.getOtherIds().getCrn()).isEqualTo("X346204");
-        assertThat(offender.getOtherIds().getCro()).isEqualTo("1234ABC");
-        assertThat(offender.getOtherIds().getPnc()).isEqualTo("ABCD1234");
+        assertThat(offender.getOtherIds().getCroNumber()).isEqualTo("1234ABC");
+        assertThat(offender.getOtherIds().getPncNumber()).isEqualTo("ABCD1234");
+        assertThat(offender.getProbationStatus().getStatus()).isEqualTo("CURRENT");
+        assertThat(offender.getProbationStatus().getInBreach()).isTrue();
+        assertThat(offender.getProbationStatus().isPreSentenceActivity()).isFalse();
+        assertThat(offender.getProbationStatus().getPreviouslyKnownTerminationDate()).isEqualTo(LocalDate.of(2020, Month.FEBRUARY, 2));
     }
 
     @Test
-    public void givenSingleMatchReturned_whenSearchWithPnc_thenReturnIt() {
-        Name name = Name.builder().forename1("Arthur").surname("MORGAN").build();
-        Optional<SearchResponse> match = restClient.search(matchRequestFactory.buildFrom("2004/0012345U", name, LocalDate.of(1975, 1, 1))).blockOptional();
+    public void givenSingleMatchReturned_whenSearchWithPncNoDob_thenReturnIt() {
+        var name = Name.builder().forename1("Arthur").surname("MORGAN").build();
+        var match = restClient.search(matchRequestFactory.buildFrom("2004/0012345U", name, LocalDate.of(1975, 1, 1))).blockOptional();
 
         assertThat(match).isPresent();
         assertThat(match.get().getMatchedBy()).isEqualTo(OffenderSearchMatchType.ALL_SUPPLIED);
         assertThat(match.get().getMatches().size()).isEqualTo(1);
         assertThat(match.get().isExactMatch()).isTrue();
 
-        Offender offender = match.get().getMatches().get(0).getOffender();
+        var offender = match.get().getMatches().get(0).getOffender();
         assertThat(offender.getOtherIds().getCrn()).isEqualTo("X346204");
-        assertThat(offender.getOtherIds().getCro()).isEqualTo("1234ABC");
-        assertThat(offender.getOtherIds().getPnc()).isEqualTo("2004/0012345U");
+        assertThat(offender.getOtherIds().getCroNumber()).isEqualTo("1234ABC");
+        assertThat(offender.getOtherIds().getPncNumber()).isEqualTo("2004/0012345U");
+    }
+
+    @Test
+    public void givenSingleMatchReturned_whenSearchWithPncWithDob_thenReturnIt() {
+        var name = Name.builder().forename1("Arthur").surname("MORGAN").build();
+        matchRequestFactory.setUseDobWithPnc(true);
+        var match = restClient.search(matchRequestFactory.buildFrom("2004/0012345U", name, LocalDate.of(1975, 1, 1))).blockOptional();
+
+        assertThat(match).isPresent();
+        assertThat(match.get().getMatchedBy()).isEqualTo(OffenderSearchMatchType.ALL_SUPPLIED);
+        assertThat(match.get().getMatches().size()).isEqualTo(1);
+        assertThat(match.get().isExactMatch()).isTrue();
+
+        var offender = match.get().getMatches().get(0).getOffender();
+        assertThat(offender.getOtherIds().getCrn()).isEqualTo("X346204");
+        assertThat(offender.getOtherIds().getCroNumber()).isEqualTo("1234ABC");
+        assertThat(offender.getOtherIds().getPncNumber()).isEqualTo("2004/0012345U");
     }
 
     @Test
@@ -82,12 +98,10 @@ public class OffenderSearchRestClientIntTest {
         Mono<SearchResponse> matchMono = restClient.search(matchRequestFactory.buildFrom(null, name, LocalDate.of(1975, 1, 1)));
 
         StepVerifier.create(matchMono)
-            .consumeNextWith(match -> {
-                Assertions.assertAll(
-                    () -> assertThat(match.getMatchedBy()).isEqualTo(OffenderSearchMatchType.ALL_SUPPLIED),
-                    () -> assertThat(match.getMatches().size()).isEqualTo(1)
-                );
-            })
+            .consumeNextWith(match -> Assertions.assertAll(
+                () -> assertThat(match.getMatchedBy()).isEqualTo(OffenderSearchMatchType.ALL_SUPPLIED),
+                () -> assertThat(match.getMatches().size()).isEqualTo(1)
+            ))
             .verifyComplete();
     }
 
@@ -115,13 +129,13 @@ public class OffenderSearchRestClientIntTest {
 
         Offender offender1 = match.get().getMatches().get(0).getOffender();
         assertThat(offender1.getOtherIds().getCrn()).isEqualTo("Y346123");
-        assertThat(offender1.getOtherIds().getCro()).isEqualTo("2234DEF");
-        assertThat(offender1.getOtherIds().getPnc()).isEqualTo("BBCD1567");
+        assertThat(offender1.getOtherIds().getCroNumber()).isEqualTo("2234DEF");
+        assertThat(offender1.getOtherIds().getPncNumber()).isEqualTo("BBCD1567");
 
         Offender offender2 = match.get().getMatches().get(1).getOffender();
         assertThat(offender2.getOtherIds().getCrn()).isEqualTo("Z346124");
-        assertThat(offender2.getOtherIds().getCro()).isEqualTo("3234DEG");
-        assertThat(offender2.getOtherIds().getPnc()).isEqualTo("CBCD1568");
+        assertThat(offender2.getOtherIds().getCroNumber()).isEqualTo("3234DEG");
+        assertThat(offender2.getOtherIds().getPncNumber()).isEqualTo("CBCD1568");
     }
 
     @Test

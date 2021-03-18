@@ -9,7 +9,6 @@ import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.Defendan
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.MatchIdentifiers;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.Offence;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.OffenderMatch;
-import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.ProbationStatusDetail;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Address;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Block;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Case;
@@ -24,6 +23,7 @@ import uk.gov.justice.probation.courtcasematcher.model.offendersearch.MatchType;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.Offender;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.OffenderSearchMatchType;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.OtherIds;
+import uk.gov.justice.probation.courtcasematcher.model.offendersearch.ProbationStatus;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.SearchResponse;
 import uk.gov.justice.probation.courtcasematcher.service.SearchResult;
 
@@ -39,8 +39,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class CaseMapperTest {
 
-    private static final String DEFAULT_PROBATION_STATUS = "No record";
-    private static final String MATCHES_PROBATION_STATUS = "Possible nDelius record";
     private static final LocalDate DATE_OF_BIRTH = LocalDate.of(1969, Month.AUGUST, 26);
     private static final LocalDate DATE_OF_HEARING = LocalDate.of(2020, Month.FEBRUARY, 29);
     private static final LocalTime START_TIME = LocalTime.of(9, 10);
@@ -99,7 +97,7 @@ class CaseMapperTest {
             .offences(singletonList(buildOffence("NEW Theft from a person", 1)))
             .build();
 
-        caseMapper = new CaseMapper(DEFAULT_PROBATION_STATUS);
+        caseMapper = new CaseMapper();
     }
 
     @DisplayName("Map a new case from gateway case but with no offences")
@@ -113,7 +111,7 @@ class CaseMapperTest {
         assertThat(courtCase.getCaseId()).isEqualTo("321321");
         assertThat(courtCase.getCourtCode()).isEqualTo(COURT_CODE);
         assertThat(courtCase.getCourtRoom()).isEqualTo("00");
-        assertThat(courtCase.getProbationStatus()).isEqualTo(DEFAULT_PROBATION_STATUS);
+        assertThat(courtCase.getProbationStatus()).isNull();
         assertThat(courtCase.getDefendantAddress().getLine1()).isEqualTo("line 1");
         assertThat(courtCase.getDefendantAddress().getLine2()).isEqualTo("line 2");
         assertThat(courtCase.getDefendantAddress().getLine3()).isEqualTo("line 3");
@@ -146,25 +144,28 @@ class CaseMapperTest {
     @DisplayName("Map a court case to a new court case when search response has yielded a single match")
     @Test
     void givenSingleMatch_whenMapNewFromCaseAndSearchResponse_thenCreateNewCaseWithSingleMatch() {
-        Match match = Match.builder().offender(Offender.builder()
-            .otherIds(OtherIds.builder().crn(CRN).cro(CRO).pnc(PNC).build())
-            .build())
-            .build();
+        Match match = Match.builder()
+                            .offender(Offender.builder()
+                                            .otherIds(OtherIds.builder().crn(CRN).croNumber(CRO).pncNumber(PNC).build())
+                                            .probationStatus(ProbationStatus.builder().status("CURRENT").preSentenceActivity(true).build())
+                                            .build())
+                            .build();
 
         CourtCase courtCase = caseMapper.newFromCase(aCase);
         SearchResponse searchResponse = SearchResponse.builder()
             .matchedBy(OffenderSearchMatchType.ALL_SUPPLIED)
             .matches(List.of(match))
-            .probationStatusDetail(ProbationStatusDetail.builder().probationStatus("Current").inBreach(Boolean.TRUE).build())
             .build();
 
         CourtCase courtCaseNew = caseMapper.newFromCourtCaseWithMatches(courtCase, buildMatchDetails(searchResponse));
 
         assertThat(courtCaseNew).isNotSameAs(courtCase);
         assertThat(courtCaseNew.getCrn()).isEqualTo(CRN);
-        assertThat(courtCaseNew.getProbationStatus()).isEqualTo("Current");
+        assertThat(courtCaseNew.getPnc()).isEqualTo(PNC);
+        assertThat(courtCaseNew.getProbationStatus()).isEqualTo("CURRENT");
         assertThat(courtCaseNew.getPreviouslyKnownTerminationDate()).isNull();
-        assertThat(courtCaseNew.getBreach()).isTrue();
+        assertThat(courtCaseNew.getBreach()).isNull();
+        assertThat(courtCaseNew.isPreSentenceActivity()).isTrue();
         assertThat(courtCaseNew.getGroupedOffenderMatches().getMatches()).hasSize(1);
         OffenderMatch offenderMatch1 = buildOffenderMatch(MatchType.NAME_DOB, CRN, CRO, PNC);
         assertThat(courtCaseNew.getGroupedOffenderMatches().getMatches()).containsExactly(offenderMatch1);
@@ -174,7 +175,7 @@ class CaseMapperTest {
     @Test
     void givenSingleMatchOnName_whenMapNewFromCaseAndSearchResponse_thenCreateNewCaseWithSingleMatchButNoCrn() {
         Match match = Match.builder().offender(Offender.builder()
-            .otherIds(OtherIds.builder().crn(CRN).cro(CRO).pnc(PNC).build())
+            .otherIds(OtherIds.builder().crn(CRN).croNumber(CRO).pncNumber(PNC).build())
             .build())
             .build();
 
@@ -182,14 +183,13 @@ class CaseMapperTest {
         SearchResponse searchResponse = SearchResponse.builder()
             .matchedBy(OffenderSearchMatchType.NAME)
             .matches(List.of(match))
-            .probationStatusDetail(ProbationStatusDetail.builder().probationStatus(MATCHES_PROBATION_STATUS).build())
             .build();
 
         CourtCase courtCaseNew = caseMapper.newFromCourtCaseWithMatches(courtCase, buildMatchDetails(searchResponse));
 
         assertThat(courtCaseNew).isNotSameAs(courtCase);
         assertThat(courtCaseNew.getCrn()).isNull();
-        assertThat(courtCaseNew.getProbationStatus()).isEqualTo(MATCHES_PROBATION_STATUS);
+        assertThat(courtCaseNew.getProbationStatus()).isNull();
         assertThat(courtCaseNew.getBreach()).isNull();
         assertThat(courtCaseNew.getPreviouslyKnownTerminationDate()).isNull();
         assertThat(courtCaseNew.getGroupedOffenderMatches().getMatches()).hasSize(1);
@@ -201,7 +201,7 @@ class CaseMapperTest {
     @Test
     void givenSingleMatchWithNoProbationStatus_whenMapNewFromCaseAndSearchResponse_thenCreateNewCaseWithSingleMatch() {
         Match match = Match.builder().offender(Offender.builder()
-            .otherIds(OtherIds.builder().crn(CRN).cro(CRO).pnc(PNC).build())
+            .otherIds(OtherIds.builder().crn(CRN).croNumber(CRO).pncNumber(PNC).build())
             .build())
             .build();
 
@@ -215,7 +215,7 @@ class CaseMapperTest {
 
         assertThat(courtCaseNew).isNotSameAs(courtCase);
         assertThat(courtCaseNew.getCrn()).isEqualTo(CRN);
-        assertThat(courtCaseNew.getProbationStatus()).isEqualTo(DEFAULT_PROBATION_STATUS);
+        assertThat(courtCaseNew.getProbationStatus()).isNull();
         assertThat(courtCaseNew.getBreach()).isNull();
         assertThat(courtCaseNew.getPreviouslyKnownTerminationDate()).isNull();
         assertThat(courtCaseNew.getGroupedOffenderMatches().getMatches()).hasSize(1);
@@ -227,7 +227,7 @@ class CaseMapperTest {
     @Test
     void givenMultipleMatches_whenMapNewFromCaseAndSearchResponse_thenCreateNewCaseWithListOfMatches() {
         Match match1 = Match.builder().offender(Offender.builder()
-            .otherIds(OtherIds.builder().crn(CRN).cro(CRO).pnc(PNC).build())
+            .otherIds(OtherIds.builder().crn(CRN).croNumber(CRO).pncNumber(PNC).build())
             .build())
             .build();
         Match match2 = Match.builder().offender(Offender.builder()
@@ -238,7 +238,6 @@ class CaseMapperTest {
         CourtCase courtCase = caseMapper.newFromCase(aCase);
         SearchResponse searchResponse = SearchResponse.builder()
             .matchedBy(OffenderSearchMatchType.PARTIAL_NAME)
-            .probationStatusDetail(ProbationStatusDetail.builder().probationStatus(MATCHES_PROBATION_STATUS).build())
             .matches(List.of(match1, match2))
             .build();
 
@@ -246,7 +245,7 @@ class CaseMapperTest {
 
         assertThat(courtCaseNew).isNotSameAs(courtCase);
         assertThat(courtCaseNew.getCrn()).isNull();
-        assertThat(courtCaseNew.getProbationStatus()).isEqualTo(MATCHES_PROBATION_STATUS);
+        assertThat(courtCaseNew.getProbationStatus()).isNull();
         assertThat(courtCaseNew.getBreach()).isNull();
         assertThat(courtCaseNew.getPreviouslyKnownTerminationDate()).isNull();
         assertThat(courtCaseNew.getGroupedOffenderMatches().getMatches()).hasSize(2);
@@ -371,7 +370,6 @@ class CaseMapperTest {
                         .searchResponse(searchResponse)
                         .build()))
                 .matches(searchResponse.getMatches())
-                .probationStatusDetail(searchResponse.getProbationStatusDetail())
                 .exactMatch(searchResponse.isExactMatch())
                 .build();
     }

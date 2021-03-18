@@ -158,7 +158,8 @@ public class CourtCaseRestClient {
             });
     }
 
-    public Mono<ProbationStatusDetail> getProbationStatusDetail(String crn) {
+    @Deprecated(forRemoval = true)
+    public Mono<ProbationStatusDetail> getProbationStatus(String crn) {
         final String path = String.format(probationStatusDetailGetTemplate, crn);
 
         return get(path)
@@ -257,10 +258,10 @@ public class CourtCaseRestClient {
 
     private Mono<Void> logRetrySignal(RetrySignal retrySignal, String messageFormat, String initialError) {
         if (retrySignal.totalRetries() > 0 ) {
-            log.error(String.format(messageFormat, retrySignal.totalRetries(), maxRetries));
+            log.warn(String.format(messageFormat, retrySignal.totalRetries(), maxRetries));
         }
         else {
-            log.error(initialError);
+            log.warn(initialError);
         }
         return Mono.empty();
     }

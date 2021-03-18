@@ -68,6 +68,8 @@ public class CourtCase implements Serializable {
 
     private final Boolean suspendedSentenceOrder;
 
+    private final boolean preSentenceActivity;
+
     @JsonIgnore
     private final GroupedOffenderMatches groupedOffenderMatches;
 

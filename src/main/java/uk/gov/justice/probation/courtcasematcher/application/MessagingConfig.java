@@ -10,20 +10,27 @@ import com.fasterxml.jackson.dataformat.xml.JacksonXmlModule;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.eventbus.EventBus;
-import javax.validation.Validation;
-import javax.validation.Validator;
 import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.jms.artemis.ArtemisAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
 import uk.gov.justice.probation.courtcasematcher.messaging.JmsErrorHandler;
 
+import javax.validation.Validation;
+import javax.validation.Validator;
+
 @Configuration
 public class MessagingConfig {
+
+    @EnableAutoConfiguration(exclude = ArtemisAutoConfiguration.class)
+    @ConditionalOnProperty(value="messaging.activemq.enabled", havingValue = "false")
+    private static class ArtemisAutoConfigToggle{}
 
     @Autowired
     private JmsErrorHandler jmsErrorHandler;
@@ -70,7 +77,7 @@ public class MessagingConfig {
 
     @ConditionalOnProperty(value="messaging.activemq.enabled", havingValue = "true")
     @Bean(name = "mqJmsListenerContainerFactory")
-    public DefaultJmsListenerContainerFactory jmsListenerContainerFactory (@Autowired ActiveMQConnectionFactory jmsConnectionFactory) {
+    public DefaultJmsListenerContainerFactory jmsListenerContainerFactory (ActiveMQConnectionFactory jmsConnectionFactory) {
         DefaultJmsListenerContainerFactory factory = new DefaultJmsListenerContainerFactory();
         factory.setConnectionFactory(jmsConnectionFactory);
         factory.setSessionTransacted(Boolean.TRUE);

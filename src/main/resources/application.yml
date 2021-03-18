@@ -63,6 +63,7 @@ offender-search:
   max-retries: 3
   min-backoff-seconds: 5
   ignore-titles: "MISS,MRS,MS,MASTER,MR,MX,DR"
+  use-dob-with-pnc: false
 
 nomis-oauth:
   ping-path: /auth/ping
@@ -72,10 +73,6 @@ web:
     connect-timeout-ms: 20000
     read-timeout-ms: 5000
     write-timeout-ms: 5000
-
-probation-status-reference:
-  default: "No record"
-  nonExactMatch: "Possible nDelius record"
 
 # Libra feed has today's case list and another case list for this many days hence. e.g. 25th and 28th July
 case-feed-future-date-offset: 3

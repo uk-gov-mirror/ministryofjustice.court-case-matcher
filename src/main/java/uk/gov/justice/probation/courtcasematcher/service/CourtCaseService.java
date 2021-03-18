@@ -52,7 +52,6 @@ public class CourtCaseService {
                     saveCourtCase(caseMapper.newFromCourtCaseWithMatches(courtCase, MatchDetails.builder()
                             .matchType(MatchType.of(result))
                             .matches(response.getMatches())
-                            .probationStatusDetail(response.getProbationStatusDetail())
                             .exactMatch(response.isExactMatch())
                             .build()));
                 },

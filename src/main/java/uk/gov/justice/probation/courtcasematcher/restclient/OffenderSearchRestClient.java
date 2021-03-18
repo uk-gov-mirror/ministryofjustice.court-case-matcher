@@ -88,8 +88,8 @@ public class OffenderSearchRestClient {
     }
 
     private Mono<Void> logRetrySignal(RetrySignal retrySignal) {
-        log.error("Error from call to offender search, at attempt {} of {}. Root Cause {} ",
-            retrySignal.totalRetries(), maxRetries, retrySignal.failure());
+        log.warn("Error from call to offender search, at attempt {} of {}. Root Cause {} ",
+            retrySignal.totalRetries(), maxRetries, retrySignal.failure().getMessage());
         return Mono.empty();
     }
 

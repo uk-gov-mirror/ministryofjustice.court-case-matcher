@@ -10,8 +10,14 @@
         "gender": "Male",
         "otherIds": {
           "crn": "X346204",
-          "cro": "1234ABC",
-          "pnc": "ABCD1234"
+          "croNumber": "1234ABC",
+          "pncNumber": "ABCD1234"
+        },
+        "probationStatus": {
+          "status": "CURRENT",
+          "inBreach": true,
+          "preSentenceActivity": false,
+          "previouslyKnownTerminationDate": "2020-02-02"
         },
         "contactDetails": {},
         "offenderProfile": {

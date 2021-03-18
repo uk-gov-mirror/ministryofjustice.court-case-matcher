@@ -14,5 +14,5 @@ import lombok.ToString;
 @NoArgsConstructor(access = AccessLevel.PRIVATE, force = true)
 public class Offender {
     private final OtherIds otherIds;
-    private final String probationStatus;
+    private final ProbationStatus probationStatus;
 }

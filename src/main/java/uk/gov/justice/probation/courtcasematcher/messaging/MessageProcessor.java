@@ -1,9 +1,5 @@
 package uk.gov.justice.probation.courtcasematcher.messaging;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 import com.google.common.eventbus.EventBus;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +17,11 @@ import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.I
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Session;
 import uk.gov.justice.probation.courtcasematcher.service.CourtCaseService;
 import uk.gov.justice.probation.courtcasematcher.service.TelemetryService;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Setter
 @Service
@@ -44,38 +45,38 @@ public class MessageProcessor {
         this.courtCaseService = courtCaseService;
     }
 
-    void process(ExternalDocumentRequest externalDocumentRequest) {
+    void process(ExternalDocumentRequest externalDocumentRequest, String messageId) {
 
         List<Document> documents = extractDocuments(externalDocumentRequest);
 
         documents.stream()
             .map(Document::getInfo)
             .distinct()
-            .forEach(this::trackCourtListReceipt);
+            .forEach(info -> trackCourtListReceipt(info, messageId));
 
         List<Session> sessions = documents
             .stream()
             .flatMap(document -> document.getData().getJob().getSessions().stream())
             .collect(Collectors.toList());
 
-        saveCases(sessions);
+        saveCases(sessions, messageId);
     }
 
-    private void saveCases(List<Session> sessions) {
+    private void saveCases(List<Session> sessions, String messageId) {
         sessions.forEach(session -> {
             log.debug("Starting to process cases in session court {}, room {}, date {}",
                 session.getCourtCode(), session.getCourtRoom(), session.getDateOfHearing());
 
             List<String> cases = session.getBlocks().stream()
                 .flatMap(block -> block.getCases().stream())
-                .map(this::saveCase)
+                .map(aCase -> saveCase(aCase, messageId))
                 .collect(Collectors.toList());
             log.debug("Completed {} cases for {}, {}, {}", cases.size(), session.getCourtCode(), session.getCourtRoom(), session.getDateOfHearing());
         });
     }
 
-    private String saveCase(Case aCase) {
-        telemetryService.trackCourtCaseEvent(aCase);
+    private String saveCase(Case aCase, String messageId) {
+        telemetryService.trackCourtCaseEvent(aCase, messageId);
         courtCaseService.getCourtCase(aCase)
             .subscribe(this::postCaseEvent);
         return aCase.getCaseNo();
@@ -90,9 +91,9 @@ public class MessageProcessor {
         }
     }
 
-    private void trackCourtListReceipt(Info info) {
+    private void trackCourtListReceipt(Info info, String messageId) {
         log.debug("Received court list for court {} on {}", info.getOuCode(), info.getDateOfHearing().toString());
-        telemetryService.trackCourtListEvent(info);
+        telemetryService.trackCourtListEvent(info, messageId);
     }
 
     private List<Document> extractDocuments(ExternalDocumentRequest externalDocumentRequest) {
