@@ -21,7 +21,7 @@
                     <means>N</means>
                     <sessions>
                         <session>
-                            <ou_code>B10JQ01</ou_code>
+                            <ou_code>B10JQ</ou_code>
                             <s_id>556805</s_id>
                             <doh>26/10/2020</doh>
                             <lja>South West London Magistrates; Court</lja>
@@ -44,13 +44,19 @@
                                             <valid>Y</valid>
                                             <caseno>1600032981</caseno>
                                             <type>C</type>
-                                            <def_name>MR CHRIS FAULKNER</def_name>
+                                            <def_name>Mr Arthur MORGAN</def_name>
+                                            <def_name_elements>
+                                                <title>Mr</title>
+                                                <forename1>Arthur</forename1>
+                                                <surname>MORGAN</surname>
+                                            </def_name_elements>
                                             <def_type>P</def_type>
-                                            <def_sex>F</def_sex>
-                                            <def_dob>06/08/1968</def_dob>
+                                            <def_sex>M</def_sex>
+                                            <def_dob>01/01/1975</def_dob>
                                             <def_addr>
                                                 <line1>A1</line1>
                                             </def_addr>
+                                            <pnc_id>2004/0012345U</pnc_id>
                                             <inf>POL01</inf>
                                             <cseq>2</cseq>
                                             <listno>1st</listno>

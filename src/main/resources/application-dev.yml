@@ -24,12 +24,4 @@ nomis-oauth:
 
 messaging:
   activemq:
-    # Note when this is retired, also change the property for management.health.jms.enabled to stop inclusion in actuator health
-    enabled: false
     queueName: "CP_OutboundQueue"
-  sqs:
-    enabled: true
-
-feature:
-  flags:
-    use-offender-search-for-probation-status: true

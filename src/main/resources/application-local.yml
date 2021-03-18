@@ -39,4 +39,3 @@ messaging:
     enabled: false
   sqs:
     enabled: true
-    queue-name: "crime-portal-gateway-queue"

@@ -13,6 +13,12 @@
           "croNumber": "1234ABC",
           "pncNumber": "2004/0012345U"
         },
+        "probationStatus": {
+          "status": "CURRENT",
+          "inBreach": true,
+          "preSentenceActivity": false,
+          "previouslyKnownTerminationDate": "2020-02-02"
+        },
         "contactDetails": {},
         "offenderProfile": {
           "offenderLanguages": {},

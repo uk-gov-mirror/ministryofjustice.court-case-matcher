@@ -2,40 +2,45 @@ package uk.gov.justice.probation.courtcasematcher.messaging;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.eventbus.EventBus;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.aws.messaging.listener.SqsMessageDeletionPolicy;
 import org.springframework.cloud.aws.messaging.listener.annotation.SqsListener;
+import org.springframework.context.annotation.Profile;
 import org.springframework.messaging.handler.annotation.Header;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.ExternalDocumentRequest;
 import uk.gov.justice.probation.courtcasematcher.service.TelemetryService;
 
 import javax.validation.constraints.NotEmpty;
 
 @Slf4j
-@Service
-@ConditionalOnProperty(value="messaging.sqs.enabled", havingValue = "true")
+@Component
+@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PRIVATE, force = true)
+@Profile("sqs-messaging")
 public class SqsMessageReceiver implements MessageReceiver {
 
     @Autowired
-    private  MessageProcessor messageProcessor;
+    private final MessageProcessor messageProcessor;
 
     @Autowired
-    private TelemetryService telemetryService;
+    private final TelemetryService telemetryService;
 
     @Autowired
-    private EventBus eventBus;
+    private final EventBus eventBus;
 
     @Autowired
-    private MessageParser<ExternalDocumentRequest> parser;
+    private final MessageParser<ExternalDocumentRequest> parser;
 
-    @Value("${aws_sqs_queue_name}")
+    @Value("${aws.sqs.queue_name}")
     private String queueName;
 
-    @SqsListener(value = "${aws_sqs_queue_name}", deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
+    @SqsListener(value = "${aws.sqs.queue_name}", deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
     public void receive(@NotEmpty String message, @Header("MessageId") String messageId) {
         log.info("Received message from SQS queue {} with messageId: {}", queueName, messageId);
         telemetryService.trackSQSMessageEvent(messageId);

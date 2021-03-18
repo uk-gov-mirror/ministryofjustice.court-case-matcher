@@ -7,6 +7,7 @@ import ch.qos.logback.classic.spi.LoggingEvent;
 import ch.qos.logback.core.Appender;
 import com.google.common.eventbus.EventBus;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
@@ -20,6 +21,8 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import reactor.core.publisher.Mono;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCase;
+import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCase.CourtCaseBuilder;
+import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.DefendantType;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Name;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.OffenderSearchMatchType;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.SearchResponse;
@@ -55,14 +58,9 @@ class EventListenerTest {
     private final static String COURT_CODE = "B10JQ00";
     private static final LocalDateTime DATE_OF_HEARING = LocalDate.of(2020, Month.NOVEMBER, 5).atStartOfDay();
     private static final String PNC = "PNC";
-    private final static CourtCase courtCase = CourtCase.builder()
-        .defendantName(DEFENDANT_NAME.getFullName())
-        .defendantDob(DEFENDANT_DOB)
-        .courtCode(COURT_CODE)
-        .caseNo(CASE)
-        .pnc(PNC)
-        .sessionStartTime(DATE_OF_HEARING)
-        .build();
+    private static final String CRN = "X340741";
+    private static CourtCase courtCase = null;
+    private static CourtCase matchedCourtCase = null;
 
     @Mock
     private MatcherService matcherService;
@@ -82,6 +80,20 @@ class EventListenerTest {
     private EventBus eventBus;
 
     private EventListener eventListener;
+
+    @BeforeAll
+    static void beforeAll() {
+        CourtCaseBuilder builder = CourtCase.builder()
+            .defendantName(DEFENDANT_NAME.getFullName())
+            .defendantType(DefendantType.PERSON)
+            .defendantDob(DEFENDANT_DOB)
+            .courtCode(COURT_CODE)
+            .caseNo(CASE)
+            .pnc(PNC)
+            .sessionStartTime(DATE_OF_HEARING);
+        courtCase = builder.build();
+        matchedCourtCase = builder.crn(CRN).build();
+    }
 
     @BeforeEach
     void beforeEach() {
@@ -154,12 +166,23 @@ class EventListenerTest {
         eventBus.post(CourtCaseFailureEvent.builder().failureMessage("Problem").build());
     }
 
-    @DisplayName("Check the match event when the call to the matcher service returns")
+    @DisplayName("With an unmatched case the update event just saves")
     @Test
-    void whenCourtCaseUpdated_thenSave() {
+    void givenUnmatchedCourtCase_whenUpdate_thenSave() {
         eventListener.courtCaseUpdateEvent(CourtCaseUpdateEvent.builder().courtCase(courtCase).build());
 
         verify(courtCaseService).saveCourtCase(courtCase);
+    }
+
+    @DisplayName("With a matched case the update event includes an update on probation status detail")
+    @Test
+    void givenMatchedCourtCase_whenUpdate_thenRefreshProbationStatusDetailAndSave() {
+        when(courtCaseService.updateProbationStatusDetail(matchedCourtCase)).thenReturn(Mono.just(matchedCourtCase));
+        eventListener.courtCaseUpdateEvent(CourtCaseUpdateEvent.builder().courtCase(matchedCourtCase).build());
+
+        verify(courtCaseService).updateProbationStatusDetail(matchedCourtCase);
+        verify(courtCaseService).saveCourtCase(matchedCourtCase);
+        verifyNoMoreInteractions(courtCaseService);
     }
 
     @DisplayName("Check the match event when the call to the matcher service returns")

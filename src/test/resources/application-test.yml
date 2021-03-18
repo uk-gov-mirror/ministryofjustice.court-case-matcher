@@ -26,33 +26,25 @@ offender-search:
   ping-path: /ping
   min-backoff-seconds: 1
   max-retries: 1
+  use-dob-with-pnc: true
 
 nomis-oauth:
   base-url: http://localhost:8090
   disable-authentication: true
   ping-path: /ping
 
-case-mapper-reference:
-  defaultProbationStatus: "No record"
-  courtNameToCodes:
-    Sheffield Magistrates Court: "SHF"
-    Beverley: "BEV"
-
 ou-code-length: 5
 
 # Localstack settings
 aws:
-  sqs-endpoint-url: "http://localhost:4566"
+  sqs_endpoint_url: "http://localhost:4566"
+  access_key_id: foobar
+  secret_access_key: foobar
+  region_name: eu-west-2
+  sqs:
+    queue_name: "crime-portal-gateway-queue"
 
 messaging:
   activemq:
     enabled: false
-  sqs:
-    enabled: false
-    queue_name: "crime-portal-gateway-queue"
 
-aws_sqs_queue_name: "crime-portal-gateway-queue"
-
-feature:
-  flags:
-    use-offender-search-for-probation-status: true

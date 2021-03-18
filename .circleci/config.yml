@@ -1,4 +1,5 @@
 version: 2.1
+machine: true
 commands:
   setup:
     description: "Install tools and configure kubectl"
@@ -53,6 +54,21 @@ executors:
     docker:
       - image: circleci/openjdk:14-jdk-buster-browsers
     working_directory: ~/app
+  validator-integration:
+    docker:
+      - image: circleci/openjdk:14-jdk-buster-browsers
+      - image: localstack/localstack:0.11.2
+        environment:
+          - SERVICES=sqs
+          - DEBUG=${DEBUG- }
+          - DATA_DIR=/tmp/localstack/data
+          - DOCKER_HOST=unix:///var/run/docker.sock
+          - AWS_EXECUTION_ENV=True
+          - DEFAULT_REGION=eu-west-2
+          - TMPDIR=/private
+    environment:
+      _JAVA_OPTIONS: -Xmx256m -XX:ParallelGCThreads=2 -XX:ConcGCThreads=2 -XX:ParallelGCThreads=2 -Djava.util.concurrent.ForkJoinPool.common.parallelism=2 -Dorg.gradle.daemon=false
+    working_directory: ~/app
 
 orbs:
   aws-cli: circleci/aws-cli@0.1.13
@@ -60,6 +76,7 @@ orbs:
   helm: circleci/helm@1.1.2
   snyk: snyk/snyk@0.0.10
   dps: ministryofjustice/dps@1.2.1
+  hmpps: ministryofjustice/hmpps@2.3
 
 jobs:
   build:
@@ -98,6 +115,35 @@ jobs:
             - build/libs
             - build.gradle
             - app_version.txt
+
+  test-integration:
+    executor: validator-integration
+    steps:
+      - checkout
+      - hmpps/install_aws_cli
+      - run:
+          name: Wait for SQS to be ready
+          command: curl -4 --connect-timeout 30 --retry-connrefused --retry 20 --retry-delay 5 http://localhost:4566
+      - run:
+          name: Set up queues
+          command: bash src/test/resources/localstack/setup-sqs.sh
+      - restore_cache:
+          keys:
+            - gradle-{{ checksum "build.gradle" }}
+            - gradle-
+      - run:
+          environment:
+            AWS_PROVIDER: localstack
+            SPRING_PROFILES_ACTIVE: test-msg
+          command: ./gradlew integrationTest
+      - save_cache:
+          paths:
+            - ~/.gradle
+          key: gradle-{{ checksum "build.gradle" }}
+      - store_test_results:
+          path: build/test-results
+      - store_artifacts:
+          path: build/reports/tests
 
   build_docker:
     executor: deployer
@@ -180,6 +226,11 @@ workflows:
     jobs:
       - app-scan
       - image-scan
+
+  test-integration:
+    jobs:
+      - test-integration
+
   build-test-and-deploy:
     jobs:
       - build:

@@ -17,7 +17,6 @@ import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 import uk.gov.justice.probation.courtcasematcher.application.FeatureFlags;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCase;
-import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.ProbationStatusDetail;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Name;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.Match;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.MatchRequest;
@@ -40,7 +39,6 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.slf4j.LoggerFactory.getLogger;
-import static uk.gov.justice.probation.courtcasematcher.application.FeatureFlags.USE_OFFENDER_SEARCH_FOR_PROBATION_STATUS;
 
 @ExtendWith(MockitoExtension.class)
 class MatcherServiceTest {
@@ -120,8 +118,6 @@ class MatcherServiceTest {
 
     @BeforeEach
     public void setUp() {
-        featureFlags = new FeatureFlags();
-        featureFlags.setFlagValue(USE_OFFENDER_SEARCH_FOR_PROBATION_STATUS, true);
 
         MockitoAnnotations.openMocks(this);
         Logger logger = (Logger) getLogger(LoggerFactory.getLogger(MatcherService.class).getName());
@@ -197,36 +193,6 @@ class MatcherServiceTest {
         assertThat(searchResult.getMatchRequest()).isEqualTo(matchRequest);
         assertThat(searchResponse.getMatches()).hasSize(0);
         assertThat(searchResponse.getMatchedBy()).isSameAs(OffenderSearchMatchType.NOTHING);
-    }
-
-    @Deprecated(forRemoval = true)
-    @Test
-    void givenUseCourtCaseServiceForProbationStatus_whenMatchCalledUseService_thenUpdateSingleMatch(){
-        featureFlags.setFlagValue(USE_OFFENDER_SEARCH_FOR_PROBATION_STATUS, false);
-
-        Offender offender = Offender.builder()
-            .otherIds(otherIds)
-            .build();
-        SearchResponse singleExactMatch = SearchResponse.builder()
-            .matches(singletonList(Match.builder()
-                .offender(offender)
-                .build()))
-            .matchedBy(OffenderSearchMatchType.ALL_SUPPLIED)
-            .build();
-
-        when(matchRequestFactory.buildFrom(COURT_CASE)).thenReturn(matchRequest);
-        when(offenderSearchRestClient.search(matchRequest)).thenReturn(Mono.just(singleExactMatch));
-        when(courtCaseRestClient.getProbationStatus(CRN)).thenReturn(Mono.just(ProbationStatusDetail.builder().probationStatus("PREVIOUSLY_KNOWN").build()));
-
-        var searchResult = matcherService.getSearchResponse(COURT_CASE).block();
-
-        SearchResponse searchResponse = searchResult.getSearchResponse();
-        assertThat(searchResponse.isExactMatch()).isTrue();
-        ProbationStatus probationStatus = searchResponse.getMatches().get(0).getOffender().getProbationStatus();
-        assertThat(probationStatus.getStatus()).isEqualTo("PREVIOUSLY_KNOWN");
-        assertThat(probationStatus.getInBreach()).isNull();
-        assertThat(probationStatus.getPreviouslyKnownTerminationDate()).isNull();
-        assertThat(probationStatus.isPreSentenceActivity()).isFalse();
     }
 
     private LoggingEvent captureFirstLogEvent() {

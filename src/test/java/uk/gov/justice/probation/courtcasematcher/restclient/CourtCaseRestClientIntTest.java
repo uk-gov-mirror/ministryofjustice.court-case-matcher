@@ -57,9 +57,9 @@ import static uk.gov.justice.probation.courtcasematcher.restclient.OffenderSearc
 @ActiveProfiles("test")
 public class CourtCaseRestClientIntTest {
 
-    private static final String COURT_CODE = "SHF";
+    private static final String COURT_CODE = "B10JQ";
     private static final String CASE_NO = "12345";
-    private static final String NEW_CASE_NO = "999999";
+    private static final String NEW_CASE_NO = "1600032981";
     private static final int WEB_CLIENT_TIMEOUT_MS = 10000;
 
     private static final GroupedOffenderMatches matches = GroupedOffenderMatches.builder()
@@ -126,13 +126,13 @@ public class CourtCaseRestClientIntTest {
             .crn("X320741")
             .pnc("D/1234560BC")
             .listNo("2nd")
-            .courtCode("SHF")
+            .courtCode("B10JQ")
             .courtRoom("1")
             .sessionStartTime(startTime)
             .probationStatus("Current")
             .breach(Boolean.TRUE)
             .suspendedSentenceOrder(Boolean.FALSE)
-            .caseNo("12345")
+            .caseNo(CASE_NO)
             .defendantAddress(address)
             .defendantDob(LocalDate.of(1977, Month.DECEMBER, 11))
             .name(Name.builder().title("Mr")
@@ -267,7 +267,7 @@ public class CourtCaseRestClientIntTest {
         List<LoggingEvent> events = captorLoggingEvent.getAllValues();
         LoggingEvent loggingEvent = events.get(0);
         assertThat(loggingEvent.getLevel()).isEqualTo(Level.INFO);
-        assertThat(loggingEvent.getFormattedMessage()).isEqualTo("Successful PUT of all cases for purge in court case service for court SHF");
+        assertThat(loggingEvent.getFormattedMessage()).isEqualTo("Successful PUT of all cases for purge in court case service for court " + COURT_CODE);
     }
 
     @Test
@@ -297,20 +297,20 @@ public class CourtCaseRestClientIntTest {
     }
 
     @Test
-    public void whenGetOffenderProbationStatus_thenMakeRestCallToCourtCaseService() {
+    public void whenGetOffenderProbationStatusDetail_thenMakeRestCallToCourtCaseService() {
 
-        Optional<ProbationStatusDetail> optional = restClient.getProbationStatus("X320741").blockOptional();
+        Optional<ProbationStatusDetail> optional = restClient.getProbationStatusDetail("X320741").blockOptional();
 
         assertThat(optional).isPresent();
         ProbationStatusDetail detail = optional.get();
-        assertThat(detail.getProbationStatus()).isEqualTo("CURRENT");
+        assertThat(detail.getStatus()).isEqualTo("CURRENT");
         assertThat(detail.getInBreach()).isTrue();
     }
 
     @Test
-    public void givenUnknownCrn_whenGetOffenderProbationStatus_thenMakeReturnEmpty() {
+    public void givenUnknownCrn_whenGetOffenderProbationStatusDetail_thenMakeReturnEmpty() {
 
-        Optional<ProbationStatusDetail> optional = restClient.getProbationStatus("X500").blockOptional();
+        Optional<ProbationStatusDetail> optional = restClient.getProbationStatusDetail("X404").blockOptional();
 
         assertThat(optional).isEmpty();
     }

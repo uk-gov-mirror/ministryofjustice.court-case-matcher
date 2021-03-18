@@ -23,7 +23,6 @@ import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.C
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.DocumentWrapper;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.ExternalDocumentRequest;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Info;
-import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Name;
 import uk.gov.justice.probation.courtcasematcher.service.CourtCaseService;
 import uk.gov.justice.probation.courtcasematcher.service.TelemetryService;
 
@@ -54,7 +53,9 @@ class MessageProcessorTest {
     private static final long MATCHER_THREAD_TIMEOUT = 4000;
     private static final String COURT_CODE_CX = "B01CX";
     private static final String COURT_CODE_CY = "B01CY";
-    private static String singleCaseXml;
+    private static final String CRN = "X340741";
+
+    public static String singleCaseXml;
     private static String multiSessionXml;
     private static String multiDayXml;
     private static String multiCourtRoomXml;
@@ -73,6 +74,7 @@ class MessageProcessorTest {
 
     @InjectMocks
     private MessageProcessor messageProcessor;
+
     private MessageParser<ExternalDocumentRequest> parser;
 
     @BeforeAll
@@ -92,12 +94,45 @@ class MessageProcessorTest {
         parser = new MessageParser<>(new XmlMapper(xmlModule), validator);
     }
 
-    @DisplayName("Receive a valid case which exists then post to the event bus")
+    @DisplayName("Receive a valid unmatched case for person then post match event to the event bus")
     @Test
-    void whenValidMessageReceived_ThenAttemptMatch() throws JsonProcessingException {
+    void whenValidMessageReceived_ThenMatch() throws JsonProcessingException {
 
-        Name name = Name.builder().forename1("Donald").surname("TRUMP").build();
-        CourtCase courtCase =  CourtCase.builder().isNew(false).name(name).build();
+        CourtCase courtCase =  CourtCase.builder().defendantType(PERSON).build();
+        when(courtCaseService.getCourtCase(any(Case.class))).thenReturn(Mono.just(courtCase));
+
+        ExternalDocumentRequest documentRequest = parser.parseMessage(singleCaseXml, ExternalDocumentRequest.class);
+
+        messageProcessor.process(documentRequest, "messageId");
+
+        verify(eventBus, timeout(MATCHER_THREAD_TIMEOUT)).post(any(CourtCaseMatchEvent.class));
+        verify(telemetryService).trackCourtListEvent(any(Info.class), eq("messageId"));
+        verify(telemetryService).trackCourtCaseEvent(any(Case.class), eq("messageId"));
+        verifyNoMoreInteractions(eventBus, telemetryService);
+    }
+
+    @DisplayName("Receive a valid case for organisation then no match event, post update event to the event bus")
+    @Test
+    void whenValidMessageReceivedForOrganisation_ThenUpdateEvent() throws JsonProcessingException {
+
+        CourtCase courtCase = CourtCase.builder().defendantType(ORGANISATION).build();
+        when(courtCaseService.getCourtCase(any(Case.class))).thenReturn(Mono.just(courtCase));
+
+        ExternalDocumentRequest documentRequest = parser.parseMessage(singleCaseXml, ExternalDocumentRequest.class);
+
+        messageProcessor.process(documentRequest, "messageId");
+
+        verify(eventBus, timeout(MATCHER_THREAD_TIMEOUT)).post(any(CourtCaseUpdateEvent.class));
+        verify(telemetryService).trackCourtListEvent(any(Info.class), eq("messageId"));
+        verify(telemetryService).trackCourtCaseEvent(any(Case.class), eq("messageId"));
+        verifyNoMoreInteractions(eventBus, telemetryService);
+    }
+
+    @DisplayName("Receive a valid matched case for person then post update event to the event bus")
+    @Test
+    void whenValidMessageReceivedForMatchedPerson_ThenNoMatch() throws JsonProcessingException {
+
+        CourtCase courtCase =  CourtCase.builder().defendantType(PERSON).crn(CRN).build();
         when(courtCaseService.getCourtCase(any(Case.class))).thenReturn(Mono.just(courtCase));
 
         ExternalDocumentRequest documentRequest = parser.parseMessage(singleCaseXml, ExternalDocumentRequest.class);
@@ -115,11 +150,11 @@ class MessageProcessorTest {
     void givenTwoExistingAndOneNew_whenValidMessageReceivedWithMultipleSessions_ThenAttemptMatchOnOneAndUpdateOnTwo() throws JsonProcessingException {
 
         CaseMatcher case1 = CaseMatcher.builder().caseNo("1600032953").build();
-        CourtCase courtCase1 = CourtCase.builder().isNew(false).caseNo("1600032953").defendantType(PERSON).build();
+        CourtCase courtCase1 = CourtCase.builder().crn(CRN).caseNo("1600032953").defendantType(PERSON).build();
         CaseMatcher case2 = CaseMatcher.builder().caseNo("1600032979").build();
-        CourtCase courtCase2 = CourtCase.builder().isNew(false).caseNo("1600032979").defendantType(PERSON).build();
+        CourtCase courtCase2 = CourtCase.builder().crn("X123456").caseNo("1600032979").defendantType(PERSON).build();
         CaseMatcher case3 = CaseMatcher.builder().caseNo("1600032952").build();
-        CourtCase courtCase3 = CourtCase.builder().isNew(true).caseNo("1600032952").defendantType(PERSON).build();
+        CourtCase courtCase3 = CourtCase.builder().caseNo("1600032952").defendantType(PERSON).build();
         CaseMatcher case4 = CaseMatcher.builder().caseNo("1600011111").build();
         CourtCase courtCase4 = CourtCase.builder().isNew(true).caseNo("1600011111").defendantType(ORGANISATION).build();
 
@@ -146,11 +181,11 @@ class MessageProcessorTest {
         verifyNoMoreInteractions(eventBus, telemetryService);
     }
 
-    @DisplayName("Receive multiple valid cases then attempt post as updates.")
+    @DisplayName("Receive multiple matched valid cases then attempt post as updates.")
     @Test
     void whenValidMessageReceivedWithMultipleDays_ThenAttemptMatch() throws JsonProcessingException {
         CourtCase courtCase = mock(CourtCase.class);
-        when(courtCase.isNew()).thenReturn(Boolean.FALSE);
+        when(courtCase.shouldMatchToOffender()).thenReturn(false);
         when(courtCaseService.getCourtCase(any(Case.class))).thenReturn(Mono.just(courtCase));
 
         ExternalDocumentRequest documentRequest = parser.parseMessage(multiDayXml, ExternalDocumentRequest.class);
@@ -168,7 +203,7 @@ class MessageProcessorTest {
     @Test
     void givenMultipleCourtRooms_whenValidMessageReceived_ThenFireOneTelemetryEvent() throws JsonProcessingException {
         CourtCase courtCase = mock(CourtCase.class);
-        when(courtCase.isNew()).thenReturn(Boolean.FALSE);
+        when(courtCase.shouldMatchToOffender()).thenReturn(false);
         when(courtCaseService.getCourtCase(any(Case.class))).thenReturn(Mono.just(courtCase));
 
         ExternalDocumentRequest documentRequest = parser.parseMessage(multiCourtRoomXml, ExternalDocumentRequest.class);
@@ -196,31 +231,7 @@ class MessageProcessorTest {
     @Test
     void givenExistingPersonCase_whenPostCase_thenDoNotMatch() {
 
-        CourtCase courtCase = CourtCase.builder().isNew(false).caseNo("1").defendantType(PERSON).build();
-
-        messageProcessor.postCaseEvent(courtCase);
-
-        verify(eventBus).post(argThat(CourtCaseUpdateEventMatcher.builder().caseNo("1").build()));
-        verifyNoMoreInteractions(eventBus);
-    }
-
-    @DisplayName("A new case based on a person does not match")
-    @Test
-    void givenNewPersonCase_whenPostCase_thenMatch() {
-
-        CourtCase courtCase = CourtCase.builder().isNew(true).caseNo("1").defendantType(PERSON).build();
-
-        messageProcessor.postCaseEvent(courtCase);
-
-        verify(eventBus).post(argThat(CourtCaseMatchEventMatcher.builder().caseNo("1").build()));
-        verifyNoMoreInteractions(eventBus);
-    }
-
-    @DisplayName("A new case based on an organisation does not match")
-    @Test
-    void givenNewOrganisationCase_whenPostCase_thenDoNotMatch() {
-
-        CourtCase courtCase = CourtCase.builder().isNew(true).caseNo("1").defendantType(ORGANISATION).build();
+        CourtCase courtCase = CourtCase.builder().crn(CRN).caseNo("1").defendantType(PERSON).build();
 
         messageProcessor.postCaseEvent(courtCase);
 
@@ -293,7 +304,7 @@ class MessageProcessorTest {
         }
     }
 
-    private InfoMatcher matchesInfoWith(LocalDate dateOfHearing, String courtCode) {
+    public static InfoMatcher matchesInfoWith(LocalDate dateOfHearing, String courtCode) {
         return InfoMatcher.builder()
             .courtCode(courtCode)
             .dateOfHearing(dateOfHearing)

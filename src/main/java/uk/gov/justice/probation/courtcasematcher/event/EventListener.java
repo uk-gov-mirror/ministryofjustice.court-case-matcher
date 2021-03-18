@@ -17,10 +17,8 @@ import uk.gov.justice.probation.courtcasematcher.service.SearchResult;
 import uk.gov.justice.probation.courtcasematcher.service.TelemetryService;
 
 import java.util.Collections;
+import java.util.Optional;
 
-/**
- * We intend to replace EventBus with an external message queue.
- */
 @Component
 @Slf4j
 public class EventListener {
@@ -65,9 +63,15 @@ public class EventListener {
     @AllowConcurrentEvents
     @Subscribe
     public void courtCaseUpdateEvent(CourtCaseUpdateEvent courtCaseEvent) {
-        CourtCase courtCase = courtCaseEvent.getCourtCase();
-        log.info("Upsert case no {} for court {}", courtCase.getCaseNo(), courtCase.getCourtCode());
-        courtCaseService.saveCourtCase(courtCaseEvent.getCourtCase());
+        final CourtCase courtCase = courtCaseEvent.getCourtCase();
+        log.info("Upsert case no {} with crn {} for court {}", courtCase.getCaseNo(), courtCase.getCrn(), courtCase.getCourtCode());
+
+        Optional.ofNullable(courtCase.getCrn())
+            .map(crn -> courtCaseService.updateProbationStatusDetail(courtCase)
+
+                                        .onErrorReturn(courtCase))
+            .orElse(Mono.just(courtCase))
+            .subscribe(courtCaseService::saveCourtCase);
     }
 
     @AllowConcurrentEvents

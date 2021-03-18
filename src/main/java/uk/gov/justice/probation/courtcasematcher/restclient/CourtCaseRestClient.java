@@ -153,13 +153,10 @@ public class CourtCaseRestClient {
             .onStatus(HttpStatus::isError, (clientResponse) -> handleError(clientResponse, () -> new CourtNotFoundException(courtCode)))
             .toBodilessEntity()
             .doOnError(e -> log.error(String.format(ERR_MSG_FORMAT_PUT_ABSENT, courtCode) + ".Exception : " + e))
-            .subscribe(responseEntity -> {
-                log.info("Successful PUT of all cases for purge in court case service for court {}", courtCode);
-            });
+            .subscribe(responseEntity -> log.info("Successful PUT of all cases for purge in court case service for court {}", courtCode));
     }
 
-    @Deprecated(forRemoval = true)
-    public Mono<ProbationStatusDetail> getProbationStatus(String crn) {
+    public Mono<ProbationStatusDetail> getProbationStatusDetail(String crn) {
         final String path = String.format(probationStatusDetailGetTemplate, crn);
 
         return get(path)

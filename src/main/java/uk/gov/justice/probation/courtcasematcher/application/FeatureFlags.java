@@ -12,8 +12,6 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "feature")
 public class FeatureFlags {
 
-    public static final String USE_OFFENDER_SEARCH_FOR_PROBATION_STATUS = "use-offender-search-for-probation-status";
-
     private final Map<String, Boolean> flags;
 
     public FeatureFlags() {
@@ -22,10 +20,6 @@ public class FeatureFlags {
 
     public Map<String, Boolean> getFlags() {
         return flags;
-    }
-
-    public boolean offenderSearchForProbationStatus() {
-        return flags.getOrDefault(USE_OFFENDER_SEARCH_FOR_PROBATION_STATUS, true);
     }
 
     public void setFlagValue(final String flagName, final boolean value) {

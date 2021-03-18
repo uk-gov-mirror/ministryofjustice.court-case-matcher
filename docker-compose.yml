@@ -1,0 +1,54 @@
+version: "3"
+services:
+  offender-search:
+    image: quay.io/hmpps/probation-offender-search:latest
+    networks:
+      - hmpps
+    container_name: probation-offender-search
+    depends_on:
+      - localstack
+    ports:
+      - "8084:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+    environment:
+      - SERVER_PORT=8080
+      - SPRING_PROFILES_ACTIVE=localstack,dev
+      - ELASTICSEARCH_HOST=localstack
+
+  oauth:
+    image: quay.io/hmpps/hmpps-auth:latest
+    networks:
+      - hmpps
+    container_name: oauth
+    ports:
+      - "8090:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/auth/health"]
+    environment:
+      - SERVER_PORT=8080
+      - SPRING_PROFILES_ACTIVE=dev
+
+  localstack:
+    image: localstack/localstack:latest
+    networks:
+      - hmpps
+    container_name: localstack
+    ports:
+      - "4566-4597:4566-4597"
+      - 8999:8080
+      - 9080:9080
+    environment:
+      - SERVICES=sqs
+      - PORT_WEB_UI=9080
+      - DEBUG=${DEBUG- }
+      - DATA_DIR=/tmp/localstack/data
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - DEFAULT_REGION=eu-west-2
+    volumes:
+      - "${TMPDIR:-/tmp/localstack}:/tmp/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - $PWD/src/test/resources/localstack:/docker-entrypoint-initaws.d
+
+networks:
+  hmpps:

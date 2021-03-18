@@ -1,7 +1,7 @@
 {
   "request": {
     "method": "PUT",
-    "url": "/court/SHF/cases/purgeAbsent",
+    "url": "/court/B10JQ/cases/purgeAbsent",
     "bodyPatterns": [
       {
         "matches" : ".*2020.*"

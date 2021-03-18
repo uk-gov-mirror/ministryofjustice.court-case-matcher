@@ -8,6 +8,6 @@
     "headers": {
       "Content-Type": "application/json"
     },
-    "body": "{\n    \"probationStatus\": \"CURRENT\",\n    \"inBreach\": true\n}"
+    "body": "{\n    \"status\": \"CURRENT\",\n    \"inBreach\": true\n}"
   }
 }

@@ -1,7 +1,7 @@
 {
   "request": {
     "method": "GET",
-    "url": "/court/SHF/case/99999"
+    "url": "/court/B10JQ/case/1600032981"
   },
   "response": {
     "status": 404,

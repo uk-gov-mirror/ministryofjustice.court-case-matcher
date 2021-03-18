@@ -1,5 +1,10 @@
 package uk.gov.justice.probation.courtcasematcher.model.courtcaseservice;
 
+import java.io.Serializable;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AccessLevel;
@@ -8,12 +13,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import reactor.util.StringUtils;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Name;
-
-import java.io.Serializable;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Data
 @Builder
@@ -76,4 +77,11 @@ public class CourtCase implements Serializable {
     @JsonIgnore
     private final boolean isNew;
 
+    public boolean isPerson() {
+        return Optional.ofNullable(defendantType).map(defType -> defType == DefendantType.PERSON).orElse(false);
+    }
+
+    public boolean shouldMatchToOffender() {
+        return isPerson() && !StringUtils.hasText(crn);
+    }
 }

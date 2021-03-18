@@ -1,14 +1,12 @@
 package uk.gov.justice.probation.courtcasematcher.messaging;
 
 import com.google.common.eventbus.EventBus;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.gov.justice.probation.courtcasematcher.event.CourtCaseMatchEvent;
 import uk.gov.justice.probation.courtcasematcher.event.CourtCaseUpdateEvent;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCase;
-import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.DefendantType;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Case;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Document;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.DocumentWrapper;
@@ -23,7 +21,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-@Setter
 @Service
 @Slf4j
 public class MessageProcessor {
@@ -83,7 +80,7 @@ public class MessageProcessor {
     }
 
     void postCaseEvent(CourtCase courtCase) {
-        if (courtCase.isNew() && DefendantType.PERSON == courtCase.getDefendantType()) {
+        if (courtCase.shouldMatchToOffender()) {
             eventBus.post(new CourtCaseMatchEvent(courtCase));
         }
         else {

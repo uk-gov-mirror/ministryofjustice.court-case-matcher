@@ -1,10 +1,10 @@
 {
   "request": {
     "method": "PUT",
-    "url": "/court/B10JQ/case/12345",
+    "url": "/court/B10JQ/case/1600032981",
     "bodyPatterns": [
       {
-        "matches" : ".*caseNo.*12345.*"
+        "matches" : ".*caseNo.*1600032981.*"
       }
     ]
   },

@@ -1,7 +1,7 @@
 {
   "request": {
     "method": "GET",
-    "url": "/court/SHF/case/123456"
+    "url": "/court/B10JQ/case/123456"
   },
   "response": {
     "status": 200,
