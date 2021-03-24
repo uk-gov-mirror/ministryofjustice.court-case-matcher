@@ -1,5 +1,9 @@
 package uk.gov.justice.probation.courtcasematcher.service;
 
+import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -15,23 +19,17 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
-import uk.gov.justice.probation.courtcasematcher.application.FeatureFlags;
 import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.CourtCase;
+import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.ProbationStatusDetail;
 import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.Name;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.Match;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.MatchRequest;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.Offender;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.OffenderSearchMatchType;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.OtherIds;
-import uk.gov.justice.probation.courtcasematcher.model.offendersearch.ProbationStatus;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.SearchResponse;
 import uk.gov.justice.probation.courtcasematcher.restclient.CourtCaseRestClient;
 import uk.gov.justice.probation.courtcasematcher.restclient.OffenderSearchRestClient;
-
-import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -69,7 +67,7 @@ class MatcherServiceTest {
         .build();
     private final Offender offender = Offender.builder()
             .otherIds(otherIds)
-            .probationStatus(ProbationStatus.builder()
+            .probationStatus(ProbationStatusDetail.builder()
                 .status(PROBATION_STATUS)
                 .build())
             .build();
@@ -93,8 +91,6 @@ class MatcherServiceTest {
             .matchedBy(OffenderSearchMatchType.NOTHING)
             .matches(Collections.emptyList())
             .build();
-
-    private FeatureFlags featureFlags;
 
     @Mock
     private CourtCaseRestClient courtCaseRestClient;
@@ -123,7 +119,7 @@ class MatcherServiceTest {
         Logger logger = (Logger) getLogger(LoggerFactory.getLogger(MatcherService.class).getName());
         logger.addAppender(mockAppender);
 
-        matcherService = new MatcherService(featureFlags, courtCaseRestClient, offenderSearchRestClient, matchRequestFactory);
+        matcherService = new MatcherService(offenderSearchRestClient, matchRequestFactory);
     }
 
     @Test

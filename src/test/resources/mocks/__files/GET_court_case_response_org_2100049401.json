@@ -1,0 +1,26 @@
+{
+  "caseId": "216544457",
+  "caseNo": "2100049401",
+  "listNo": "1st",
+  "courtCode": "B10JQ",
+  "courtRoom": "1",
+  "sessionStartTime": "2020-01-13T09:00:00",
+  "session": "MORNING",
+  "probationStatus": "No record",
+  "offences": [
+    {
+      "offenceTitle": "Theft from a shop",
+      "offenceSummary": "On 01/01/2016 at Town, stole Article, to the value of £100.00, belonging to Person.",
+      "act": "Contrary to section 1(1) and 7 of the Theft Act 1968."
+    }
+  ],
+  "name": {
+    "surname": "BOROUGH COUNCIL"
+  },
+  "defendantAddress": {
+    "line1": "Line 1",
+    "line2": "Line 2",
+    "postcode": "SP10 1AA"
+  },
+  "defendantType": "ORGANISATION"
+}

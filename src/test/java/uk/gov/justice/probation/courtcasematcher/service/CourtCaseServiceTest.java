@@ -159,7 +159,8 @@ class CourtCaseServiceTest {
     void whenUpdateProbationStatus_thenMergeAndReturn() {
 
         LocalDate localDate = LocalDate.of(2020, Month.AUGUST, 20);
-        CourtCase courtCase = CourtCase.builder().crn(CRN).courtCode(COURT_CODE).caseNo(CASE_NO).build();
+        CourtCase courtCase = CourtCase.builder().crn(CRN).courtCode(COURT_CODE).caseNo(CASE_NO).probationStatus("Previously known")
+            .probationStatusActual("PREVIOUSLY_KNOWN").build();
         ProbationStatusDetail probationStatusDetail = ProbationStatusDetail.builder()
                                                                     .status("CURRENT")
                                                                     .preSentenceActivity(true)

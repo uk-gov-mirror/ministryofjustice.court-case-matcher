@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import uk.gov.justice.probation.courtcasematcher.model.courtcaseservice.ProbationStatusDetail;
 
 @Getter
 @Builder
@@ -14,5 +15,5 @@ import lombok.ToString;
 @NoArgsConstructor(access = AccessLevel.PRIVATE, force = true)
 public class Offender {
     private final OtherIds otherIds;
-    private final ProbationStatus probationStatus;
+    private final ProbationStatusDetail probationStatus;
 }

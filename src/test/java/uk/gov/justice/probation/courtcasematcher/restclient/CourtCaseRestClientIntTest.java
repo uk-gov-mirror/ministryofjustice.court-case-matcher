@@ -130,6 +130,7 @@ public class CourtCaseRestClientIntTest {
             .courtRoom("1")
             .sessionStartTime(startTime)
             .probationStatus("Current")
+            .probationStatusActual("CURRENT")
             .breach(Boolean.TRUE)
             .suspendedSentenceOrder(Boolean.FALSE)
             .caseNo(CASE_NO)

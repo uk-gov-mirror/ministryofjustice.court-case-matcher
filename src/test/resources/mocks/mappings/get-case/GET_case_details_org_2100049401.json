@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/court/B10JQ/case/2100049401"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "bodyFileName": "GET_court_case_response_org_2100049401.json"
+  }
+}

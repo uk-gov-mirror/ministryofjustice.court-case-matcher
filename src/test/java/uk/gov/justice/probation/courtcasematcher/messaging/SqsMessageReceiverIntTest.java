@@ -44,6 +44,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 @ActiveProfiles({"test"})
 public class SqsMessageReceiverIntTest {
 
+    private static final String BASE_PATH = "src/test/resources/messages";
     private static String singleCaseXml;
 
     @Autowired
@@ -56,8 +57,7 @@ public class SqsMessageReceiverIntTest {
 
     @BeforeAll
     static void beforeAll() throws IOException {
-        final String basePath = "src/test/resources/messages";
-        singleCaseXml = Files.readString(Paths.get(basePath +"/external-document-request-single-case.xml"));
+        singleCaseXml = Files.readString(Paths.get(BASE_PATH +"/external-document-request-single-case.xml"));
         MOCK_SERVER.start();
     }
 
@@ -72,7 +72,7 @@ public class SqsMessageReceiverIntTest {
     private QueueMessagingTemplate queueMessagingTemplate;
 
     @Test
-    public void whenReceivePayload_thenSendCase() {
+    public void givenMatchedExistingCase_whenReceivePayload_thenSendUpdatedCase() {
 
         queueMessagingTemplate.convertAndSend(QUEUE_NAME, singleCaseXml);
 
@@ -83,11 +83,36 @@ public class SqsMessageReceiverIntTest {
         MOCK_SERVER.verify(
             putRequestedFor(urlEqualTo("/court/B10JQ/case/1600032981"))
                 .withRequestBody(matchingJsonPath("pnc", equalTo("2004/0012345U")))
+                .withRequestBody(matchingJsonPath("probationStatus", equalTo("CURRENT")))
+                .withRequestBody(matchingJsonPath("listNo", equalTo("2nd")))
         );
 
         verify(telemetryService).trackSQSMessageEvent(any(String.class));
         verify(telemetryService).trackCourtCaseEvent(any(Case.class), any(String.class));
         verify(telemetryService).trackOffenderMatchEvent(any(CourtCase.class), any(SearchResponse.class));
+        verify(telemetryService).trackCourtListEvent(any(Info.class), any(String.class));
+        verifyNoMoreInteractions(telemetryService);
+    }
+
+    @Test
+    public void givenExistingCase_whenReceivePayloadForOrganisation_thenSendUpdatedCase() throws IOException {
+
+        String orgXml = Files.readString(Paths.get(BASE_PATH +"/external-document-request-single-case-org.xml"));
+
+        queueMessagingTemplate.convertAndSend(QUEUE_NAME, orgXml);
+
+        await()
+            .atMost(5, TimeUnit.SECONDS)
+            .until(() -> countPutRequestsTo("/court/B10JQ/case/2100049401") == 1);
+
+        MOCK_SERVER.verify(
+            putRequestedFor(urlEqualTo("/court/B10JQ/case/2100049401"))
+                .withRequestBody(matchingJsonPath("courtRoom", equalTo("7")))
+                .withRequestBody(matchingJsonPath("defendantType", equalTo("ORGANISATION")))
+        );
+
+        verify(telemetryService).trackSQSMessageEvent(any(String.class));
+        verify(telemetryService).trackCourtCaseEvent(any(Case.class), any(String.class));
         verify(telemetryService).trackCourtListEvent(any(Info.class), any(String.class));
         verifyNoMoreInteractions(telemetryService);
     }

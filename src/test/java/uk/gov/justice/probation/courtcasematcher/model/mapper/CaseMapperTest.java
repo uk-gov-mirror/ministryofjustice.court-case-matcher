@@ -25,7 +25,6 @@ import uk.gov.justice.probation.courtcasematcher.model.offendersearch.MatchType;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.Offender;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.OffenderSearchMatchType;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.OtherIds;
-import uk.gov.justice.probation.courtcasematcher.model.offendersearch.ProbationStatus;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.SearchResponse;
 import uk.gov.justice.probation.courtcasematcher.service.SearchResult;
 
@@ -45,7 +44,7 @@ class CaseMapperTest {
     private static final LocalDate DATE_OF_HEARING = LocalDate.of(2020, Month.FEBRUARY, 29);
     private static final LocalTime START_TIME = LocalTime.of(9, 10);
     private static final LocalDateTime SESSION_START_TIME = LocalDateTime.of(2020, Month.FEBRUARY, 29, 9, 10);
-    private static final String COURT_CODE = "B10JQ00";
+    private static final String COURT_CODE = "B10JQ";
     private static final String COURT_NAME = "North Shields Magistrates Court";
 
     private static final Name name = Name.builder().title("Mr")
@@ -124,7 +123,7 @@ class CaseMapperTest {
             Match match = Match.builder()
                 .offender(Offender.builder()
                     .otherIds(OtherIds.builder().crn(CRN).croNumber(CRO).pncNumber(PNC).build())
-                    .probationStatus(ProbationStatus.builder().status("CURRENT").preSentenceActivity(true).build())
+                    .probationStatus(ProbationStatusDetail.builder().status("CURRENT").preSentenceActivity(true).build())
                     .build())
                 .build();
 
@@ -342,6 +341,7 @@ class CaseMapperTest {
                 .caseNo("12345")
                 .caseId("123456")
                 .probationStatus("Current")
+                .probationStatusActual("CURRENT")
                 .courtCode(COURT_CODE)
                 .defendantAddress(null)
                 .defendantName("Pat Garrett")
@@ -368,7 +368,8 @@ class CaseMapperTest {
 
             // Fields that stay the same on existing value
             assertThat(courtCase.getCourtCode()).isEqualTo(COURT_CODE);
-            assertThat(courtCase.getProbationStatus()).isEqualTo("Current");
+            assertThat(courtCase.getProbationStatus()).isEqualTo("CURRENT");
+            assertThat(courtCase.getProbationStatusActual()).isEqualTo("CURRENT");
             assertThat(courtCase.getCaseNo()).isEqualTo("12345");
             assertThat(courtCase.getBreach()).isTrue();
             assertThat(courtCase.getSuspendedSentenceOrder()).isTrue();

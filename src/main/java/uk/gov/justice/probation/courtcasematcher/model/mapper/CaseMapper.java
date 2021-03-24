@@ -17,7 +17,6 @@ import uk.gov.justice.probation.courtcasematcher.model.externaldocumentrequest.N
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.Match;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.MatchType;
 import uk.gov.justice.probation.courtcasematcher.model.offendersearch.Offender;
-import uk.gov.justice.probation.courtcasematcher.model.offendersearch.ProbationStatus;
 
 import java.util.Collections;
 import java.util.List;
@@ -137,7 +136,8 @@ public class CaseMapper {
             .breach(existingCourtCase.getBreach())
             .previouslyKnownTerminationDate(existingCourtCase.getPreviouslyKnownTerminationDate())
             .crn(existingCourtCase.getCrn())
-            .probationStatus(existingCourtCase.getProbationStatus())
+            .probationStatus(existingCourtCase.getProbationStatusActual())
+            .probationStatusActual(existingCourtCase.getProbationStatusActual())
             .suspendedSentenceOrder(existingCourtCase.getSuspendedSentenceOrder())
             .pnc(existingCourtCase.getPnc())
 
@@ -182,13 +182,14 @@ public class CaseMapper {
 
         if (matchDetails.isExactMatch()) {
             Offender offender = matchDetails.getMatches().get(0).getOffender();
-            ProbationStatus probationStatus = offender.getProbationStatus();
+            ProbationStatusDetail probationStatus = offender.getProbationStatus();
             courtCaseBuilder
-                .breach(Optional.ofNullable(probationStatus).map(ProbationStatus::getInBreach).orElse(null))
+                .breach(Optional.ofNullable(probationStatus).map(ProbationStatusDetail::getInBreach).orElse(null))
                 .previouslyKnownTerminationDate(
-                    Optional.ofNullable(probationStatus).map(ProbationStatus::getPreviouslyKnownTerminationDate).orElse(null))
-                .probationStatus(Optional.ofNullable(probationStatus).map(ProbationStatus::getStatus).orElse(null))
-                .preSentenceActivity(Optional.ofNullable(probationStatus).map(ProbationStatus::isPreSentenceActivity).orElse(false))
+                    Optional.ofNullable(probationStatus).map(ProbationStatusDetail::getPreviouslyKnownTerminationDate).orElse(null))
+                .probationStatus(Optional.ofNullable(probationStatus).map(ProbationStatusDetail::getStatus).orElse(null))
+                .probationStatusActual(Optional.ofNullable(probationStatus).map(ProbationStatusDetail::getStatus).orElse(null))
+                .preSentenceActivity(Optional.ofNullable(probationStatus).map(ProbationStatusDetail::isPreSentenceActivity).orElse(false))
                 .crn(offender.getOtherIds().getCrn())
                 .cro(offender.getOtherIds().getCroNumber())
                 .pnc(offender.getOtherIds().getPncNumber())
