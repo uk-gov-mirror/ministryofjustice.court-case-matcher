@@ -31,12 +31,12 @@ import static java.util.Comparator.comparing;
 public class CaseMapper {
 
     public static CourtCase newFromCase(Case aCase) {
-        return getCourtCaseBuilderFromCase(aCase)
+        return newFromLibraCase(aCase)
             .isNew(true)
             .build();
     }
 
-    private static CourtCase.CourtCaseBuilder getCourtCaseBuilderFromCase(CourtCase courtCase) {
+    private static CourtCase.CourtCaseBuilder newFromCourtCase(CourtCase courtCase) {
         return CourtCase.builder()
             .caseNo(courtCase.getCaseNo())
             .courtCode(courtCase.getCourtCode())
@@ -58,7 +58,7 @@ public class CaseMapper {
             .offences(courtCase.getOffences());
     }
 
-    private static CourtCase.CourtCaseBuilder getCourtCaseBuilderFromCase(Case aCase) {
+    private static CourtCase.CourtCaseBuilder newFromLibraCase(Case aCase) {
         return CourtCase.builder()
             .caseNo(aCase.getCaseNo())
             .courtCode(aCase.getBlock().getSession().getCourtCode())
@@ -177,7 +177,7 @@ public class CaseMapper {
 
     public static CourtCase newFromCourtCaseWithMatches(CourtCase incomingCase, MatchDetails matchDetails) {
 
-        CourtCaseBuilder courtCaseBuilder = getCourtCaseBuilderFromCase(incomingCase)
+        CourtCaseBuilder courtCaseBuilder = newFromCourtCase(incomingCase)
             .groupedOffenderMatches(buildGroupedOffenderMatch(matchDetails.getMatches(), matchDetails.getMatchType()));
 
         if (matchDetails.isExactMatch()) {

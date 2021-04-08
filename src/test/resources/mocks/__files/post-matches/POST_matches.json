@@ -1,0 +1,20 @@
+{
+  "matches": [
+    {
+      "matchIdentifiers": {
+        "crn": "X12345"
+      },
+      "matchType": "PARTIAL_NAME",
+      "confirmed": false,
+      "rejected": true
+    },
+    {
+      "matchIdentifiers": {
+        "crn": "X12346"
+      },
+      "matchType": "NAME_DOB_ALIAS",
+      "confirmed": true,
+      "rejected": false
+    }
+  ]
+}

@@ -5,7 +5,6 @@ import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -98,14 +97,14 @@ public class CourtCaseRestClientIntTest {
     static WiremockExtension wiremockExtension = new WiremockExtension(MOCK_SERVER);
 
     @BeforeEach
-    public void beforeEach() {
+    void beforeEach() {
         MockitoAnnotations.openMocks(this);
         Logger logger = (Logger) getLogger(LoggerFactory.getLogger(CourtCaseRestClient.class).getName());
         logger.addAppender(mockAppender);
     }
 
     @Test
-    public void whenGetCourtCase_thenMakeRestCallToCourtCaseService() {
+    void whenGetCourtCase_thenMakeRestCallToCourtCaseService() {
 
         LocalDateTime startTime = LocalDateTime.of(2020, Month.JANUARY, 13, 9, 0, 0);
         Address address = Address.builder()
@@ -154,7 +153,7 @@ public class CourtCaseRestClientIntTest {
     }
 
     @Test
-    public void givenUnknownCaseNo_whenGetCourtCase_thenReturnEmptyOptional() {
+    void givenUnknownCaseNo_whenGetCourtCase_thenReturnEmptyOptional() {
 
         Optional<CourtCase> optional = restClient.getCourtCase(COURT_CODE, NEW_CASE_NO).blockOptional();
 
@@ -162,7 +161,7 @@ public class CourtCaseRestClientIntTest {
     }
 
     @Test
-    public void whenPutCourtCase_thenMakeRestCallToCourtCaseService() {
+    void whenPutCourtCase_thenMakeRestCallToCourtCaseService() {
 
         restClient.putCourtCase(COURT_CODE, CASE_NO, A_CASE);
 
@@ -170,7 +169,7 @@ public class CourtCaseRestClientIntTest {
     }
 
     @Test
-    public void givenUnknownCourt_whenPutCourtCase_thenNoRetryFailureEvent() {
+    void givenUnknownCourt_whenPutCourtCase_thenNoRetryFailureEvent() {
 
         var unknownCourtCode = "XXX";
         var courtCaseApi = CourtCase.builder()
@@ -187,7 +186,7 @@ public class CourtCaseRestClientIntTest {
     }
 
     @Test
-    public void whenRestClientThrows500OnPut_ThenRetryWithFailureEvent() {
+    void whenRestClientThrows500OnPut_ThenRetryWithFailureEvent() {
         restClient.putCourtCase("X500", CASE_NO, A_CASE);
 
         var retryExhaustedException = Exceptions.retryExhausted("Message", new IllegalArgumentException()).getClass();
@@ -196,7 +195,7 @@ public class CourtCaseRestClientIntTest {
     }
 
     @Test
-    public void whenPostOffenderMatches_thenMakeRestCallToCourtCaseService() {
+    void whenPostOffenderMatches_thenMakeRestCallToCourtCaseService() {
 
         restClient.postMatches(COURT_CODE, CASE_NO, matches);
 
@@ -207,7 +206,7 @@ public class CourtCaseRestClientIntTest {
     }
 
     @Test
-    public void givenUnknownCourt_whenPostOffenderMatches_thenNoRetryAndLogNotFoundError() {
+    void givenUnknownCourt_whenPostOffenderMatches_thenNoRetryAndLogNotFoundError() {
 
         GroupedOffenderMatches matches = GroupedOffenderMatches.builder()
             .matches(Collections.singletonList(OffenderMatch.builder()
@@ -234,7 +233,7 @@ public class CourtCaseRestClientIntTest {
     }
 
     @Test
-    public void whenRestClientThrows500OnPostMatches_ThenRetryAndLogRetryExhaustedError() {
+    void whenRestClientThrows500OnPostMatches_ThenRetryAndLogRetryExhaustedError() {
 
         restClient.postMatches("X500", CASE_NO, matches);
 
@@ -251,7 +250,7 @@ public class CourtCaseRestClientIntTest {
     }
 
     @Test
-    public void whenRestClientCalledWithNull_ThenFailureEvent() {
+    void whenRestClientCalledWithNull_ThenFailureEvent() {
 
         restClient.postMatches(COURT_CODE, CASE_NO, null);
 
@@ -259,46 +258,7 @@ public class CourtCaseRestClientIntTest {
     }
 
     @Test
-    public void whenPurgeAbsent_ThenPutAndLog() {
-
-        Map<LocalDate, List<String>> casesByDate = Map.of(LocalDate.of(2020, Month.JANUARY, 1), Collections.emptyList());
-        restClient.purgeAbsent(COURT_CODE, casesByDate);
-
-        verify(mockAppender, timeout(WEB_CLIENT_TIMEOUT_MS)).doAppend(captorLoggingEvent.capture());
-        List<LoggingEvent> events = captorLoggingEvent.getAllValues();
-        LoggingEvent loggingEvent = events.get(0);
-        assertThat(loggingEvent.getLevel()).isEqualTo(Level.INFO);
-        assertThat(loggingEvent.getFormattedMessage()).isEqualTo("Successful PUT of all cases for purge in court case service for court " + COURT_CODE);
-    }
-
-    @Test
-    public void givenUnknownCourt_whenPurgeAbsent_ThenReturn404() {
-
-        Map<LocalDate, List<String>> casesByDate = Map.of(LocalDate.of(2020, Month.JANUARY, 1), Collections.emptyList());
-        restClient.purgeAbsent("XXX", casesByDate);
-
-        verify(mockAppender, timeout(WEB_CLIENT_TIMEOUT_MS)).doAppend(captorLoggingEvent.capture());
-        List<LoggingEvent> events = captorLoggingEvent.getAllValues();
-        LoggingEvent loggingEvent = events.get(0);
-        assertThat(loggingEvent.getLevel()).isEqualTo(Level.ERROR);
-        assertThat(loggingEvent.getFormattedMessage()).contains("Unexpected exception when applying PUT to purge absent cases for court 'XXX'");
-    }
-
-    @Test
-    public void whenRestClientThrows500OnPurgeAbsent_ThenFailureEvent() {
-
-        Map<LocalDate, List<String>> casesByDate = Map.of(LocalDate.of(2020, Month.JANUARY, 1), Collections.emptyList());
-        restClient.purgeAbsent("X500", casesByDate);
-
-        verify(mockAppender, timeout(WEB_CLIENT_TIMEOUT_MS)).doAppend(captorLoggingEvent.capture());
-        List<LoggingEvent> events = captorLoggingEvent.getAllValues();
-        LoggingEvent loggingEvent = events.get(0);
-        assertThat(loggingEvent.getLevel()).isEqualTo(Level.ERROR);
-        assertThat(loggingEvent.getFormattedMessage()).contains("Unexpected exception when applying PUT to purge absent cases for court 'X500'");
-    }
-
-    @Test
-    public void whenGetOffenderProbationStatusDetail_thenMakeRestCallToCourtCaseService() {
+    void whenGetOffenderProbationStatusDetail_thenMakeRestCallToCourtCaseService() {
 
         Optional<ProbationStatusDetail> optional = restClient.getProbationStatusDetail("X320741").blockOptional();
 
@@ -309,7 +269,7 @@ public class CourtCaseRestClientIntTest {
     }
 
     @Test
-    public void givenUnknownCrn_whenGetOffenderProbationStatusDetail_thenMakeReturnEmpty() {
+    void givenUnknownCrn_whenGetOffenderProbationStatusDetail_thenMakeReturnEmpty() {
 
         Optional<ProbationStatusDetail> optional = restClient.getProbationStatusDetail("X404").blockOptional();
 

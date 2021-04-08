@@ -145,6 +145,16 @@ jobs:
       - store_artifacts:
           path: build/reports/tests
 
+  pact-publish:
+    executor: builder
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - gradle-{{ checksum "build.gradle" }}
+            - gradle-
+      - run: ./gradlew -Dpact.writer.overwrite=true test pactPublish
+
   build_docker:
     executor: deployer
     steps:
@@ -240,6 +250,12 @@ workflows:
       - build_docker:
           requires:
             - build
+      - pact-publish:
+          requires:
+            - build
+          filters:
+            branches:
+              only: main
       - dps/helm_lint:
           name: helm_lint_dev
           env: dev

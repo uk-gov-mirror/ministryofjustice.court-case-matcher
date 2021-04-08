@@ -20,11 +20,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.Month;
 import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
-import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -45,46 +41,6 @@ class CourtCaseServiceTest {
 
     @InjectMocks
     private CourtCaseService courtCaseService;
-
-    @DisplayName("Purge with 5 cases across 4 sessions and 2 days")
-    @Test
-    void purgeAbsent() {
-
-        Session sessionJan1a = Session.builder().dateOfHearing(JAN_1).courtCode(COURT_CODE).build();
-        Session sessionJan1b = Session.builder().dateOfHearing(JAN_1).courtCode(COURT_CODE).build();
-
-        Session sessionJan3a = Session.builder().dateOfHearing(JAN_3).courtCode(COURT_CODE).build();
-        Session sessionJan3b = Session.builder().dateOfHearing(JAN_3).courtCode(COURT_CODE).build();
-
-        Case aCase10 = Case.builder().caseNo("1010").block(Block.builder().session(sessionJan1a).build()).build();
-        Case aCase20 = Case.builder().caseNo("1011").block(Block.builder().session(sessionJan1b).build()).build();
-        Case aCase21 = Case.builder().caseNo("1030").block(Block.builder().session(sessionJan3a).build()).build();
-        Case aCase30 = Case.builder().caseNo("1031").block(Block.builder().session(sessionJan3a).build()).build();
-        Case aCase31 = Case.builder().caseNo("1032").block(Block.builder().session(sessionJan3b).build()).build();
-
-        List<Case> allCases = asList(aCase20, aCase21, aCase10, aCase30, aCase31);
-
-        courtCaseService.purgeAbsent(COURT_CODE, Set.of(JAN_1, JAN_3), allCases);
-
-        Map<LocalDate, List<String>> expected = Map.of(JAN_1, asList("1010", "1011"), JAN_3, asList("1030", "1031", "1032"));
-        verify(restClient).purgeAbsent(COURT_CODE, expected);
-    }
-
-    @DisplayName("Purge with 2 cases across 1 sessions and 2 days. One day has no cases.")
-    @Test
-    void purgeAbsentNoCases() {
-
-
-        Session sessionJan3 = Session.builder().dateOfHearing(JAN_3).courtCode(COURT_CODE).build();
-
-        Case aCase30 = Case.builder().caseNo("1031").block(Block.builder().session(sessionJan3).build()).build();
-        Case aCase31 = Case.builder().caseNo("1032").block(Block.builder().session(sessionJan3).build()).build();
-
-        courtCaseService.purgeAbsent(COURT_CODE, Set.of(JAN_1, JAN_3), asList(aCase30, aCase31));
-
-        Map<LocalDate, List<String>> expected = Map.of(JAN_1, Collections.emptyList(), JAN_3, asList("1031", "1032"));
-        verify(restClient).purgeAbsent(COURT_CODE, expected);
-    }
 
     @DisplayName("Save court case.")
     @Test

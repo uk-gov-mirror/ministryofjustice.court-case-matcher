@@ -6,6 +6,7 @@ plugins {
     id 'org.springframework.boot' version '2.4.4'
     id 'io.spring.dependency-management' version '1.0.11.RELEASE'
     id 'com.github.ben-manes.versions' version '0.38.0'
+    id "au.com.dius.pact" version "4.2.3"
 }
 
 repositories {
@@ -115,6 +116,9 @@ dependencies {
 
     testImplementation("com.github.tomakehurst:wiremock:2.27.2")
 
+    testImplementation 'au.com.dius.pact.consumer:junit5:4.2.3'
+    testImplementation 'org.apache.httpcomponents:fluent-hc:4.5.13'
+
     agentDeps 'com.microsoft.azure:applicationinsights-agent:3.0.3'
 }
 
@@ -169,6 +173,15 @@ task copyAgent(type: Copy) {
 task copyAgentConfig(type: Copy) {
     from "applicationinsights.json"
     into "$buildDir/libs"
+}
+
+pact {
+    publish {
+        pactBrokerUrl = System.getenv("PACTBROKER_URL")
+        pactBrokerUsername = System.getenv("PACTBROKER_AUTH_USERNAME")
+        pactBrokerPassword = System.getenv("PACTBROKER_AUTH_PASSWORD")
+        pactDirectory = 'build/pacts'
+    }
 }
 
 assemble.dependsOn copyAgent

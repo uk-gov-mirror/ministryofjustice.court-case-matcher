@@ -1,0 +1,11 @@
+{
+  "caseNo": "1600028913",
+  "courtCode": "B10JQ",
+  "pnc": "A/1234560BA",
+  "probationStatusActual": "CURRENT",
+  "previouslyKnownTerminationDate": "2010-01-01",
+  "crn": "X340741",
+  "suspendedSentenceOrder": true,
+  "breach": true,
+  "preSentenceActivity": true
+}
