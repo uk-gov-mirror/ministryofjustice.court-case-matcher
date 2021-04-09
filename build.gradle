@@ -181,6 +181,7 @@ pact {
         pactBrokerUsername = System.getenv("PACTBROKER_AUTH_USERNAME")
         pactBrokerPassword = System.getenv("PACTBROKER_AUTH_PASSWORD")
         pactDirectory = 'build/pacts'
+        consumerVersion = System.getenv("PACTCONSUMER_VERSION")
     }
 }
 

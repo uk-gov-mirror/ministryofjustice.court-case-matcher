@@ -32,14 +32,6 @@ class CourtCaseServiceConsumerPactTest {
 
     private static final String BASE_MOCK_PATH = "src/test/resources/mocks/__files/";
 
-    private Map<String, String> responseHeaders = new HashMap<>(1);
-
-    @BeforeEach
-    void beforeAll() {
-        responseHeaders = new HashMap<>();
-        responseHeaders.put("Content-Type", "application/json");
-    }
-
     @Pact(provider="court-case-service", consumer="court-case-matcher")
     public RequestResponsePact getCourtCasePact(PactDslWithProvider builder) throws IOException {
 
@@ -51,7 +43,7 @@ class CourtCaseServiceConsumerPactTest {
             .path("/court/B10JQ/case/1600028913")
             .method("GET")
             .willRespondWith()
-            .headers(responseHeaders)
+            .headers(Map.of("Content-Type", MediaType.APPLICATION_JSON_VALUE))
             .body(body)
             .status(200)
             .toPact();
@@ -88,7 +80,7 @@ class CourtCaseServiceConsumerPactTest {
             .path("/court/B10JQ/case/1600028914")
             .method("PUT")
             .willRespondWith()
-            .headers(responseHeaders)
+            .headers(Map.of("Content-Type", MediaType.APPLICATION_JSON_VALUE))
             .status(201)
             .toPact();
     }
@@ -98,8 +90,6 @@ class CourtCaseServiceConsumerPactTest {
 
         String body = FileUtils.readFileToString(new File(BASE_MOCK_PATH + "/post-matches/POST_matches.json"), UTF_8);
 
-        responseHeaders.put("Location", "/court/B10JQ/case/1600028913/grouped-offender-matches/1234");
-
         return builder
             .given("a case does not exist with grouped offender matches")
             .uponReceiving("a request to create grouped offender matches")
@@ -107,7 +97,7 @@ class CourtCaseServiceConsumerPactTest {
             .path("/court/B10JQ/case/1600028913/grouped-offender-matches")
             .method("POST")
             .willRespondWith()
-            .headers(responseHeaders)
+            .headers(Map.of("Location", "/court/B10JQ/case/1600028913/grouped-offender-matches/1234"))
             .status(201)
             .toPact();
     }
