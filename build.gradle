@@ -116,7 +116,7 @@ dependencies {
 
     testImplementation("com.github.tomakehurst:wiremock:2.27.2")
 
-    testImplementation 'au.com.dius.pact.consumer:junit5:4.2.3'
+    testImplementation 'au.com.dius.pact.consumer:junit5:4.2.4'
     testImplementation 'org.apache.httpcomponents:fluent-hc:4.5.13'
 
     agentDeps 'com.microsoft.azure:applicationinsights-agent:3.0.3'
