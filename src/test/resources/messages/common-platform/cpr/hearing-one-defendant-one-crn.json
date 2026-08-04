@@ -89,8 +89,7 @@
             "masterDefendantId": null,
             "pncId": null,
             "croNumber": null,
-            "isYouth": false,
-            "cprUUID": "84e022e0-773d-4a36-9829-03c76bcaa789"
+            "isYouth": false
           }
         ],
         "caseStatus": null,

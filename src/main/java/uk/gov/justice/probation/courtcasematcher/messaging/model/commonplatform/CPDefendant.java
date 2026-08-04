@@ -40,7 +40,6 @@ public class CPDefendant {
     private final CPLegalEntityDefendant legalEntityDefendant;
     @JsonProperty(value="isYouth")
     private final boolean isYouth;
-    private final String cprUUID;
 
     public Defendant asDomain() {
         if (personDefendant == null && legalEntityDefendant == null) {
@@ -60,7 +59,6 @@ public class CPDefendant {
                                 .map(CPAddress::asDomain).orElse(Address.builder().build()))
                         .phoneNumber(Optional.ofNullable(personDetails.getContact())
                                 .map(CPContact::asPhoneNumber).orElse(null))
-                        .cprUUID(cprUUID)
                         .build())
                 .orElseGet(this::getLegalDefendant);
     }

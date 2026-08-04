@@ -56,7 +56,6 @@ public class LibraHearing {
     private final String courtCode;
     private final String courtRoom;
     private final LocalDateTime sessionStartTime;
-    private final String cprUUID;
     @JsonProperty(value="cId")
     private final String cId;
 

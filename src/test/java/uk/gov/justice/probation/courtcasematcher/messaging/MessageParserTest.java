@@ -162,7 +162,6 @@ class MessageParserTest {
         private CPDefendant legalEntityDefendant() {
             return CPDefendant.builder()
                     .id("903c4c54-f667-4770-8fdf-1adbb5957c25")
-                    .cprUUID("6789")
                     .prosecutionCaseId("D2B61C8A-0684-4764-B401-F0A788BC7CCF")
                     .pncId(null)
                     .croNumber(null)
@@ -192,7 +191,6 @@ class MessageParserTest {
         private CPDefendant defendant1() {
             return CPDefendant.builder()
                     .id("f91ef118-a51f-4874-9409-c0538b4ca6fd")
-                    .cprUUID("f91ef118-a51f-4874-9409-c0538b4ca6fd")
                     .prosecutionCaseId("D2B61C8A-0684-4764-B401-F0A788BC7CCF")
                     .pncId("2004/0012345U")
                     .croNumber("12345ABCDEF")
@@ -236,7 +234,6 @@ class MessageParserTest {
         private CPDefendant defendant2() {
             return CPDefendant.builder()
                     .id("903c4c54-f667-4770-8fdf-1adbb5957c25")
-                    .cprUUID("6789")
                     .prosecutionCaseId("D2B61C8A-0684-4764-B401-F0A788BC7CCF")
                     .pncId(null)
                     .croNumber(null)

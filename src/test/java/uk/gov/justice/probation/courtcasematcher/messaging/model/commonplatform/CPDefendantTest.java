@@ -41,7 +41,6 @@ class CPDefendantTest {
                 .mobile(TEST_CP_CONTACT.getMobile())
                 .home(TEST_CP_CONTACT.getHome())
                 .build());
-        assertThat(actual.getCprUUID()).isNotNull();
     }
 
     @Test
@@ -176,7 +175,6 @@ class CPDefendantTest {
             .id("2B6AAC03-FEFD-41E9-87C2-7B3E8B8F27D9")
             .pncId("20071234557L")
             .croNumber("croNumber")
-            .cprUUID("CPRDEFENDANTID")
             .build();
     }
 }

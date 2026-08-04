@@ -56,7 +56,6 @@ public class HearingMapper {
                         .cro(aLibraHearing.getCro())
                         .pnc(aLibraHearing.getPnc())
                         .offences(Optional.ofNullable(aLibraHearing.getOffences()).map(HearingMapper::fromOffences).orElse(Collections.emptyList()))
-                        .cprUUID(aLibraHearing.getCprUUID())
                         .cId(aLibraHearing.getCId())
                         .build()))
                 .source(DataSource.LIBRA)

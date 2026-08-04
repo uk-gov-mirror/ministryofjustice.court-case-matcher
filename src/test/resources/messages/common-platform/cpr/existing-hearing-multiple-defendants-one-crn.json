@@ -89,8 +89,7 @@
             "masterDefendantId": null,
             "pncId": null,
             "croNumber": null,
-            "isYouth": false,
-            "cprUUID": "7e69177d-cf34-487b-9dea-cc9c0a525499"
+            "isYouth": false
           },
           {
             "id": "a0bf57a6-3791-46dc-8f87-b33e5c784973",
@@ -129,8 +128,7 @@
                 }
               }
             },
-            "prosecutionCaseId": "8e5cfd34-a8dd-403e-ae96-219704ce7110",
-            "cprUUID": "a0bf57a6-3791-46dc-8f87-b33e5c784973"
+            "prosecutionCaseId": "8e5cfd34-a8dd-403e-ae96-219704ce7110"
           }
         ],
         "caseStatus": null,

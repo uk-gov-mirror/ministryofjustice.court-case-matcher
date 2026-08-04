@@ -33,11 +33,13 @@ import java.util.concurrent.TimeUnit;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.absent;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.matching;
 import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static org.awaitility.Awaitility.await;
+import static uk.gov.justice.probation.courtcasematcher.TestConstants.UUID_REGEX;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -271,9 +273,9 @@ public class CprMatchingIntTest {
                 .withRequestBody(matchingJsonPath("caseNo", equalTo("1600032982")))
                 .withRequestBody(matchingJsonPath("hearingDays[0].courtCode", equalTo("B43KB")))
                 .withRequestBody(matchingJsonPath("hearingDays[0].listNo", equalTo("1st")))
-                .withRequestBody(matchingJsonPath("defendants[0].defendantId", equalTo("748851d9-4b99-491e-8076-372460c73015")))
+                .withRequestBody(matchingJsonPath("defendants[0].defendantId", matching(UUID_REGEX)))
                 .withRequestBody(matchingJsonPath("defendants[0].crn", absent()))
-                .withRequestBody(matchingJsonPath("defendants[0].cprUUID", equalTo("748851d9-4b99-491e-8076-372460c73015")))
+                .withRequestBody(matchingJsonPath("defendants[0].cprUUID", matching(UUID_REGEX)))
                 .withRequestBody(matchingJsonPath("defendants[0].probationStatus", absent()))
                 .withRequestBody(matchingJsonPath("defendants[0].breach", absent()))
                 .withRequestBody(matchingJsonPath("defendants[0].awaitingPsr", absent()))
@@ -444,7 +446,7 @@ public class CprMatchingIntTest {
                 .withRequestBody(matchingJsonPath("hearingDays[0].courtCode", equalTo("B43KB")))
                 .withRequestBody(matchingJsonPath("defendants[0].defendantId", equalTo("f264bdf5-56cf-45ff-9371-470b18f5c6cb")))
                 .withRequestBody(matchingJsonPath("defendants[0].crn", absent()))
-                .withRequestBody(matchingJsonPath("defendants[0].cprUUID", equalTo("f264bdf5-56cf-45ff-9371-470b18f5c6cb")))
+                .withRequestBody(matchingJsonPath("defendants[0].cprUUID", absent()))
                 .withRequestBody(matchingJsonPath("defendants[0].phoneNumber.home", equalTo("+44 114 496 2345")))
                 .withRequestBody(matchingJsonPath("defendants[0].phoneNumber.work", equalTo("0114 496 0000")))
                 .withRequestBody(matchingJsonPath("defendants[0].phoneNumber.mobile", equalTo("555 CRIME")))
@@ -480,16 +482,20 @@ public class CprMatchingIntTest {
                 .withRequestBody(matchingJsonPath("hearingDays[0].courtCode", equalTo("B43KB")))
                 .withRequestBody(matchingJsonPath("defendants[0].defendantId", equalTo("f264bdf5-56cf-45ff-9371-470b18f5c6cb")))
                 .withRequestBody(matchingJsonPath("defendants[0].crn", absent()))
-                .withRequestBody(matchingJsonPath("defendants[0].cprUUID", equalTo("f264bdf5-56cf-45ff-9371-470b18f5c6cb")))
+                .withRequestBody(matchingJsonPath("defendants[0].cprUUID", absent()))
                 .withRequestBody(matchingJsonPath("defendants[0].address.line1",  equalTo("13 Wind Street")))
                 .withRequestBody(matchingJsonPath("defendants[0].address.line2",  equalTo("Swansea")))
                 .withRequestBody(matchingJsonPath("defendants[0].address.line3",  equalTo("Wales")))
                 .withRequestBody(matchingJsonPath("defendants[0].address.line4",  equalTo("UK")))
                 .withRequestBody(matchingJsonPath("defendants[0].address.line5",  equalTo("Earth")))
                 .withRequestBody(matchingJsonPath("defendants[0].address.postcode",  equalTo("SA1 1FU")))
-                .withRequestBody(matchingJsonPath("defendants[0].dateOfBirth",  equalTo("1982-12-01")))
-                .withRequestBody(matchingJsonPath("defendants[0].name.forename1",  equalTo("Jane")))
-                .withRequestBody(matchingJsonPath("defendants[0].name.surname",  equalTo("Doe")))
+                .withRequestBody(matchingJsonPath("defendants[0].dateOfBirth",  equalTo("1975-01-01")))
+                .withRequestBody(matchingJsonPath("defendants[0].name.forename1",  equalTo("Arthur")))
+                .withRequestBody(matchingJsonPath("defendants[0].name.surname",  equalTo("MORGAN")))
+                .withRequestBody(matchingJsonPath("defendants[0].offences[0].listNo", equalTo("30")))
+                .withRequestBody(matchingJsonPath("defendants[0].offences[0].offenceCode", equalTo("ABC001")))
+                .withRequestBody(matchingJsonPath("defendants[0].pnc", equalTo("2004/0012345U")))
+                .withRequestBody(matchingJsonPath("defendants[0].cro", equalTo("12345ABCDEG")))
         );
     }
 

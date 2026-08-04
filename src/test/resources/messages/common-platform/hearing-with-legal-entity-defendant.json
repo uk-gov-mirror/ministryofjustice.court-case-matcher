@@ -25,7 +25,6 @@
         "defendants": [
           {
             "id": "f91ef118-a51f-4874-9409-c0538b4ca6fd",
-            "cprUUID": "f91ef118-a51f-4874-9409-c0538b4ca6fd",
             "pncId": "2004/0012345U",
             "croNumber": "12345ABCDEF",
             "offences": [
@@ -68,7 +67,6 @@
           },
           {
             "id": "903c4c54-f667-4770-8fdf-1adbb5957c25",
-            "cprUUID": "6789",
             "offences": [
               {
                 "id": "50474F6F-65FC-48C7-AA83-16277B55B3BA",

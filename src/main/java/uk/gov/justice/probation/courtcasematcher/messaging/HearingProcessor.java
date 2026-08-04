@@ -108,15 +108,11 @@ public class HearingProcessor {
         final var updatedDefendants = hearing.getDefendants()
                 .stream()
                 .map(defendant -> defendant.withDefendantId(
-                        defendant.getDefendantId() == null ? returnCprUUIDOrRandomUUID(defendant) : defendant.getDefendantId()
+                        defendant.getDefendantId() == null ? UUID.randomUUID().toString() : defendant.getDefendantId()
                 ))
                 .collect(Collectors.toList());
 
         return updatedHearing.withDefendants(updatedDefendants);
 
-    }
-
-    private String returnCprUUIDOrRandomUUID(Defendant defendant) {
-        return defendant.getCprUUID() == null ? UUID.randomUUID().toString() : defendant.getCprUUID();
     }
 }
